@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group >
+        <item
+            android:id="@+id/action_category_add"
+
+            android:title="@string/action_category_add" />
+        <item
+            android:id="@+id/action_category_delete"
+
+            android:title="@string/action_category_delete" />
+
+    </group>
+
+    <item android:title="Settings" android:checkableBehavior="none">
+        <menu>
+            <item
+                android:id="@+id/checkable_menu_showMillis"
+
+                android:title="@string/action_show_milliseconds" />
+            <item
+                android:id="@+id/checkable_menu_use24hr"
+
+                android:title="@string/action_show_24" />
+
+            <item
+                android:id="@+id/checkable_menu_use_dark_theme"
+
+                android:title="@string/action_use_dark_theme" />
+            <item
+                android:id="@+id/checkable_menu_auto_note"
+
+                android:title="@string/add_note_to_new_stamps" />
+            <item
+                android:id="@+id/checkable_menu_useGPS"
+
+                android:title="@string/use_gps" />
+
+
+        </menu>
+    </item>
+
+
+
+    <item android:title="Import / Export"  android:checkableBehavior="all">
+        <menu>
+            <item
+                android:id="@+id/action_export"
+                android:checkable="true"
+                android:title="@string/action_export" />
+        </menu>
+
+
+    </item>
+
+</menu>

@@ -1,0 +1,50 @@
+<resources>
+    <string name="app_name">TimeStamper</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_category_add">Add a new category</string>
+    <string name="action_show_milliseconds">Show milliseconds</string>
+    <string name="action_show_24">Use 24HR format</string>
+    <string name="action_export">Export to CSV</string>
+    <string name="action_save">Save</string>
+    <string name="action_open">Open</string>
+    <string name="action_category_delete">Delete category</string>
+    <string name="action_use_dark_theme">Use dark theme</string>
+    <string name="add_note_to_new_stamps">Always enter notes</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="new_timestamp_created">New timestamp was created</string>
+    <string name="add_note_here">add a note here</string>
+    <string name="add_from_widget">added from widget</string>
+
+    <string name="null_location">Unable to record location, make sure GPS is ON</string>
+
+    <string name="use_gps">Record location</string>
+
+    <string name="s1">Better three hours too soon than a minute too late.</string>
+    <string name="s2">Time is nature\'s way of keeping everything from happening at once.</string>
+    <string name="s3">Time flies over us, but leaves its shadow behind.</string>
+    <string name="s4">Time moves in one direction, memory in another.</string>
+    <string name="s5">Tough times never last, but tough people do.</string>
+    <string name="s6">Time is what we want most, but what we use worst.</string>
+    <string name="s7">Patience and time do more than strength or passion.</string>
+    <string name="s8">Time is the most valuable thing a man can spend.</string>
+    <string name="s9">Eternity: a moment standing still for ever.</string>
+    <string name="s10">Time and tide wait for no man.</string>
+
+    <string-array name="phrases">
+        <item>@string/s1</item>
+        <item>@string/s2</item>
+        <item>@string/s3</item>
+        <item>@string/s4</item>
+        <item>@string/s5</item>
+        <item>@string/s6</item>
+        <item>@string/s7</item>
+        <item>@string/s8</item>
+        <item>@string/s9</item>
+        <item>@string/s10</item>
+    </string-array>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="add_widget">Add widget</string>
+
+
+</resources>

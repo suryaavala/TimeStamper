@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="10dp">
+
+        <ImageButton
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:id="@+id/imageButton"
+            android:src="@android:drawable/ic_delete"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
+            android:background="@null"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="5dp"
+            android:visibility="invisible" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/textViewPos"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="15dp"
+            android:textSize="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/textViewTime"
+            android:layout_alignParentTop="true"
+            android:layout_toEndOf="@+id/textViewPos"
+            android:layout_marginLeft="25dp"
+            android:textSize="16dp"
+            android:textStyle="bold" />
+
+        <ImageButton
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:id="@+id/gpsPinButton"
+            android:visibility="invisible"
+            android:src="@drawable/pin"
+            android:background="@null"
+            android:layout_alignBottom="@+id/textViewTime"
+            android:layout_toEndOf="@+id/textViewTime"
+            android:scaleType="centerInside"
+            android:layout_marginLeft="10dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Category"
+            android:id="@+id/textViewCategory"
+
+
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginRight="35dp"
+            android:textSize="16dp" />
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14dp"
+            android:text="Wed"
+            android:id="@+id/textViewWeekday"
+            android:layout_marginLeft="25dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/textViewNote"
+            android:layout_marginLeft="40dp"
+            android:textSize="14dp" />
+    </LinearLayout>
+
+</LinearLayout>
