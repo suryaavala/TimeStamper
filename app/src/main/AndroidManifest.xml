@@ -21,7 +21,7 @@
             </intent-filter>
         </activity>
 
-        <receiver android:name=".widget">
+        <receiver android:name=".utils.InstantTimestampWidget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

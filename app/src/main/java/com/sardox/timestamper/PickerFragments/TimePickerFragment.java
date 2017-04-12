@@ -1,4 +1,4 @@
-package com.sardox.timestamper.pickers;
+package com.sardox.timestamper.PickerFragments;
 
 import android.app.Dialog;
 import android.app.TimePickerDialog;
@@ -7,15 +7,10 @@ import android.support.v4.app.DialogFragment;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.widget.TimePicker;
-import com.sardox.timestamper.MainActivity;
-import com.sardox.timestamper.recyclerview.MyRecyclerViewAdapter;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-/**
- * Created by sardox on 8/8/2016.
- */
 public  class TimePickerFragment extends DialogFragment
         implements TimePickerDialog.OnTimeSetListener {
 
@@ -48,10 +43,7 @@ public  class TimePickerFragment extends DialogFragment
         int day = c.get(Calendar.DAY_OF_MONTH);
         int sec = c.get(Calendar.SECOND);
 
-
-
         c.set(year,month,day,view.getCurrentHour(),view.getCurrentMinute(), sec);
-
 
         time=c.getTimeInMillis();
         String format = "yyyy.MM.dd G 'at' HH:mm:ss z";
@@ -59,15 +51,9 @@ public  class TimePickerFragment extends DialogFragment
         String hhmmss = sdf.format(c.getTime());
         Log.e("aaa", hhmmss);
 
-
-        MainActivity.adapter.mStampsList.get(pos).setTime(time);
-        MainActivity.adapter.notifyDataSetChanged();
-        MainActivity.adapter.mainActivity.filterList();
-        // MainActivity.adapter.
-
-
-
+//        MainActivity.adapter.mStampsList.get(pos).setTime(time);
+//        MainActivity.adapter.notifyDataSetChanged();
+//        MainActivity.adapter.mainActivity.filterList();
 
     }
 }
-

@@ -1,93 +1,46 @@
 package com.sardox.timestamper.objects;
 
 
-/**
- * Created by sardox on 7/23/2016.
- */
+
+
+import com.sardox.timestamper.types.JetTimestamp;
+import com.sardox.timestamper.types.PhysicalLocation;
+
+
 public class Timestamp {
-    private String n;  //mName
-    private String s; //mSubtitle
-    private String g; //mgpsCoordinates
 
-    private int c; //mCategoryID
-    private int i; //stampID
-    private long t; //time
+    private JetTimestamp timestamp;
 
-
-    public Timestamp() {
+    private PhysicalLocation physicalLocation;
+    private String note;
+    private int categoryId;
+    public Timestamp(JetTimestamp now, PhysicalLocation location, int categoryID, String note) {
+        this.timestamp=now;
+        this.physicalLocation=location;
+        this.categoryId=categoryID;
+        this.note=note;
     }
 
-    public Timestamp(String name, String subtitle, String gpsCoordinates, int categoryID, long time) {
-        this.n = name;
-        this.s = subtitle;
-        this.g = gpsCoordinates;
-        this.c = categoryID;
-        this.t = t;
+    public Timestamp(JetTimestamp now, PhysicalLocation location, int categoryID) {
+        this.timestamp=now;
+        this.physicalLocation=location;
+        this.categoryId=categoryID;
+        this.note="";
     }
 
-    public String getName() {
-        return n;
+    public JetTimestamp getTimestamp() {
+        return timestamp;
     }
 
-
-    public void setName(String name) {
-        this.n = name;
+    public PhysicalLocation getPhysicalLocation() {
+        return physicalLocation;
     }
 
-    public String getSubtitle() {
-        return s;
+    public String getNote() {
+        return note;
     }
 
-    public void setSubtitle(String subtitle) {
-        this.s = subtitle;
-    }
-
-
-
-
-    public void setGps(String gps) {
-        this.g = gps;
-    }
-
-    public String getGps() {
-        return g;
-    }
-
-
-
-    public int getCategoryID() {
-        return c;
-    }
-
-
-    public void setCategoryID(int category) {
-        this.c = category;
-    }
-
-    public long getTime() {
-        return t;
-    }
-
-
-    public void setTime(long time) {
-        this.t = time;
-    }
-
-    public int getStampID() {
-        return i;
-    }
-
-
-    public void setStampID(int id) {
-        this.i = id;
+    public int getCategoryId() {
+        return categoryId;
     }
 }
-
-
-
-
-
-
-
-
-

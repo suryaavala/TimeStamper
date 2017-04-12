@@ -4,16 +4,13 @@ package com.sardox.timestamper.objects;
 
 
 public class Category {
-    private String n; //mName
-    private int c;//mCategoryID
+    private String n;
+    private int c;
 
-    public Category() {
-    }
 
     public Category(String name, int mCategoryID) {
         this.n = name;
-        this.c=mCategoryID;
-
+        this.c = mCategoryID;
     }
 
     public String getName() {
