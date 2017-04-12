@@ -1,16 +1,8 @@
 apply plugin: 'com.android.application'
 
 android {
-    signingConfigs {
-        config {
-            keyAlias 'TimeStamper'
-            keyPassword '1qa@WS3edt'
-            storeFile file('C:/android/projects/TimeStamper/timestamper.jks')
-            storePassword '1qa@WS3edt'
-        }
-    }
-    compileSdkVersion 24
-    buildToolsVersion "24.0.1"
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
     defaultConfig {
         applicationId "com.sardox.timestamper"
         minSdkVersion 19
@@ -23,14 +15,16 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-        debug {
-            signingConfig signingConfigs.config
-        }
+    }
+    productFlavors {
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
     }
     packagingOptions {
         exclude 'META-INF/maven/com.google.code.gson/gson/pom.xml'
         exclude 'META-INF/maven/com.google.code.gson/gson/pom.properties'
-
     }
 }
 repositories {
@@ -39,9 +33,9 @@ repositories {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.android.support:recyclerview-v7:24.0.0'
+    compile 'com.android.support:recyclerview-v7:25.3.0'
     testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:24.1.1'
-    compile 'com.android.support:design:24.1.1'
+    compile 'com.android.support:appcompat-v7:25.3.0'
+    compile 'com.android.support:design:25.3.0'
     compile 'com.google.code.gson:gson:2.7'
 }
