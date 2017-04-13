@@ -1,12 +1,14 @@
 package com.sardox.timestamper.recyclerview;
 
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.R;
+import com.sardox.timestamper.utils.Consumer;
 
 
 import java.util.List;
@@ -15,9 +17,9 @@ import java.util.List;
 public class MyRecyclerViewAdapterCategory extends RecyclerView.Adapter<MyRecyclerViewAdapterCategory.MyViewHolderCategory> {
 
     private List<Category> categories;
-    private int selected_category;
+    private Consumer<Category> selected_category;
 
-    public MyRecyclerViewAdapterCategory( List<Category> categories, int selected_category) {
+    public MyRecyclerViewAdapterCategory(List<Category> categories, Consumer<Category> selected_category) {
         this.selected_category = selected_category;
         this.categories = categories;
     }
@@ -56,7 +58,7 @@ public class MyRecyclerViewAdapterCategory extends RecyclerView.Adapter<MyRecycl
 
         @Override
         public void onClick(View v) {
-            selected_category = categories.get(getAdapterPosition()).getCategoryID();
+            selected_category.accept(categories.get(getAdapterPosition()));
         }
     }
 }
