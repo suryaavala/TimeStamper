@@ -2,29 +2,44 @@ package com.sardox.timestamper.recyclerview;
 
 import android.support.v7.util.SortedList;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.sardox.timestamper.R;
 import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.objects.Timestamp;
+import com.sardox.timestamper.types.JetTimestamp;
+import com.sardox.timestamper.types.JetTimestampFormat;
+import com.sardox.timestamper.utils.AppSettings;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 
 public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder> {
 
     private SortedList<Timestamp> sortedTimeStamps; // filteredTimestamps
     private final Comparator<Timestamp> mComparator;
+    private List<Category> categories;
+    private DisplayMetrics displayMetrics;
+    private AppSettings appSettings;
 
-    public MyRecyclerViewAdapter(final Comparator<Timestamp> mComparator ) {
+    public MyRecyclerViewAdapter(final Comparator<Timestamp> mComparator, List<Category> categories, DisplayMetrics displayMetrics) {
 
         this.mComparator = mComparator;
+        this.categories = categories;
+        this.displayMetrics = displayMetrics;
 
         sortedTimeStamps = new SortedList<>(Timestamp.class, new SortedList.Callback<Timestamp>() {
             @Override
@@ -75,14 +90,38 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
     @Override
     public void onBindViewHolder(MyRecyclerViewAdapter.MyViewHolder holder, int position) {
+        int w = displayMetrics.widthPixels;
+        holder.left_container.setMinimumWidth(w);
+        Log.e("stamper", "setMinimumWidth: " + w);
+        Log.e("stamper", "left_container w: " + holder.left_container.getWidth());
+
         Timestamp timestamp = sortedTimeStamps.get(position);
 
-        holder.recycler_timestamp_day.setText("11 Jan");
-        holder.recycler_timestamp_category.setText("Sport");
-        holder.recycler_timestamp_note.setText(timestamp.getNote());
-        holder.recycler_timestamp_time.setText(timestamp.getTimestamp().toString());
-        holder.recycler_timestamp_weekday.setText("Mon");
+        JetTimestamp.now().toString(Locale.getDefault(), Calendar.getInstance().getTimeZone(), JetTimestampFormat.LongDateTime);
 
+        Calendar calendar = Calendar.getInstance();
+        TimeZone localTZ = calendar.getTimeZone();
+
+        calendar.setTimeInMillis(timestamp.getTimestamp().toMilliseconds());
+        String  format = "hh:mm:ss.SSS a";
+
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+        sdf.setTimeZone(localTZ);
+        String hhmmss = sdf.format(calendar.getTime());
+
+        SimpleDateFormat sdfDAY = new SimpleDateFormat("d MMM");
+        sdfDAY.setTimeZone(localTZ);
+        String dMMM = sdfDAY.format(calendar.getTime());
+
+        SimpleDateFormat sdfWeekDay = new SimpleDateFormat("EEE");
+        sdfWeekDay.setTimeZone(localTZ);
+        String EEE = sdfWeekDay.format(calendar.getTime());
+
+        holder.recycler_timestamp_day.setText(dMMM);
+        holder.recycler_timestamp_category.setText(categories.get(timestamp.getCategoryId()).getName());
+        holder.recycler_timestamp_note.setText(timestamp.getNote());
+        holder.recycler_timestamp_time.setText(hhmmss);
+        holder.recycler_timestamp_weekday.setText(EEE);
     }
 
     @Override
@@ -114,10 +153,15 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
         sortedTimeStamps.clear();
     }
 
+    public void setAppSettings(AppSettings appSettings) {
+        this.appSettings = appSettings;
+    }
+
     public class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
 
         private TextView recycler_timestamp_category, recycler_timestamp_weekday, recycler_timestamp_day, recycler_timestamp_note, recycler_timestamp_time;
         // private ImageButton
+        private LinearLayout left_container;
 
         public MyViewHolder(View itemView) {
             super(itemView);
@@ -127,7 +171,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
             recycler_timestamp_time = (TextView) itemView.findViewById(R.id.recycler_timestamp_time);
             //   mGPSpinButton = (ImageButton) itemView.findViewById(R.id.r);
             recycler_timestamp_weekday = (TextView) itemView.findViewById(R.id.recycler_timestamp_weekday);
-
+            left_container = (LinearLayout) itemView.findViewById(R.id.left_container);
 //            mNameTextView.setOnClickListener(this);
 //            mNameTextView.setOnLongClickListener(this);
 //            mCategoryTextView.setOnClickListener(this);
