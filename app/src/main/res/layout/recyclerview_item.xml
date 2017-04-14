@@ -18,7 +18,7 @@
 
             <LinearLayout
                 android:id="@+id/left_container"
-                android:layout_width="150dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
@@ -69,7 +69,7 @@
                         android:layout_alignParentEnd="true"
                         android:layout_alignParentTop="false"
                         android:layout_alignTop="@+id/recycler_timestamp_day"
-                        android:layout_centerVertical="false"
+                        android:layout_centerVertical="true"
                         android:layout_marginRight="30dp"
                         android:gravity="center"
                         android:text="Sport" />
@@ -80,69 +80,52 @@
                 android:id="@+id/right_container"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_margin="12dp"
                 android:orientation="horizontal">
 
-                <LinearLayout
-                    android:id="@+id/timestamp_map"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:clickable="true"
-                    android:orientation="horizontal">
+                <ImageButton
+                    android:id="@+id/timestamp_map_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="10dp"
+                    android:adjustViewBounds="true"
+                    android:background="#00000000"
+                    android:scaleType="fitCenter"
+                    app:srcCompat="@drawable/item_map_to" />
 
-                    <ImageButton
-                        android:id="@+id/timestamp_map_button"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        app:srcCompat="@android:drawable/ic_dialog_map" />
-                </LinearLayout>
+                <ImageButton
+                    android:id="@+id/timestamp_edit_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginRight="10dp"
+                    android:layout_weight="1"
+                    android:adjustViewBounds="true"
+                    android:background="#00000000"
+                    android:scaleType="fitCenter"
+                    app:srcCompat="@drawable/item_edit_note" />
 
-                <LinearLayout
-                    android:id="@+id/timestamp_edit"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:clickable="true"
-                    android:orientation="horizontal"
-                    android:visibility="visible">
+                <ImageButton
+                    android:id="@+id/timestamp_remove_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginRight="10dp"
+                    android:layout_weight="1"
+                    android:adjustViewBounds="true"
+                    android:background="#00000000"
+                    android:scaleType="fitCenter"
+                    app:srcCompat="@drawable/item_category_change" />
 
-                    <ImageButton
-                        android:id="@+id/timestamp_edit_button"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        app:srcCompat="@android:drawable/ic_menu_edit" />
+                <ImageButton
+                    android:id="@+id/timestamp_map_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginRight="10dp"
+                    android:layout_weight="1"
+                    android:adjustViewBounds="true"
+                    android:background="#00000000"
+                    android:scaleType="fitCenter"
+                    app:srcCompat="@drawable/item_remove" />
 
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/timestamp_remove"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:clickable="true"
-                    android:orientation="horizontal">
-
-                    <ImageButton
-                        android:id="@+id/timestamp_remove_button"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        app:srcCompat="@android:drawable/ic_menu_delete" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/timestamp_map"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:clickable="true"
-                    android:orientation="horizontal">
-
-                    <ImageButton
-                        android:id="@+id/timestamp_map_button"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        app:srcCompat="@drawable/pin" />
-                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
     </HorizontalScrollView>

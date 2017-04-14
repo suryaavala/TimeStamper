@@ -221,6 +221,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void filterTimestamps(Category selectedCategory) {
         adapter.removeAll();
+        if (selectedCategory==Category.Default) {
+            adapter.add(unfilteredTimestamps);
+            return;
+        }
         List<Timestamp> sortedTimestamps = new ArrayList<>();
         for (Timestamp timestamp : unfilteredTimestamps) {
             if (timestamp.getCategoryId() == selectedCategory.getCategoryID())
