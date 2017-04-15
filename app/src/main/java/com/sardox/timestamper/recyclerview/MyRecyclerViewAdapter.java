@@ -1,13 +1,25 @@
 package com.sardox.timestamper.recyclerview;
 
+import android.animation.ObjectAnimator;
+import android.graphics.Color;
+import android.graphics.Rect;
+import android.support.v4.view.animation.FastOutLinearInInterpolator;
 import android.support.v7.util.SortedList;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.BounceInterpolator;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.OvershootInterpolator;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -34,6 +46,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     private List<Category> categories;
     private DisplayMetrics displayMetrics;
     private AppSettings appSettings;
+    private int aaa=0;
 
     public MyRecyclerViewAdapter(final Comparator<Timestamp> mComparator, List<Category> categories, DisplayMetrics displayMetrics) {
 
@@ -89,8 +102,8 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
 
     @Override
-    public void onBindViewHolder(MyRecyclerViewAdapter.MyViewHolder holder, int position) {
-        int w = displayMetrics.widthPixels;
+    public void onBindViewHolder(final MyRecyclerViewAdapter.MyViewHolder holder, int position) {
+        final int w = displayMetrics.widthPixels;
         holder.left_container.setMinimumWidth(w);
         Log.e("stamper", "setMinimumWidth: " + w);
         Log.e("stamper", "left_container w: " + holder.left_container.getWidth());
@@ -122,7 +135,85 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
         holder.recycler_timestamp_note.setText(timestamp.getNote());
         holder.recycler_timestamp_time.setText(hhmmss);
         holder.recycler_timestamp_weekday.setText(EEE);
+
+        Log.e("stamper", " holder.remove.getMeasuredWidth: " +     holder.remove.getMeasuredWidth());
+
+
+
+        holder.timestamp_horizontall_scrollview.getViewTreeObserver().addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
+            @Override
+            public void onScrollChanged() {
+
+                final int button_size = holder.remove.getWidth();
+                final int button_padding = displayMetrics.densityDpi * 10; // 10dp is left margin set in layout
+                final int overall_button_size = button_size + button_padding;
+
+              int current_scroll_x= holder.timestamp_horizontall_scrollview.getScrollX();
+//                if (current_scroll_x!=0) {
+//                    if (current_scroll_x>aaa){
+//                        //keeps scrolling right
+//
+//                    } else {
+//                        // scrolling left
+//
+//                    }
+//                    aaa=current_scroll_x;
+//                }
+//
+                Rect scrollBounds = new Rect();
+                holder.timestamp_horizontall_scrollview.getHitRect(scrollBounds);
+
+                if (holder.map_to.getLocalVisibleRect(scrollBounds) && current_scroll_x<140) {
+                    ObjectAnimator animY = ObjectAnimator.ofFloat(holder.map_to, "translationY", -100f, 0f);
+                    animY.setDuration(200);//1sec
+                    animY.setInterpolator(new AccelerateInterpolator());
+                    animY.setRepeatCount(0);
+                    animY.start();
+                    // Any portion of the imageView, even a single pixel, is within the visible window
+                }
+
+                if (holder.edit_note.getLocalVisibleRect(scrollBounds)&& current_scroll_x<290) {
+                    ObjectAnimator animY = ObjectAnimator.ofFloat(holder.edit_note, "translationY", -100f, 0f);
+                    animY.setDuration(200);//1sec
+                    animY.setInterpolator(new AccelerateInterpolator());
+                    animY.setRepeatCount(0);
+                    animY.start();
+                    // Any portion of the imageView, even a single pixel, is within the visible window
+                }
+
+                if (holder.change_category.getLocalVisibleRect(scrollBounds)&& current_scroll_x<450) {
+                    ObjectAnimator animY = ObjectAnimator.ofFloat(holder.change_category, "translationY", -100f, 0f);
+                    animY.setDuration(200);//1sec
+                    animY.setInterpolator(new AccelerateInterpolator());
+                    animY.setRepeatCount(0);
+                    animY.start();
+                    // Any portion of the imageView, even a single pixel, is within the visible window
+                }
+
+
+                if (holder.remove.getLocalVisibleRect(scrollBounds)&& current_scroll_x<140) {
+                    ObjectAnimator animY = ObjectAnimator.ofFloat(holder.remove, "translationY", -100f, 0f);
+                    animY.setDuration(200);//1sec
+                    animY.setInterpolator(new AccelerateInterpolator());
+                    animY.setRepeatCount(0);
+                    animY.start();
+                    // Any portion of the imageView, even a single pixel, is within the visible window
+                }
+
+
+                Log.e("stamper", "holder.remove.visible: " +     holder.remove.isShown());
+
+//                Log.e("stamper", "holder.remove.getWidth: " +     holder.remove.getWidth());
+//                Log.e("stamper", "holder.edit_note.getX: " +     holder.edit_note.getScrollX()
+//                Log.e("stamper", "holder.remove.getX: " +     holder.remove.getX());
+//                Log.e("stamper", "onScrollChanged: " +  holder.timestamp_horizontall_scrollview.getScrollX());
+
+
+                //if (holder.card_horizontall_scrollview.getScrollX()>0) holder.card_arrow.setVisibility(View.GONE); else holder.card_arrow.setVisibility(View.VISIBLE);
+            }
+        });
     }
+
 
     @Override
     public int getItemCount() {
@@ -157,14 +248,18 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
         this.appSettings = appSettings;
     }
 
-    public class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
+    public class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener, View.OnTouchListener {
 
         private TextView recycler_timestamp_category, recycler_timestamp_weekday, recycler_timestamp_day, recycler_timestamp_note, recycler_timestamp_time;
         // private ImageButton
         private LinearLayout left_container;
+        private ImageButton edit_note, map_to, change_category, remove;
+        private HorizontalScrollView timestamp_horizontall_scrollview;
 
         public MyViewHolder(View itemView) {
             super(itemView);
+            timestamp_horizontall_scrollview = (HorizontalScrollView) itemView.findViewById(R.id.timestamp_horizontall_scrollview);
+
             recycler_timestamp_category = (TextView) itemView.findViewById(R.id.recycler_timestamp_category);
             recycler_timestamp_day = (TextView) itemView.findViewById(R.id.recycler_timestamp_day);
             recycler_timestamp_note = (TextView) itemView.findViewById(R.id.recycler_timestamp_note);
@@ -172,6 +267,19 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
             //   mGPSpinButton = (ImageButton) itemView.findViewById(R.id.r);
             recycler_timestamp_weekday = (TextView) itemView.findViewById(R.id.recycler_timestamp_weekday);
             left_container = (LinearLayout) itemView.findViewById(R.id.left_container);
+
+            edit_note = (ImageButton) itemView.findViewById(R.id.timestamp_edit_note);
+            map_to = (ImageButton) itemView.findViewById(R.id.timestamp_map_to);
+            change_category = (ImageButton) itemView.findViewById(R.id.timestamp_category_change);
+            remove = (ImageButton) itemView.findViewById(R.id.timestamp_remove);
+
+           // remove.setOnClickListener(this);
+
+            remove.setOnTouchListener(this);
+            map_to.setOnClickListener(this);
+            change_category.setOnClickListener(this);
+            edit_note.setOnClickListener(this);
+
 //            mNameTextView.setOnClickListener(this);
 //            mNameTextView.setOnLongClickListener(this);
 //            mCategoryTextView.setOnClickListener(this);
@@ -180,6 +288,13 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
         }
 
+        private void animate_me(View view){
+            ObjectAnimator animY = ObjectAnimator.ofFloat(view, "translationY", -100f, 0f);
+            animY.setDuration(700);//1sec
+            animY.setInterpolator(new AccelerateInterpolator());
+            animY.setRepeatCount(0);
+            animY.start();
+        }
         @Override
         public boolean onLongClick(View v) {
 //            if (v.getId() == mNameTextView.getId()) {
@@ -195,7 +310,27 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
         @Override
         public void onClick(View v) {
-//            int a = getAdapterPosition();
+           // int a = getAdapterPosition();
+
+            switch (v.getId()){
+                case R.id.timestamp_remove: {
+
+                    break;
+                }
+                case R.id.timestamp_edit_note: {
+
+                    break;
+                }
+                case R.id.timestamp_map_to: {
+
+                    break;
+                }
+                case R.id.timestamp_category_change: {
+
+                    break;
+                }
+            }
+
 //            if (v.getId() == mNameTextView.getId() || v.getId() == mSubtitleTextView.getId()) {
 //
 //                showDialog(v, getAdapterPosition()); // input dialog -- for a note
@@ -215,11 +350,24 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
 
         private void showSpinner(View v, final int pos) {
-
         } // spinner dialog -- change items category
 
 
         public void showDialog(View v, final int pos) {
         }  // input dialog -- for a note
+
+        @Override
+        public boolean onTouch(View view, MotionEvent motionEvent) {
+//            ImageButton imageButton = (ImageButton) view;
+//            switch (motionEvent.getAction()) {
+//                case MotionEvent.ACTION_DOWN:
+//                    imageButton.setColorFilter(Color.argb(255, 255, 255, 255)); // White Tint
+//                    return true; // if you want to handle the touch event
+//                case MotionEvent.ACTION_UP:
+//                    imageButton.clearColorFilter(); // White Tint
+//                    return true; // if you want to handle the touch event
+//            }
+            return false;
+        }
     }
 }

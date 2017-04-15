@@ -4,20 +4,11 @@
     android:layout_height="wrap_content"
     android:orientation="vertical" >
 
-    <LinearLayout
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recyclerViewCat"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginTop="58dp">
-        <View style="@style/Divider"/>
-
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/recyclerViewCat"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-
-    </LinearLayout>
+        android:layout_height="match_parent"
+        android:background="@color/colorPrimary" />
 
     <View style="@style/Divider"/>
 
@@ -25,6 +16,6 @@
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:scrollbarStyle="insideInset"
+        android:layout_marginTop="4dp"
         android:scrollbars="vertical" />
 </LinearLayout>

@@ -56,6 +56,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public RecyclerView recyclerViewCategory;
     public MyRecyclerViewAdapterCategory adapterCategory;
 
+    private Category lastSelectedCategory = Category.Default;
+
     private List<Timestamp> unfilteredTimestamps;
     private List<Category> categories;
 
@@ -94,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         dataManager = new DataManager(getApplicationContext());
         appSettings = dataManager.readSettings();
-        if (appSettings.isUseDark()) setTheme(R.style.AppThemeCustomMaterialDark); else setTheme(R.style.AppThemeCustom);
+     //   if (appSettings.isUseDark()) setTheme(R.style.AppThemeCustomMaterialDark); else setTheme(R.style.AppThemeCustom);
         setupDrawer(toolbar);
 
         String[] perms = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
@@ -111,7 +113,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, getString(R.string.new_timestamp_created) + "cat", Snackbar.LENGTH_LONG)
+                Timestamp newTimestamp = timeStampManager.createTimestamp(lastSelectedCategory);
+                unfilteredTimestamps.add(newTimestamp); //adding timestamp to main list
+                adapter.add(newTimestamp);
+
+                Snackbar.make(view, getString(R.string.new_timestamp_created) + " in " + lastSelectedCategory.getName(), Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
         });
@@ -125,8 +131,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         categories = dataManager.readCategories();
 
         initRecyclerView(unfilteredTimestamps, categories);
-
-        //timeStampManager = new TimeStampManager();
+        timeStampManager = new TimeStampManager();
     }
 
 
@@ -151,10 +156,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ((Switch) navigationView.getMenu().findItem(R.id.checkable_menu_showMillis).getActionView()).setChecked(appSettings.isShowMillis());
         navigationView.getMenu().findItem(R.id.checkable_menu_showMillis).getActionView().setClickable(false);
 
-        navigationView.getMenu().findItem(R.id.checkable_menu_use_dark_theme)
-                .setActionView(new Switch(this));
-        ((Switch) navigationView.getMenu().findItem(R.id.checkable_menu_use_dark_theme).getActionView()).setChecked(appSettings.isUseDark());
-        navigationView.getMenu().findItem(R.id.checkable_menu_use_dark_theme).getActionView().setClickable(false);
+//        navigationView.getMenu().findItem(R.id.checkable_menu_use_dark_theme)
+//                .setActionView(new Switch(this));
+//        ((Switch) navigationView.getMenu().findItem(R.id.checkable_menu_use_dark_theme).getActionView()).setChecked(appSettings.isUseDark());
+//        navigationView.getMenu().findItem(R.id.checkable_menu_use_dark_theme).getActionView().setClickable(false);
 
         navigationView.getMenu().findItem(R.id.checkable_menu_useGPS)
                 .setActionView(new Switch(this));
@@ -182,13 +187,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void accept(Category selectedCategory) {
                 Log.e("stamper", "selected_category: " + selectedCategory.getName() + " #" + selectedCategory.getCategoryID());
-                filterTimestamps(selectedCategory);
-                // adapter.setSelectedCategory(selectedCategory);
+                lastSelectedCategory = selectedCategory;
+                filterTimestamps(lastSelectedCategory);
             }
         };
 
 
-        adapterCategory = new MyRecyclerViewAdapterCategory(categories, categoryUpdate);
+        adapterCategory = new MyRecyclerViewAdapterCategory(categories, categoryUpdate, getApplicationContext());
 
         recyclerViewCategory = (RecyclerView) findViewById(R.id.recyclerViewCat);
         recyclerViewCategory.setAdapter(adapterCategory);
@@ -221,7 +226,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void filterTimestamps(Category selectedCategory) {
         adapter.removeAll();
-        if (selectedCategory==Category.Default) {
+        if (selectedCategory.getCategoryID()==Category.Default.getCategoryID()) {
             adapter.add(unfilteredTimestamps);
             return;
         }
@@ -248,7 +253,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (id == R.id.checkable_menu_use24hr) {
             appSettings.setUse24hrFormat(!appSettings.isUse24hrFormat());
             ((Switch) item.getActionView()).toggle();
-
             return true;
         }
 
@@ -265,14 +269,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return true;
         }
 
-        if (id == R.id.checkable_menu_use_dark_theme) {
-
-            appSettings.setUseDark(!appSettings.isUseDark());
-            ((Switch) item.getActionView()).toggle();
-
-            recreate();
-            return true;
-        }
+//        if (id == R.id.checkable_menu_use_dark_theme) {
+//
+//            appSettings.setUseDark(!appSettings.isUseDark());
+//            ((Switch) item.getActionView()).toggle();
+//
+//            recreate();
+//            return true;
+//        }
 
         if (id == R.id.checkable_menu_auto_note) {
             ((Switch) item.getActionView()).toggle();

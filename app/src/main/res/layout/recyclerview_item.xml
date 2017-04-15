@@ -5,129 +5,145 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <HorizontalScrollView
-        android:id="@+id/timestamp_horizontall_scrollview"
+    <android.support.v7.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:scrollbars="none">
+        android:elevation="2dp">
 
-        <LinearLayout
-            android:layout_width="wrap_content"
+        <HorizontalScrollView
+            android:id="@+id/timestamp_horizontall_scrollview"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:scrollbars="none">
 
             <LinearLayout
-                android:id="@+id/left_container"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:id="@+id/recycler_timestamp_day"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="10dp"
-                        android:layout_marginTop="10dp"
-                        android:minEms="3"
-                        android:text="12 Aug" />
-
-                    <TextView
-                        android:id="@+id/recycler_timestamp_weekday"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@+id/recycler_timestamp_day"
-                        android:layout_marginBottom="10dp"
-                        android:layout_marginLeft="10dp"
-                        android:text="Mon" />
-
-                    <TextView
-                        android:id="@+id/recycler_timestamp_time"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignTop="@+id/recycler_timestamp_day"
-                        android:layout_marginLeft="20dp"
-                        android:layout_toEndOf="@+id/recycler_timestamp_day"
-                        android:text="10:41:59" />
-
-                    <TextView
-                        android:id="@+id/recycler_timestamp_note"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignStart="@+id/recycler_timestamp_time"
-                        android:layout_below="@+id/recycler_timestamp_time"
-                        android:text="my parking expires" />
-
-                    <TextView
-                        android:id="@+id/recycler_timestamp_category"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignBottom="@+id/recycler_timestamp_note"
-                        android:layout_alignParentEnd="true"
-                        android:layout_alignParentTop="false"
-                        android:layout_alignTop="@+id/recycler_timestamp_day"
-                        android:layout_centerVertical="true"
-                        android:layout_marginRight="30dp"
-                        android:gravity="center"
-                        android:text="Sport" />
-                </RelativeLayout>
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/right_container"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_margin="12dp"
                 android:orientation="horizontal">
 
-                <ImageButton
-                    android:id="@+id/timestamp_map_button"
+                <LinearLayout
+                    android:id="@+id/left_container"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginRight="10dp"
-                    android:adjustViewBounds="true"
-                    android:background="#00000000"
-                    android:scaleType="fitCenter"
-                    app:srcCompat="@drawable/item_map_to" />
+                    android:orientation="vertical">
 
-                <ImageButton
-                    android:id="@+id/timestamp_edit_button"
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/recycler_timestamp_day"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="10dp"
+                            android:layout_marginTop="10dp"
+                            android:minEms="3"
+                            android:text="12 Aug"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/recycler_timestamp_weekday"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_below="@+id/recycler_timestamp_day"
+                            android:layout_marginBottom="10dp"
+                            android:layout_marginLeft="20dp"
+                            android:text="Mon"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:id="@+id/recycler_timestamp_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignTop="@+id/recycler_timestamp_day"
+                            android:layout_marginLeft="20dp"
+                            android:layout_toEndOf="@+id/recycler_timestamp_day"
+                            android:text="10:41:59"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:id="@+id/recycler_timestamp_note"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignStart="@+id/recycler_timestamp_time"
+                            android:layout_below="@+id/recycler_timestamp_time"
+                            android:text="my parking expires" />
+
+                        <TextView
+                            android:id="@+id/recycler_timestamp_category"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignBottom="@+id/recycler_timestamp_note"
+                            android:layout_alignParentEnd="true"
+                            android:layout_alignParentTop="false"
+                            android:layout_alignTop="@+id/recycler_timestamp_day"
+                            android:layout_centerVertical="true"
+                            android:layout_marginRight="30dp"
+                            android:gravity="center"
+                            android:text="Sport"
+                            android:textSize="16sp" />
+                    </RelativeLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/right_container"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_marginRight="10dp"
-                    android:layout_weight="1"
-                    android:adjustViewBounds="true"
-                    android:background="#00000000"
-                    android:scaleType="fitCenter"
-                    app:srcCompat="@drawable/item_edit_note" />
+                    android:layout_margin="10dp"
+                    android:orientation="horizontal">
 
-                <ImageButton
-                    android:id="@+id/timestamp_remove_button"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginRight="10dp"
-                    android:layout_weight="1"
-                    android:adjustViewBounds="true"
-                    android:background="#00000000"
-                    android:scaleType="fitCenter"
-                    app:srcCompat="@drawable/item_category_change" />
+                    <ImageButton
+                        android:id="@+id/timestamp_map_to"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="10dp"
+                        android:adjustViewBounds="true"
+                        android:background="#00000000"
+                        android:clickable="true"
+                        android:padding="4dp"
+                        android:scaleType="fitCenter"
+                        app:srcCompat="@drawable/item_map_to" />
 
-                <ImageButton
-                    android:id="@+id/timestamp_map_button"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginRight="10dp"
-                    android:layout_weight="1"
-                    android:adjustViewBounds="true"
-                    android:background="#00000000"
-                    android:scaleType="fitCenter"
-                    app:srcCompat="@drawable/item_remove" />
+                    <ImageButton
+                        android:id="@+id/timestamp_edit_note"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="10dp"
+                        android:adjustViewBounds="true"
+                        android:background="#00000000"
+                        android:clickable="true"
+                        android:padding="4dp"
+                        android:scaleType="fitCenter"
+                        app:srcCompat="@drawable/item_edit_note" />
 
+                    <ImageButton
+                        android:id="@+id/timestamp_category_change"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="10dp"
+                        android:adjustViewBounds="true"
+                        android:background="#00000000"
+                        android:clickable="true"
+                        android:padding="4dp"
+                        android:scaleType="fitCenter"
+                        app:srcCompat="@drawable/item_category_change" />
+
+                    <ImageButton
+                        android:id="@+id/timestamp_remove"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="10dp"
+                        android:adjustViewBounds="true"
+                        android:background="#00000000"
+                        android:clickable="true"
+                        android:padding="4dp"
+                        android:scaleType="fitCenter"
+                        app:srcCompat="@drawable/item_remove" />
+
+                </LinearLayout>
             </LinearLayout>
-        </LinearLayout>
-    </HorizontalScrollView>
+        </HorizontalScrollView>
+    </android.support.v7.widget.CardView>
 
 </RelativeLayout>
