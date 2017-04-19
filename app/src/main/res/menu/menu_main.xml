@@ -1,7 +1,5 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.sardox.timestamper.MainActivity">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/checkable_menu_auto_note1"
         android:checkable="true"
@@ -46,13 +44,5 @@
         android:orderInCategory="160"
         android:title="@string/action_category_delete"
         app:showAsAction="never" />
-
-
-
-
-
-
-
-
 
 </menu>

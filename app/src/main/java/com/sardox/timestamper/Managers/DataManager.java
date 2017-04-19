@@ -11,6 +11,7 @@ import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.objects.Timestamp;
 import com.sardox.timestamper.types.JetTimestamp;
 import com.sardox.timestamper.types.PhysicalLocation;
+import com.sardox.timestamper.utils.TimestampIcon;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -89,9 +90,10 @@ public class DataManager {
 
     private List<Category> sampleCategories() {
         List<Category> sample = new ArrayList<>();
-        sample.add(new Category("Default", 0));
-        sample.add(new Category("Sport", 1));
-        sample.add(new Category("Baby", 2));
+        sample.add(new Category("Default", 0, 0));
+        sample.add(new Category("Baby", 1, 1));
+        sample.add(new Category("Sport", 2, 2));
+        sample.add(new Category("Home", 3, 3));
         return sample;
     }
 }

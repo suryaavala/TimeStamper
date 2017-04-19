@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
+    <item
+        android:id="@+id/recycler_menu_edit_note"
+        android:orderInCategory="100"
+        android:title="Edit note"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/recycler_menu_edit_time"
+        android:orderInCategory="100"
+        android:title="Edit time"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/recycler_menu_edit_date"
+        android:orderInCategory="100"
+        android:title="Edit date"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/recycler_menu_move"
+        android:orderInCategory="100"
+        android:title="Change category"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/recycler_menu_map_to"
+        android:orderInCategory="100"
+        android:title="Show on map"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/recycler_menu_remove"
+        android:orderInCategory="100"
+        android:title="Remove"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/recycler_menu_share"
+        android:orderInCategory="100"
+        android:title="Share"
+        app:showAsAction="never" />
+</menu>

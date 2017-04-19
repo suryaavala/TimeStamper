@@ -11,6 +11,8 @@
     <color name="category_selected">#fe3f61</color>
    // <color name="category_deselected">#424242</color>
 
+    <color name="selectedIcon">#E0E0E0</color>
+
     <color name="textColorPrimary">#ffffff</color>
     <color name="textColorSecondary">#ffffff</color>
 

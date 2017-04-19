@@ -1,14 +1,19 @@
 package com.sardox.timestamper.recyclerview;
 
 import android.animation.ObjectAnimator;
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Rect;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.animation.FastOutLinearInInterpolator;
 import android.support.v7.util.SortedList;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,12 +28,15 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.sardox.timestamper.PickerFragments.DatePickerFragment;
+import com.sardox.timestamper.PickerFragments.TimePickerFragment;
 import com.sardox.timestamper.R;
 import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.objects.Timestamp;
 import com.sardox.timestamper.types.JetTimestamp;
 import com.sardox.timestamper.types.JetTimestampFormat;
 import com.sardox.timestamper.utils.AppSettings;
+import com.sardox.timestamper.utils.TimestampIcon;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -42,22 +50,23 @@ import java.util.TimeZone;
 public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder> {
 
     private SortedList<Timestamp> sortedTimeStamps; // filteredTimestamps
-    private final Comparator<Timestamp> mComparator;
     private List<Category> categories;
     private DisplayMetrics displayMetrics;
     private AppSettings appSettings;
-    private int aaa=0;
+    private List<TimestampIcon> icons;
+    private Context context;
 
-    public MyRecyclerViewAdapter(final Comparator<Timestamp> mComparator, List<Category> categories, DisplayMetrics displayMetrics) {
+    public MyRecyclerViewAdapter(List<Category> categories, DisplayMetrics displayMetrics, List<TimestampIcon> icons, Context context) {
 
-        this.mComparator = mComparator;
+        this.context = context;
         this.categories = categories;
         this.displayMetrics = displayMetrics;
+        this.icons = icons;
 
         sortedTimeStamps = new SortedList<>(Timestamp.class, new SortedList.Callback<Timestamp>() {
             @Override
             public int compare(Timestamp o1, Timestamp o2) {
-                return mComparator.compare(o1, o2);
+                return TIMESTAMP_COMPARATOR_NEW_TOP.compare(o1, o2);
             }
 
             @Override
@@ -116,7 +125,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
         TimeZone localTZ = calendar.getTimeZone();
 
         calendar.setTimeInMillis(timestamp.getTimestamp().toMilliseconds());
-        String  format = "hh:mm:ss.SSS a";
+        String format = "hh:mm:ss.SSS a";
 
         SimpleDateFormat sdf = new SimpleDateFormat(format);
         sdf.setTimeZone(localTZ);
@@ -131,87 +140,12 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
         String EEE = sdfWeekDay.format(calendar.getTime());
 
         holder.recycler_timestamp_day.setText(dMMM);
-        holder.recycler_timestamp_category.setText(categories.get(timestamp.getCategoryId()).getName());
+
+        holder.recycler_timestamp_category.setImageDrawable(ContextCompat.getDrawable(context, icons.get(categories.get(timestamp.getCategoryId()).getIcon_id()).getDrawable_id()));
         holder.recycler_timestamp_note.setText(timestamp.getNote());
         holder.recycler_timestamp_time.setText(hhmmss);
         holder.recycler_timestamp_weekday.setText(EEE);
 
-        Log.e("stamper", " holder.remove.getMeasuredWidth: " +     holder.remove.getMeasuredWidth());
-
-
-
-        holder.timestamp_horizontall_scrollview.getViewTreeObserver().addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
-            @Override
-            public void onScrollChanged() {
-
-                final int button_size = holder.remove.getWidth();
-                final int button_padding = displayMetrics.densityDpi * 10; // 10dp is left margin set in layout
-                final int overall_button_size = button_size + button_padding;
-
-              int current_scroll_x= holder.timestamp_horizontall_scrollview.getScrollX();
-//                if (current_scroll_x!=0) {
-//                    if (current_scroll_x>aaa){
-//                        //keeps scrolling right
-//
-//                    } else {
-//                        // scrolling left
-//
-//                    }
-//                    aaa=current_scroll_x;
-//                }
-//
-                Rect scrollBounds = new Rect();
-                holder.timestamp_horizontall_scrollview.getHitRect(scrollBounds);
-
-                if (holder.map_to.getLocalVisibleRect(scrollBounds) && current_scroll_x<140) {
-                    ObjectAnimator animY = ObjectAnimator.ofFloat(holder.map_to, "translationY", -100f, 0f);
-                    animY.setDuration(200);//1sec
-                    animY.setInterpolator(new AccelerateInterpolator());
-                    animY.setRepeatCount(0);
-                    animY.start();
-                    // Any portion of the imageView, even a single pixel, is within the visible window
-                }
-
-                if (holder.edit_note.getLocalVisibleRect(scrollBounds)&& current_scroll_x<290) {
-                    ObjectAnimator animY = ObjectAnimator.ofFloat(holder.edit_note, "translationY", -100f, 0f);
-                    animY.setDuration(200);//1sec
-                    animY.setInterpolator(new AccelerateInterpolator());
-                    animY.setRepeatCount(0);
-                    animY.start();
-                    // Any portion of the imageView, even a single pixel, is within the visible window
-                }
-
-                if (holder.change_category.getLocalVisibleRect(scrollBounds)&& current_scroll_x<450) {
-                    ObjectAnimator animY = ObjectAnimator.ofFloat(holder.change_category, "translationY", -100f, 0f);
-                    animY.setDuration(200);//1sec
-                    animY.setInterpolator(new AccelerateInterpolator());
-                    animY.setRepeatCount(0);
-                    animY.start();
-                    // Any portion of the imageView, even a single pixel, is within the visible window
-                }
-
-
-                if (holder.remove.getLocalVisibleRect(scrollBounds)&& current_scroll_x<140) {
-                    ObjectAnimator animY = ObjectAnimator.ofFloat(holder.remove, "translationY", -100f, 0f);
-                    animY.setDuration(200);//1sec
-                    animY.setInterpolator(new AccelerateInterpolator());
-                    animY.setRepeatCount(0);
-                    animY.start();
-                    // Any portion of the imageView, even a single pixel, is within the visible window
-                }
-
-
-                Log.e("stamper", "holder.remove.visible: " +     holder.remove.isShown());
-
-//                Log.e("stamper", "holder.remove.getWidth: " +     holder.remove.getWidth());
-//                Log.e("stamper", "holder.edit_note.getX: " +     holder.edit_note.getScrollX()
-//                Log.e("stamper", "holder.remove.getX: " +     holder.remove.getX());
-//                Log.e("stamper", "onScrollChanged: " +  holder.timestamp_horizontall_scrollview.getScrollX());
-
-
-                //if (holder.card_horizontall_scrollview.getScrollX()>0) holder.card_arrow.setVisibility(View.GONE); else holder.card_arrow.setVisibility(View.VISIBLE);
-            }
-        });
     }
 
 
@@ -248,126 +182,111 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
         this.appSettings = appSettings;
     }
 
-    public class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener, View.OnTouchListener {
+    public class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
 
-        private TextView recycler_timestamp_category, recycler_timestamp_weekday, recycler_timestamp_day, recycler_timestamp_note, recycler_timestamp_time;
+        private TextView recycler_timestamp_weekday, recycler_timestamp_day, recycler_timestamp_note, recycler_timestamp_time, recycler_timestamp_button_menu;
         // private ImageButton
         private LinearLayout left_container;
-        private ImageButton edit_note, map_to, change_category, remove;
-        private HorizontalScrollView timestamp_horizontall_scrollview;
+        private ImageView recycler_timestamp_category;
 
         public MyViewHolder(View itemView) {
             super(itemView);
-            timestamp_horizontall_scrollview = (HorizontalScrollView) itemView.findViewById(R.id.timestamp_horizontall_scrollview);
 
-            recycler_timestamp_category = (TextView) itemView.findViewById(R.id.recycler_timestamp_category);
+
+            recycler_timestamp_category = (ImageView) itemView.findViewById(R.id.recycler_timestamp_category);
             recycler_timestamp_day = (TextView) itemView.findViewById(R.id.recycler_timestamp_day);
             recycler_timestamp_note = (TextView) itemView.findViewById(R.id.recycler_timestamp_note);
             recycler_timestamp_time = (TextView) itemView.findViewById(R.id.recycler_timestamp_time);
             //   mGPSpinButton = (ImageButton) itemView.findViewById(R.id.r);
             recycler_timestamp_weekday = (TextView) itemView.findViewById(R.id.recycler_timestamp_weekday);
+            recycler_timestamp_button_menu = (TextView) itemView.findViewById(R.id.recycler_timestamp_button_menu);
             left_container = (LinearLayout) itemView.findViewById(R.id.left_container);
 
-            edit_note = (ImageButton) itemView.findViewById(R.id.timestamp_edit_note);
-            map_to = (ImageButton) itemView.findViewById(R.id.timestamp_map_to);
-            change_category = (ImageButton) itemView.findViewById(R.id.timestamp_category_change);
-            remove = (ImageButton) itemView.findViewById(R.id.timestamp_remove);
-
-           // remove.setOnClickListener(this);
-
-            remove.setOnTouchListener(this);
-            map_to.setOnClickListener(this);
-            change_category.setOnClickListener(this);
-            edit_note.setOnClickListener(this);
-
-//            mNameTextView.setOnClickListener(this);
-//            mNameTextView.setOnLongClickListener(this);
-//            mCategoryTextView.setOnClickListener(this);
-//            mGPSpinButton.setOnClickListener(this);
-//            mSubtitleTextView.setOnClickListener(this);
+            recycler_timestamp_button_menu.setOnClickListener(this);
 
         }
 
-        private void animate_me(View view){
-            ObjectAnimator animY = ObjectAnimator.ofFloat(view, "translationY", -100f, 0f);
-            animY.setDuration(700);//1sec
-            animY.setInterpolator(new AccelerateInterpolator());
-            animY.setRepeatCount(0);
-            animY.start();
-        }
-        @Override
-        public boolean onLongClick(View v) {
+
+
 //            if (v.getId() == mNameTextView.getId()) {
-//
 //                DatePickerFragment.time = mStampsList.get(getAdapterPosition()).getTime();
 //                TimePickerFragment.pos = getAdapterPosition();
 //                DatePickerFragment.fragmentmanager = fragmentmanager;
 //                DialogFragment newFragment = new DatePickerFragment();
 //                newFragment.show(fragmentmanager, "Change the date");
 //            }
-            return false;
-        }
 
         @Override
         public void onClick(View v) {
-           // int a = getAdapterPosition();
+            // int a = getAdapterPosition();
 
-            switch (v.getId()){
-                case R.id.timestamp_remove: {
-
-                    break;
-                }
-                case R.id.timestamp_edit_note: {
-
-                    break;
-                }
-                case R.id.timestamp_map_to: {
-
-                    break;
-                }
-                case R.id.timestamp_category_change: {
-
+            switch (v.getId()) {
+                case R.id.recycler_timestamp_button_menu: {
+                    show_popup(v);
                     break;
                 }
             }
-
-//            if (v.getId() == mNameTextView.getId() || v.getId() == mSubtitleTextView.getId()) {
-//
-//                showDialog(v, getAdapterPosition()); // input dialog -- for a note
-//
-//            } else if (v.getId() == mGPSpinButton.getId()) { //open google maps
-//
-//            } else if (v.getId() == mCategoryTextView.getId()) {  // spinner dialog -- change items category
-//
-//                showSpinner(v, getAdapterPosition());
-//
-//            } else if (v.getId() == mSubtitleTextView.getId()) {  // input dialog -- for a note - duplicate
-//
-//                showDialog(v, getAdapterPosition());
-//
-//            }
         }
 
 
-        private void showSpinner(View v, final int pos) {
-        } // spinner dialog -- change items category
+        private void show_DatePicker() {
+//                DatePickerFragment.time = mStampsList.get(getAdapterPosition()).getTime();
+//                TimePickerFragment.pos = getAdapterPosition();
+//                DatePickerFragment.fragmentmanager = fragmentmanager;
+//                DialogFragment newFragment = new DatePickerFragment();
+//                newFragment.show(fragmentmanager, "Change the date");
+        }
 
+
+          private void showSpinner(View v, final int pos) {
+        } // spinner dialog -- change items category
+        
 
         public void showDialog(View v, final int pos) {
         }  // input dialog -- for a note
 
-        @Override
-        public boolean onTouch(View view, MotionEvent motionEvent) {
-//            ImageButton imageButton = (ImageButton) view;
-//            switch (motionEvent.getAction()) {
-//                case MotionEvent.ACTION_DOWN:
-//                    imageButton.setColorFilter(Color.argb(255, 255, 255, 255)); // White Tint
-//                    return true; // if you want to handle the touch event
-//                case MotionEvent.ACTION_UP:
-//                    imageButton.clearColorFilter(); // White Tint
-//                    return true; // if you want to handle the touch event
-//            }
-            return false;
-        }
     }
+
+    private void show_popup(View v) {
+        PopupMenu popup = new PopupMenu(v.getContext(), v);
+        popup.inflate(R.menu.options_menu);
+        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.recycler_menu_edit_date:
+                        //handle menu1 click
+                        break;
+                    case R.id.recycler_menu_edit_note:
+                        //handle menu2 click
+                        break;
+                    case R.id.recycler_menu_edit_time:
+                        //handle menu3 click
+                        break;
+                    case R.id.recycler_menu_map_to:
+                        //handle menu3 click
+                        break;
+                    case R.id.recycler_menu_move:
+                        //handle menu3 click
+                        break;
+                    case R.id.recycler_menu_remove:
+                        //handle menu3 click
+                        break;
+                    case R.id.recycler_menu_share:
+                        //handle menu3 click
+                        break;
+                }
+                return false;
+            }
+        });
+        //displaying the popup
+        popup.show();
+
+    }
+    private static final Comparator<Timestamp> TIMESTAMP_COMPARATOR_NEW_TOP = new Comparator<Timestamp>() {
+        @Override
+        public int compare(Timestamp a, Timestamp b) {
+            return a.getTimestamp().compareTo(b.getTimestamp());
+        }
+    };
 }

@@ -2,6 +2,7 @@ package com.sardox.timestamper;
 
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -10,6 +11,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 
 import android.support.v7.widget.DefaultItemAnimator;
@@ -19,9 +21,11 @@ import android.support.v7.widget.Toolbar;
 
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 
 import android.view.MenuItem;
+import android.widget.EditText;
 import android.widget.Switch;
 
 import com.sardox.timestamper.Managers.DataManager;
@@ -30,8 +34,10 @@ import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.objects.Timestamp;
 import com.sardox.timestamper.recyclerview.MyRecyclerViewAdapter;
 import com.sardox.timestamper.recyclerview.MyRecyclerViewAdapterCategory;
+import com.sardox.timestamper.recyclerview.MyRecyclerViewIconPicker;
 import com.sardox.timestamper.utils.AppSettings;
 import com.sardox.timestamper.utils.Consumer;
+import com.sardox.timestamper.utils.TimestampIcon;
 import com.sardox.timestamper.utils.VerticalSpaceItemDecoration;
 
 import java.util.ArrayList;
@@ -48,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private TimeStampManager timeStampManager;
     private DataManager dataManager;
     private AppSettings appSettings;
-    //private int selectedCategory=0;
+
     private Consumer<Category> categoryUpdate;
     public RecyclerView recyclerViewTimestamps;
     public MyRecyclerViewAdapter adapter;
@@ -61,10 +67,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private List<Timestamp> unfilteredTimestamps;
     private List<Category> categories;
 
+    private List<TimestampIcon> icons;
+
     @Override
     protected void onResume() {
         super.onResume();
-       // loadData();
+        // loadData();
     }
 
     @Override
@@ -78,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
     }
+
 
     /*
     1. verify permissions
@@ -96,7 +105,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         dataManager = new DataManager(getApplicationContext());
         appSettings = dataManager.readSettings();
-     //   if (appSettings.isUseDark()) setTheme(R.style.AppThemeCustomMaterialDark); else setTheme(R.style.AppThemeCustom);
+
+        //   if (appSettings.isUseDark()) setTheme(R.style.AppThemeCustomMaterialDark); else setTheme(R.style.AppThemeCustom);
         setupDrawer(toolbar);
 
         String[] perms = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
@@ -126,7 +136,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @AfterPermissionGranted(RC_READWRITE)
     private void initApp() {
-
+        init_icons();
         unfilteredTimestamps = dataManager.readTimestamps();
         categories = dataManager.readCategories();
 
@@ -134,6 +144,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         timeStampManager = new TimeStampManager();
     }
 
+    private void init_icons() {
+        icons = new ArrayList<>();
+        icons.add(new TimestampIcon(R.drawable.category_default, "Default", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_baby, "Baby", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_sport, "Sport", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_home, "Home", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_love, "Favorite", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_pill, "Pills", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_sleep, "Sleep", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_car, "Car", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_food, "Food", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_map, "Map", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_phone, "Phone", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_timer, "Timer", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_wallet, "Money", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_weather, "Weather", icons.size()));
+    }
 
     private View setupDrawer(Toolbar toolbar) {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -173,14 +200,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return header;
     }
 
-    private static final Comparator<Timestamp> TIMESTAMP_COMPARATOR_NEW_TOP = new Comparator<Timestamp>() {
-        @Override
-        public int compare(Timestamp a, Timestamp b) {
-            return a.getTimestamp().compareTo(b.getTimestamp());
-        }
-    };
-
-
     private void initRecyclerView(List<Timestamp> unfilteredTimestamps, List<Category> categories) {
 
         categoryUpdate = new Consumer<Category>() {
@@ -210,7 +229,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
         recyclerViewTimestamps = (RecyclerView) findViewById(R.id.recyclerView);
-        adapter = new MyRecyclerViewAdapter(TIMESTAMP_COMPARATOR_NEW_TOP, categories, metrics);
+        adapter = new MyRecyclerViewAdapter(categories, metrics, icons, getApplicationContext());
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setReverseLayout(true);
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
@@ -224,9 +243,90 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    private void add_new_category_dialog(View v) {//new category dialog
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
+        View viewInflated = LayoutInflater.from(v.getContext()).inflate(R.layout.new_category, null, false);
+        final EditText input = (EditText) viewInflated.findViewById(R.id.input_cat);
+
+        final MyRecyclerViewIconPicker iconPicker = new MyRecyclerViewIconPicker(icons, new Consumer<TimestampIcon>() {
+            @Override
+            public void accept(TimestampIcon icon) {
+                input.setText(icon.getDescription());
+            }
+        }, getApplicationContext());
+        RecyclerView iconRecycler = (RecyclerView) viewInflated.findViewById(R.id.recyclerView_icon);
+        iconRecycler.setAdapter(iconPicker);
+        iconRecycler.setHasFixedSize(true);
+
+        LinearLayoutManager linearLayoutManagerCat = new LinearLayoutManager(this);
+        linearLayoutManagerCat.setOrientation(LinearLayoutManager.HORIZONTAL);
+        iconRecycler.setLayoutManager(linearLayoutManagerCat);
+
+        builder.setView(viewInflated);
+
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                int lastAdapterPosition = iconPicker.getLastSelected(); // which icon was selected
+                categories.add(new Category(input.getText().toString(), categories.size(), lastAdapterPosition));
+                iconPicker.destroy();
+                dialog.cancel();
+            }
+        });
+        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                iconPicker.destroy();
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+    }                        // input dialog --   add  new category
+
+    private void remove_category(View v) {      //category deletion dialog
+        AlertDialog.Builder b = new AlertDialog.Builder(v.getContext());
+        b.setTitle("Select a category you want to delete");
+        List<String> quickCategories = new ArrayList<>();//
+
+        for (int a = 1; a < categories.size(); a++) {
+            quickCategories.add(categories.get(a).getName());
+        }
+
+        b.setItems(quickCategories.toArray(new String[quickCategories.size()]), new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialog, int clickedPos) {
+                dialog.dismiss();
+                int categoryToRemove = categories.get(clickedPos + 1).getCategoryID();
+
+                // remove all timestamps  that belongs to this category
+                List<Timestamp> itemsToRemove = new ArrayList<>();
+                for (Timestamp timestamp : unfilteredTimestamps) {
+                    if (timestamp.getCategoryId() == categoryToRemove) itemsToRemove.add(timestamp);
+                }
+                unfilteredTimestamps.removeAll(itemsToRemove);
+
+                //remove category
+                categories.remove(clickedPos + 1);
+
+                adapterCategory.notifyItemRemoved(clickedPos + 1);
+
+                //switch to default category
+                lastSelectedCategory = Category.Default;
+                filterTimestamps(lastSelectedCategory);
+            }
+
+        });
+
+        b.show();
+
+    }                       // spinner dialog -- delete  a category
+
     private void filterTimestamps(Category selectedCategory) {
         adapter.removeAll();
-        if (selectedCategory.getCategoryID()==Category.Default.getCategoryID()) {
+        if (selectedCategory.getCategoryID() == Category.Default.getCategoryID()) {
             adapter.add(unfilteredTimestamps);
             return;
         }
@@ -238,74 +338,74 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         adapter.add(sortedTimestamps);
     }
 
+
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.checkable_menu_showMillis) {
-            appSettings.setShowMillis(!appSettings.isShowMillis());
-            ((Switch) item.getActionView()).toggle();
+        switch (id) {
+            case R.id.checkable_menu_showMillis: {
+                appSettings.setShowMillis(!appSettings.isShowMillis());
+                ((Switch) item.getActionView()).toggle();
+                return true;
+            }
+            case R.id.checkable_menu_use24hr: {
+                appSettings.setUse24hrFormat(!appSettings.isUse24hrFormat());
+                ((Switch) item.getActionView()).toggle();
+                return true;
+            }
 
-            return true;
-        }
-        if (id == R.id.checkable_menu_use24hr) {
-            appSettings.setUse24hrFormat(!appSettings.isUse24hrFormat());
-            ((Switch) item.getActionView()).toggle();
-            return true;
-        }
-
-        if (id == R.id.action_category_add) {
-            // showDialog(findViewById(R.id.recyclerViewCat));
-            return true;
-        }
-        if (id == R.id.action_category_delete) {
-            // showSpinner(findViewById(R.id.recyclerView));
-            return true;
-        }
-        if (id == R.id.action_export) {
-            // exportToCSV();
-            return true;
-        }
-
-//        if (id == R.id.checkable_menu_use_dark_theme) {
-//
+            case R.id.action_category_add: {
+                add_new_category_dialog(getCurrentFocus());
+                // add_new_category_dialog(findViewById(R.id.recyclerViewCat));
+                break;
+            }
+            case R.id.action_category_delete: {
+                remove_category(getCurrentFocus());
+                break;
+            }
+            case R.id.action_export: {
+                // exportToCSV();
+                break;
+            }
+//       case R.id.checkable_menu_use_dark_theme) {
 //            appSettings.setUseDark(!appSettings.isUseDark());
 //            ((Switch) item.getActionView()).toggle();
-//
 //            recreate();
 //            return true;
 //        }
+            case R.id.checkable_menu_auto_note: {
+                ((Switch) item.getActionView()).toggle();
+                appSettings.setShowNoteAddDialog(!appSettings.isShowNoteAddDialog());
+                return true;
+            }
 
-        if (id == R.id.checkable_menu_auto_note) {
-            ((Switch) item.getActionView()).toggle();
-            appSettings.setShowNoteAddDialog(!appSettings.isShowNoteAddDialog());
+            case R.id.checkable_menu_useGPS: {
+
+                appSettings.setUse_gps(!appSettings.isUse_gps());
+                ((Switch) item.getActionView()).toggle();
+                return true;
+            }
+        }
+            DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+            drawer.closeDrawer(GravityCompat.START);
             return true;
         }
-
-        if (id == R.id.checkable_menu_useGPS) {
-
-            appSettings.setUse_gps(!appSettings.isUse_gps());
-            ((Switch) item.getActionView()).toggle();
-            return true;
-        }
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
-    }
-
 
     public void saveData() {
         Log.v("stamper", "writing appSettings");
         dataManager.writeSettings(appSettings);
     }
 
+
     public void loadData() {
         //Log.v("stamper", "reading appSettings");
-       // appSettings = dataManager.readSettings();
-     //   applyAppSettings(appSettings);
+        // appSettings = dataManager.readSettings();
+        //   applyAppSettings(appSettings);
     }
+
+
 
 }

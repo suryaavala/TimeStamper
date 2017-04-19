@@ -1,12 +1,15 @@
 package com.sardox.timestamper.utils;
 
 
+import java.util.List;
+
 public class AppSettings {
 
     private boolean use24hrFormat = false;            //default values
     private boolean useDark = true;                   //default values
     private boolean showNoteAddDialog = false;        //default values
     private boolean showMillis = false;               //default values
+
 
     public AppSettings() {
     }

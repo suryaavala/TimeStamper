@@ -10,11 +10,6 @@
         android:layout_height="wrap_content"
         android:elevation="2dp">
 
-        <HorizontalScrollView
-            android:id="@+id/timestamp_horizontall_scrollview"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:scrollbars="none">
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -70,7 +65,7 @@
                             android:layout_below="@+id/recycler_timestamp_time"
                             android:text="my parking expires" />
 
-                        <TextView
+                        <ImageView
                             android:id="@+id/recycler_timestamp_category"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -79,71 +74,28 @@
                             android:layout_alignParentTop="false"
                             android:layout_alignTop="@+id/recycler_timestamp_day"
                             android:layout_centerVertical="true"
-                            android:layout_marginRight="30dp"
-                            android:gravity="center"
-                            android:text="Sport"
-                            android:textSize="16sp" />
+                            android:layout_marginRight="40dp"
+                            android:adjustViewBounds="true"
+                            android:gravity="center" />
+
+                        <TextView
+                            android:id="@+id/recycler_timestamp_button_menu"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentRight="true"
+                            android:layout_alignParentTop="false"
+                            android:layout_centerVertical="true"
+                            android:layout_marginRight="5dp"
+                            android:paddingLeft="@dimen/activity_horizontal_margin"
+                            android:paddingRight="10dp"
+                            android:text="&#8942;"
+                            android:textAppearance="?android:textAppearanceLarge"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
                     </RelativeLayout>
                 </LinearLayout>
 
-                <LinearLayout
-                    android:id="@+id/right_container"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_margin="10dp"
-                    android:orientation="horizontal">
-
-                    <ImageButton
-                        android:id="@+id/timestamp_map_to"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginRight="10dp"
-                        android:adjustViewBounds="true"
-                        android:background="#00000000"
-                        android:clickable="true"
-                        android:padding="4dp"
-                        android:scaleType="fitCenter"
-                        app:srcCompat="@drawable/item_map_to" />
-
-                    <ImageButton
-                        android:id="@+id/timestamp_edit_note"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginRight="10dp"
-                        android:adjustViewBounds="true"
-                        android:background="#00000000"
-                        android:clickable="true"
-                        android:padding="4dp"
-                        android:scaleType="fitCenter"
-                        app:srcCompat="@drawable/item_edit_note" />
-
-                    <ImageButton
-                        android:id="@+id/timestamp_category_change"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginRight="10dp"
-                        android:adjustViewBounds="true"
-                        android:background="#00000000"
-                        android:clickable="true"
-                        android:padding="4dp"
-                        android:scaleType="fitCenter"
-                        app:srcCompat="@drawable/item_category_change" />
-
-                    <ImageButton
-                        android:id="@+id/timestamp_remove"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginRight="10dp"
-                        android:adjustViewBounds="true"
-                        android:background="#00000000"
-                        android:clickable="true"
-                        android:padding="4dp"
-                        android:scaleType="fitCenter"
-                        app:srcCompat="@drawable/item_remove" />
-
-                </LinearLayout>
             </LinearLayout>
-        </HorizontalScrollView>
     </android.support.v7.widget.CardView>
 
 </RelativeLayout>
