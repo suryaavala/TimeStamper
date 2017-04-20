@@ -37,6 +37,7 @@
     <item
         android:id="@+id/recycler_menu_share"
         android:orderInCategory="100"
+        android:visible="false"
         android:title="Share"
         app:showAsAction="never" />
 </menu>

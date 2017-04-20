@@ -1,23 +1,23 @@
 package com.sardox.timestamper.objects;
 
 
-
+import com.sardox.timestamper.types.JetUUID;
 
 public class Category {
-    private String n;
-    private int c;
+    private String name;
+    private JetUUID identifier;
 
     public static final Category Default = new Category();
 
     public Category() {
-        this.n = "Default";
-        this.c = 0;
+        this.name = "Default";
+        this.identifier = JetUUID.Zero;
         this.icon_id=0;
     }
 
-    public Category(String name, int mCategoryID, int icon_id) {
-        this.n = name;
-        this.c = mCategoryID;
+    public Category(String name, JetUUID identifier, int icon_id) {
+        this.name = name;
+        this.identifier = identifier;
         this.icon_id = icon_id;
     }
 
@@ -29,19 +29,19 @@ public class Category {
     private int icon_id=0;
 
     public String getName() {
-        return n;
+        return name;
     }
 
     public void setName(String name) {
-        this.n = name;
+        this.name = name;
     }
 
-    public int getCategoryID() {
-        return c;
+    public JetUUID getCategoryID() {
+        return identifier;
     }
 
-    public void setCategoryID(int mCategoryID) {
-        this.c = mCategoryID;
+    public void setCategoryID(JetUUID identifier) {
+        this.identifier = identifier;
     }
 
 

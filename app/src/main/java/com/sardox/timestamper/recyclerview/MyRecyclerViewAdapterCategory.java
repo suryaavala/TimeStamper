@@ -3,12 +3,12 @@ package com.sardox.timestamper.recyclerview;
 import android.content.Context;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
 import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.R;
 import com.sardox.timestamper.utils.Consumer;
@@ -20,16 +20,21 @@ import java.util.List;
 public class MyRecyclerViewAdapterCategory extends RecyclerView.Adapter<MyRecyclerViewAdapterCategory.MyViewHolderCategory> {
 
     private List<Category> categories;
-    private Consumer<Category> selected_category;
- //   private Context context;
+    private Consumer<Category> category_changed_callback;
+    //   private Context context;
     private final int category_color_selected;
     private final int category_color_deselected;
-    private int selected_category_id=0;
 
-
-    public MyRecyclerViewAdapterCategory(List<Category> categories, Consumer<Category> selected_category, Context context) {
-     //   this.context = context;
+    public void setSelected_category(Category selected_category) {
         this.selected_category = selected_category;
+    }
+
+    private Category selected_category = Category.Default;
+
+
+    public MyRecyclerViewAdapterCategory(List<Category> categories, Consumer<Category> category_changed_callback, Context context) {
+        //   this.context = context;
+        this.category_changed_callback = category_changed_callback;
         this.categories = categories;
 
         category_color_selected = ContextCompat.getColor(context, R.color.category_selected);
@@ -50,7 +55,9 @@ public class MyRecyclerViewAdapterCategory extends RecyclerView.Adapter<MyRecycl
         Category category = categories.get(position);
 
         holder.mCategoryTextView.setText(category.getName());
-        if (position==selected_category_id)    holder.category_underline.setBackgroundColor(category_color_selected); else   holder.category_underline.setBackgroundColor(category_color_deselected);
+        if (selected_category.getCategoryID().equals(category.getCategoryID()))
+            holder.category_underline.setBackgroundColor(category_color_selected);
+        else holder.category_underline.setBackgroundColor(category_color_deselected);
     }
 
     @Override
@@ -74,8 +81,8 @@ public class MyRecyclerViewAdapterCategory extends RecyclerView.Adapter<MyRecycl
 
         @Override
         public void onClick(View v) {
-            selected_category.accept(categories.get(getAdapterPosition()));
-            selected_category_id = categories.get(getAdapterPosition()).getCategoryID();
+            selected_category = categories.get(getAdapterPosition());
+            category_changed_callback.accept(selected_category);
             notifyDataSetChanged();
         }
     }

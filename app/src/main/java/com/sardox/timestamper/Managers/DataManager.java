@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+import com.sardox.timestamper.types.JetDuration;
+import com.sardox.timestamper.types.JetUUID;
 import com.sardox.timestamper.utils.AppSettings;
 import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.objects.Timestamp;
@@ -14,6 +16,7 @@ import com.sardox.timestamper.types.PhysicalLocation;
 import com.sardox.timestamper.utils.TimestampIcon;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class DataManager {
@@ -27,14 +30,21 @@ public class DataManager {
 
     private SharedPreferences mPrefs;
 
-
     public DataManager(Context context) {
         mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+
     }
 
     public List<Timestamp> readTimestamps() {
         return sampleTimestamps();
     }
+
+    public HashMap<JetUUID, Timestamp> readTimestampsMap() {
+        HashMap<JetUUID, Timestamp> hashMap = new HashMap<>();
+        for (Timestamp timestamp : sampleTimestamps()) hashMap.put(timestamp.getIdentifier(),timestamp);
+        return hashMap;
+    }
+
 
     public void writeTimestamps() {
     }
@@ -79,21 +89,30 @@ public class DataManager {
         List<Timestamp> sample = new ArrayList<>();
         JetTimestamp now = JetTimestamp.now();
 
-        sample.add(new Timestamp(JetTimestamp.now(), PhysicalLocation.Default, 0, "Default 1"));
-        sample.add(new Timestamp(JetTimestamp.fromMilliseconds(now.toMilliseconds() + 1000 * 60 * 4), PhysicalLocation.Default, 0, "Default 2"));
-        sample.add(new Timestamp(JetTimestamp.fromMilliseconds(now.toMilliseconds() + 1000 * 60 * 7), PhysicalLocation.Default, 1, "Sport 3"));
-        sample.add(new Timestamp(JetTimestamp.fromMilliseconds(now.toMilliseconds() + 1000 * 60 * 8), PhysicalLocation.Default, 1, "Sport 5"));
-        sample.add(new Timestamp(JetTimestamp.fromMilliseconds(now.toMilliseconds() + 1000 * 60 * 6), PhysicalLocation.Default, 2, "Baby 5"));
-        sample.add(new Timestamp(JetTimestamp.fromMilliseconds(now.toMilliseconds() + 1000 * 60 * 10), PhysicalLocation.Default, 2, "Baby 6 "));
+        sample.add(new Timestamp(JetTimestamp.now(), PhysicalLocation.Default, categories().get(0), "real time timestamp", JetUUID.randomUUID()));
+        sample.add(new Timestamp(JetTimestamp.fromMilliseconds(now.toMilliseconds() - 1000 * 60 * 4), PhysicalLocation.Default, categories().get(0), "add a note", JetUUID.randomUUID()));
+        sample.add(new Timestamp(JetTimestamp.now().subtract(JetDuration.fromDays(5)),                PhysicalLocation.Default, categories().get(1), "add a note", JetUUID.randomUUID()));
+        sample.add(new Timestamp(JetTimestamp.fromMilliseconds(now.toMilliseconds() - 1000 * 60 * 7), PhysicalLocation.Default, categories().get(1), "add a note", JetUUID.randomUUID()));
+        sample.add(new Timestamp(JetTimestamp.fromMilliseconds(now.toMilliseconds() - 1000 * 60 * 8), PhysicalLocation.Default, categories().get(2), "add a note", JetUUID.randomUUID()));
+        sample.add(new Timestamp(JetTimestamp.fromMilliseconds(now.toMilliseconds() - 1000 * 60 * 10), PhysicalLocation.Default,categories().get(2), "add a note", JetUUID.randomUUID()));
         return sample;
     }
 
     private List<Category> sampleCategories() {
         List<Category> sample = new ArrayList<>();
-        sample.add(new Category("Default", 0, 0));
-        sample.add(new Category("Baby", 1, 1));
-        sample.add(new Category("Sport", 2, 2));
-        sample.add(new Category("Home", 3, 3));
+        sample.add(Category.Default);
+        sample.add(new Category("Baby", categories().get(1), 1));
+        sample.add(new Category("Sport", categories().get(2), 2));
+        sample.add(new Category("Home", categories().get(3), 3));
         return sample;
+    }
+
+    private  final static  List<JetUUID> categories(){
+        List<JetUUID> jetList = new ArrayList<>();
+        jetList.add(JetUUID.Zero);
+        jetList.add(JetUUID.fromString("1cefd5bc-ebc6-493b-9f4e-e23591d1d001"));
+        jetList.add(JetUUID.fromString("1cefd5bc-ebc6-493b-9f4e-e23591d1d002"));
+        jetList.add(JetUUID.fromString("1cefd5bc-ebc6-493b-9f4e-e23591d1d003"));
+        return  jetList;
     }
 }

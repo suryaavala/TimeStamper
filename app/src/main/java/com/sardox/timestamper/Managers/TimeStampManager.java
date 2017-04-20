@@ -4,6 +4,7 @@ package com.sardox.timestamper.Managers;
 import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.objects.Timestamp;
 import com.sardox.timestamper.types.JetTimestamp;
+import com.sardox.timestamper.types.JetUUID;
 import com.sardox.timestamper.types.PhysicalLocation;
 
 
@@ -15,17 +16,8 @@ public class TimeStampManager {
     }
 
     public Timestamp createTimestamp(Category category) {
-        return new Timestamp(JetTimestamp.now(), getLocation(), category.getCategoryID());
+        return new Timestamp(JetTimestamp.now(), getLocation(), category.getCategoryID(), JetUUID.randomUUID());
     }
-
-    public Timestamp createTimestamp(int categoryID) {
-        return new Timestamp(JetTimestamp.now(), getLocation(), categoryID);
-    }
-
-    public Timestamp createTimestamp(int categoryID, String note) {
-        return new Timestamp(JetTimestamp.now(), getLocation(), categoryID, note);
-    }
-
 
     private PhysicalLocation getLocation() {
         return PhysicalLocation.Default;

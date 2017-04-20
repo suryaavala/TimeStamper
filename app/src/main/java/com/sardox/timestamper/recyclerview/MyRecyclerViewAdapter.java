@@ -1,12 +1,9 @@
 package com.sardox.timestamper.recyclerview;
 
-import android.animation.ObjectAnimator;
+
 import android.content.Context;
-import android.graphics.Color;
-import android.graphics.Rect;
-import android.support.v4.app.DialogFragment;
+
 import android.support.v4.content.ContextCompat;
-import android.support.v4.view.animation.FastOutLinearInInterpolator;
 import android.support.v7.util.SortedList;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
@@ -14,33 +11,30 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
+
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.BounceInterpolator;
-import android.view.animation.LinearInterpolator;
-import android.view.animation.OvershootInterpolator;
-import android.widget.HorizontalScrollView;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.sardox.timestamper.PickerFragments.DatePickerFragment;
-import com.sardox.timestamper.PickerFragments.TimePickerFragment;
+
 import com.sardox.timestamper.R;
 import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.objects.Timestamp;
 import com.sardox.timestamper.types.JetTimestamp;
 import com.sardox.timestamper.types.JetTimestampFormat;
+import com.sardox.timestamper.types.JetUUID;
+import com.sardox.timestamper.types.PhysicalLocation;
+import com.sardox.timestamper.utils.ActionType;
 import com.sardox.timestamper.utils.AppSettings;
+import com.sardox.timestamper.utils.Consumer;
 import com.sardox.timestamper.utils.TimestampIcon;
+import com.sardox.timestamper.utils.UserAction;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -55,9 +49,10 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     private AppSettings appSettings;
     private List<TimestampIcon> icons;
     private Context context;
+    private Consumer<UserAction> userActionCallback;
 
-    public MyRecyclerViewAdapter(List<Category> categories, DisplayMetrics displayMetrics, List<TimestampIcon> icons, Context context) {
-
+    public MyRecyclerViewAdapter(List<Category> categories, DisplayMetrics displayMetrics, List<TimestampIcon> icons, Context context, Consumer<UserAction> userActionCallback) {
+        this.userActionCallback = userActionCallback;
         this.context = context;
         this.categories = categories;
         this.displayMetrics = displayMetrics;
@@ -81,7 +76,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
             @Override
             public boolean areItemsTheSame(Timestamp item1, Timestamp item2) {
-                return false;
+                return item1.equals(item2);
             }
 
             @Override
@@ -91,6 +86,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
             @Override
             public void onRemoved(int position, int count) {
+                Log.v("stamper", "SortedList onRemoved callback");
                 notifyItemRangeRemoved(position, count);
             }
 
@@ -114,12 +110,10 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     public void onBindViewHolder(final MyRecyclerViewAdapter.MyViewHolder holder, int position) {
         final int w = displayMetrics.widthPixels;
         holder.left_container.setMinimumWidth(w);
-        Log.e("stamper", "setMinimumWidth: " + w);
-        Log.e("stamper", "left_container w: " + holder.left_container.getWidth());
+        //Log.e("stamper", "setMinimumWidth: " + w);
+        //Log.e("stamper", "left_container w: " + holder.left_container.getWidth());
 
         Timestamp timestamp = sortedTimeStamps.get(position);
-
-        JetTimestamp.now().toString(Locale.getDefault(), Calendar.getInstance().getTimeZone(), JetTimestampFormat.LongDateTime);
 
         Calendar calendar = Calendar.getInstance();
         TimeZone localTZ = calendar.getTimeZone();
@@ -141,11 +135,18 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
         holder.recycler_timestamp_day.setText(dMMM);
 
-        holder.recycler_timestamp_category.setImageDrawable(ContextCompat.getDrawable(context, icons.get(categories.get(timestamp.getCategoryId()).getIcon_id()).getDrawable_id()));
+        JetUUID category_id = timestamp.getCategoryId();
+
+        for (Category category : categories) {
+            if (category.getCategoryID().equals(category_id)) {
+                holder.recycler_timestamp_category.setImageDrawable(ContextCompat.getDrawable(context, icons.get(category.getIcon_id()).getDrawable_id()));
+                break;
+            }
+        }
+
         holder.recycler_timestamp_note.setText(timestamp.getNote());
         holder.recycler_timestamp_time.setText(hhmmss);
         holder.recycler_timestamp_weekday.setText(EEE);
-
     }
 
 
@@ -158,12 +159,17 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
         sortedTimeStamps.add(timestamp);
     }
 
-    public void remove(Timestamp timestamp) {
-        sortedTimeStamps.remove(timestamp);
-    }
-
     public void add(List<Timestamp> timestamps) {
         sortedTimeStamps.addAll(timestamps);
+    }
+
+    public void add(Collection<Timestamp> values) {
+        sortedTimeStamps.addAll(values);
+    }
+
+
+    public void remove(Timestamp timestamp) {
+        sortedTimeStamps.remove(timestamp);
     }
 
     public void remove(List<Timestamp> timestamps) {
@@ -182,98 +188,89 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
         this.appSettings = appSettings;
     }
 
-    public class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+    private int find_timestamp_index_by_id(JetUUID id) {
+        for (int i = 0; i < sortedTimeStamps.size(); i++) {
+            if (sortedTimeStamps.get(i).getIdentifier().equals(id)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public void updateTimestamp(Timestamp updatedTimestamp) {
+        for (int i = 0; i < sortedTimeStamps.size(); i++) {
+            if (sortedTimeStamps.get(i).getIdentifier().equals(updatedTimestamp.getIdentifier())) {
+                sortedTimeStamps.updateItemAt(i, updatedTimestamp);
+                return;
+            }
+        }
+    }
+
+    class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         private TextView recycler_timestamp_weekday, recycler_timestamp_day, recycler_timestamp_note, recycler_timestamp_time, recycler_timestamp_button_menu;
         // private ImageButton
         private LinearLayout left_container;
         private ImageView recycler_timestamp_category;
 
-        public MyViewHolder(View itemView) {
+        MyViewHolder(View itemView) {
             super(itemView);
-
 
             recycler_timestamp_category = (ImageView) itemView.findViewById(R.id.recycler_timestamp_category);
             recycler_timestamp_day = (TextView) itemView.findViewById(R.id.recycler_timestamp_day);
             recycler_timestamp_note = (TextView) itemView.findViewById(R.id.recycler_timestamp_note);
             recycler_timestamp_time = (TextView) itemView.findViewById(R.id.recycler_timestamp_time);
-            //   mGPSpinButton = (ImageButton) itemView.findViewById(R.id.r);
             recycler_timestamp_weekday = (TextView) itemView.findViewById(R.id.recycler_timestamp_weekday);
             recycler_timestamp_button_menu = (TextView) itemView.findViewById(R.id.recycler_timestamp_button_menu);
             left_container = (LinearLayout) itemView.findViewById(R.id.left_container);
 
             recycler_timestamp_button_menu.setOnClickListener(this);
-
         }
 
 
-
-//            if (v.getId() == mNameTextView.getId()) {
-//                DatePickerFragment.time = mStampsList.get(getAdapterPosition()).getTime();
-//                TimePickerFragment.pos = getAdapterPosition();
-//                DatePickerFragment.fragmentmanager = fragmentmanager;
-//                DialogFragment newFragment = new DatePickerFragment();
-//                newFragment.show(fragmentmanager, "Change the date");
-//            }
-
         @Override
         public void onClick(View v) {
-            // int a = getAdapterPosition();
-
             switch (v.getId()) {
                 case R.id.recycler_timestamp_button_menu: {
-                    show_popup(v);
+                    show_popup(v, sortedTimeStamps.get(getAdapterPosition()));
                     break;
                 }
             }
         }
-
-
-        private void show_DatePicker() {
-//                DatePickerFragment.time = mStampsList.get(getAdapterPosition()).getTime();
-//                TimePickerFragment.pos = getAdapterPosition();
-//                DatePickerFragment.fragmentmanager = fragmentmanager;
-//                DialogFragment newFragment = new DatePickerFragment();
-//                newFragment.show(fragmentmanager, "Change the date");
-        }
-
-
-          private void showSpinner(View v, final int pos) {
-        } // spinner dialog -- change items category
-        
-
-        public void showDialog(View v, final int pos) {
-        }  // input dialog -- for a note
-
     }
 
-    private void show_popup(View v) {
+    private void show_popup(View v, final Timestamp timestamp) {
         PopupMenu popup = new PopupMenu(v.getContext(), v);
         popup.inflate(R.menu.options_menu);
+        if (timestamp.getPhysicalLocation().equals(PhysicalLocation.Default)) {
+            MenuItem map_to_menu_item = popup.getMenu().findItem(R.id.recycler_menu_map_to);
+            if (map_to_menu_item != null) map_to_menu_item.setVisible(false);
+        }
+
         popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.recycler_menu_edit_date:
-                        //handle menu1 click
-                        break;
-                    case R.id.recycler_menu_edit_note:
-                        //handle menu2 click
+                        userActionCallback.accept(new UserAction(ActionType.EDIT_DATE, timestamp));
                         break;
                     case R.id.recycler_menu_edit_time:
-                        //handle menu3 click
+                        userActionCallback.accept(new UserAction(ActionType.EDIT_TIME, timestamp));
+                        break;
+                    case R.id.recycler_menu_edit_note:
+                        userActionCallback.accept(new UserAction(ActionType.EDIT_NOTE, timestamp));
                         break;
                     case R.id.recycler_menu_map_to:
-                        //handle menu3 click
+                        userActionCallback.accept(new UserAction(ActionType.MAP_TO, timestamp));
                         break;
                     case R.id.recycler_menu_move:
-                        //handle menu3 click
+                        userActionCallback.accept(new UserAction(ActionType.CHANGE_CATEGORY, timestamp));
                         break;
                     case R.id.recycler_menu_remove:
-                        //handle menu3 click
+                        userActionCallback.accept(new UserAction(ActionType.REMOVE, timestamp));
                         break;
                     case R.id.recycler_menu_share:
-                        //handle menu3 click
+                        userActionCallback.accept(new UserAction(ActionType.SHARE, timestamp));
                         break;
                 }
                 return false;
@@ -283,6 +280,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
         popup.show();
 
     }
+
     private static final Comparator<Timestamp> TIMESTAMP_COMPARATOR_NEW_TOP = new Comparator<Timestamp>() {
         @Override
         public int compare(Timestamp a, Timestamp b) {

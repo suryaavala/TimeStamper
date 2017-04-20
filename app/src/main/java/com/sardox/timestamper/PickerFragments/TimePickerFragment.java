@@ -8,6 +8,8 @@ import android.text.format.DateFormat;
 import android.util.Log;
 import android.widget.TimePicker;
 
+import com.sardox.timestamper.types.JetTimestamp;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -16,6 +18,10 @@ public  class TimePickerFragment extends DialogFragment
 
     public static long time;
     public static int pos;
+
+//    public static void setTime(JetTimestamp time) {
+//        TimePickerFragment.time = time;
+//    }
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
