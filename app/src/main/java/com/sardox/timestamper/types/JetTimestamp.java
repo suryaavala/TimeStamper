@@ -174,8 +174,22 @@ public final class JetTimestamp {
         return simpleDateFormat;
     }
 
+    private static SimpleDateFormat createISO8601TZ_Format(Locale locale, TimeZone timeZone) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", locale);
+        simpleDateFormat.setTimeZone(timeZone);
+        return simpleDateFormat;
+    }
+
     private static String toString(long milliseconds) {
         return iso8601Format.format(new Date(milliseconds));
+    }
+
+    private static String toStringTZ(long milliseconds, Locale locale, TimeZone tz) {
+        return  createISO8601TZ_Format(locale, tz).format(new Date(milliseconds));
+    }
+
+    public String toString(Locale locale, TimeZone timeZone) {
+          return toStringTZ(milliseconds, locale,timeZone);
     }
 
     @Override

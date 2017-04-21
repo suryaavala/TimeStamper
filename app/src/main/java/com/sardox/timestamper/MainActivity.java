@@ -63,6 +63,7 @@ import com.sardox.timestamper.utils.TimestampIcon;
 import com.sardox.timestamper.utils.UserAction;
 import com.sardox.timestamper.utils.VerticalSpaceItemDecoration;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -97,7 +98,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onResume() {
         super.onResume();
-        // loadData();
+        loadData();
+    }
+
+    /**
+     * while app is in background, user can create timestamps with widget. when user back in app, we need to read them and add them to recycler view
+     */
+    private void loadData() {
+        if (dataManager == null || unfilteredTimestamps == null) return;
+
+        HashMap<JetUUID, Timestamp> widgetTimestamps = dataManager.readWidgetTimestamps();
+        if (widgetTimestamps.size() == 0) return;
+
+        unfilteredTimestamps.putAll(widgetTimestamps);
+        filterTimestamps(lastSelectedCategory);
     }
 
     @Override
@@ -127,15 +141,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //   if (appSettings.isUseDark()) setTheme(R.style.AppThemeCustomMaterialDark); else setTheme(R.style.AppThemeCustom);
         setupDrawer(toolbar);
 
-        String[] perms = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
 
-        if (EasyPermissions.hasPermissions(this, perms)) {
-            initApp();
-        } else {
-            Log.v("srdx", " EasyPermissions not granted. Requesting Permissions...");
-            EasyPermissions.requestPermissions(this, "App needs to write to storage",
-                    RC_READWRITE, perms);
-        }
+        initApp();
+//        String[] perms = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
+//        if (EasyPermissions.hasPermissions(this, perms)) {
+//            initApp();
+//        } else {
+//            Log.v("srdx", " EasyPermissions not granted. Requesting Permissions...");
+//            EasyPermissions.requestPermissions(this, "App needs to write to storage",
+//                    RC_READWRITE, perms);
+//        }
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -158,6 +173,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     });
                 }
 
+                scrollTop();
                 Snackbar.make(view, getString(R.string.new_timestamp_created) + " in " + lastSelectedCategory.getName(), Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
@@ -175,6 +191,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         initRecyclerView();
         timeStampManager = new TimeStampManager();
+    }
+
+    private void emailCSV(File file) {
+        if (file==null) {
+            Log.wtf("srdx", "WTF Unexpected behavior. file is null in emailCSV");
+            return;
+        }
+        Uri u1 = Uri.fromFile(file);
+        Intent sendIntent = new Intent(Intent.ACTION_SEND);
+        sendIntent.putExtra(Intent.EXTRA_SUBJECT, "My timestamps");
+        sendIntent.putExtra(Intent.EXTRA_STREAM, u1);
+        sendIntent.setType("text/html");
+        startActivity(sendIntent);
     }
 
     private void init_icons() {
@@ -276,7 +305,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         };
 
-
         adapterCategory = new MyRecyclerViewAdapterCategory(categories, categoryUpdate, getApplicationContext());
 
         recyclerViewCategory = (RecyclerView) findViewById(R.id.recyclerViewCat);
@@ -305,7 +333,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         recyclerViewTimestamps.setItemAnimator(itemAnimator);
 
         filterTimestamps(Category.Default);
-
     }
 
     private void getGPSCoordinates(final Consumer<PhysicalLocation> consumer) {
@@ -348,11 +375,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }, GPS_REQUEST_TIMEOUT);
     }
 
-
     private void filterTimestamps(Category selectedCategory) {
+        if (lastSelectedCategory == null) {
+            Log.wtf("srdx", "WTF Unexpected behavior. selectedCategory is null in filterTimestamps");
+            lastSelectedCategory = Category.Default;
+        }
+
         adapter.removeAll();
         if (selectedCategory.equals(Category.Default)) {
             adapter.add(unfilteredTimestamps.values());
+            scrollTop();
             return;
         }
         List<Timestamp> sortedTimestamps = new ArrayList<>();
@@ -361,8 +393,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 sortedTimestamps.add(timestamp);
         }
         adapter.add(sortedTimestamps);
+        scrollTop();
     }
 
+    private void scrollTop() {
+        recyclerViewTimestamps.smoothScrollToPosition(adapter.getItemCount());
+    }
 
     public void saveData() {
         Log.v("srdx", "saving data...");
@@ -403,7 +439,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
             }
             case R.id.action_export: {
-                // exportToCSV();
+                exportTimestampsToCsv();
                 break;
             }
 //       case R.id.checkable_menu_use_dark_theme) {
@@ -430,6 +466,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
+    private void exportTimestampsToCsv() {
+        String[] storage_perms = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
+        if (EasyPermissions.hasPermissions(this, storage_perms)) {
+            emailCSV(dataManager.exportToCSV(lastSelectedCategory, unfilteredTimestamps.values()));
+        } else {
+            Log.v("srdx", " EasyPermissions not granted. Requesting Permissions...");
+            EasyPermissions.requestPermissions(this, "App needs to write to storage",
+                    RC_READWRITE, storage_perms);
+        }
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -441,7 +488,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         String uri = "geo:0,0?q=" + timestamp.getPhysicalLocation().toSimpleCommaString() + "(" + timestamp.getNote() + ")";
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
         try {
-           getApplicationContext().startActivity(intent);
+            getApplicationContext().startActivity(intent);
         } catch (ActivityNotFoundException ex) {
             Snackbar.make(recyclerViewTimestamps, "Please install a maps application", Snackbar.LENGTH_SHORT).show();
         }

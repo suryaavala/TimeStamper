@@ -63,4 +63,8 @@ public final class PhysicalLocation {
     public String toSimpleCommaString() {
         return latitude + "," + longitude;
     }
+
+    public String toCsvString() {
+        return "lat:" + latitude + ";long:" + longitude;
+    }
 }

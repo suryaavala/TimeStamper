@@ -5,25 +5,26 @@ import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationManager;
-import android.preference.PreferenceManager;
-import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
-
+import com.sardox.timestamper.Managers.DataManager;
 import com.sardox.timestamper.R;
+import com.sardox.timestamper.objects.Timestamp;
+import com.sardox.timestamper.types.JetTimestamp;
+import com.sardox.timestamper.types.JetUUID;
+import com.sardox.timestamper.types.PhysicalLocation;
 
-import java.util.Calendar;
+import java.util.HashMap;
 
 /**
  * Implementation of App Widget functionality.
  */
 public class InstantTimestampWidget extends AppWidgetProvider {
 
-    private static final String SYNC_CLICKED = "WidgetButtonClick";
+    private static final String ADD_TIMESTAMP = "AddNewTimestamp";
 
     private PendingIntent getPendingSelfIntent(Context context, String action) {
         Intent intent = new Intent(context, getClass());
@@ -32,23 +33,19 @@ public class InstantTimestampWidget extends AppWidgetProvider {
     }
 
 
-    void updateAppWidget(Context context, AppWidgetManager appWidgetManager,  //this runs first
-                         int appWidgetId) {
+    private void updateAppWidget(Context context, AppWidgetManager appWidgetManager,  //this runs first
+                                 int appWidgetId) {
 
-        CharSequence widgetText = context.getString(R.string.appwidget_text);
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget);
-    //    Log.e("aaa", " void updateAppWidget");
-        views.setOnClickPendingIntent(R.id.widget_button, getPendingSelfIntent(context, SYNC_CLICKED));
+        views.setOnClickPendingIntent(R.id.widget_button, getPendingSelfIntent(context, ADD_TIMESTAMP));
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
 
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
-        if (SYNC_CLICKED.equals(intent.getAction())) {
-           // Log.e("aaa", "SYNC_CLICKED, onReceive");
+        if (ADD_TIMESTAMP.equals(intent.getAction())) {
             saveNewStamp(context);
-
         }
     }
 
@@ -57,7 +54,6 @@ public class InstantTimestampWidget extends AppWidgetProvider {
         // There may be multiple widgets active, so update all of them
         for (int appWidgetId : appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId);
-            //Log.e("aaa", " void onUpdate");
         }
     }
 
@@ -72,57 +68,26 @@ public class InstantTimestampWidget extends AppWidgetProvider {
     }
 
     public void saveNewStamp(Context context) {
-        final String SHARED_PREFS_STAMPS = "stamps";
-        final String SHARED_PREFS_MAX_ID = "maxID";
-        final String SHARED_PREFS_USE_GPS = "gps";
+        DataManager dataManager = new DataManager(context);
+        AppSettings appSettings = dataManager.readSettings();
 
-        SharedPreferences mPrefs;
-        mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+        PhysicalLocation physicalLocation = PhysicalLocation.Default;
 
-        String stampsLoaded = "";
-        long time = 0;
-        int maxId = -1;
-
-        boolean useGPS=false;
-        String GPScoords="";
-
-        if (mPrefs.contains(SHARED_PREFS_STAMPS))
-            stampsLoaded = mPrefs.getString(SHARED_PREFS_STAMPS, "");
-        if (mPrefs.contains(SHARED_PREFS_USE_GPS)) useGPS = mPrefs.getBoolean(SHARED_PREFS_USE_GPS, false);
-        if (mPrefs.contains(SHARED_PREFS_MAX_ID)) maxId = mPrefs.getInt(SHARED_PREFS_MAX_ID, 0);
-
-
-        Log.e("aaa", " maxId:" + maxId);
-        //if (maxId >= 0) {
-
-
-      //  {
-            maxId++;
-            Calendar c = Calendar.getInstance();
-            time = c.getTimeInMillis();
-           // String newstamp = ",{\"mCategoryID\":0,\"mSubtitle\":\""+context.getString(R.string.add_from_widget)+"\",\"mgpsCoordinates\":\"\",\"stampID\":" + maxId  + ",\"time\":" + Long.toString(time) + "}";
-
-             if (useGPS) {
-                 final LocationManager mlocManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-                 final Location currentGeoLocation = mlocManager
-                         .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                 if (currentGeoLocation==null)  Toast.makeText(context, context.getString(R.string.null_location), Toast.LENGTH_LONG).show();
-                 if (currentGeoLocation!=null) GPScoords= String.valueOf(currentGeoLocation.getLatitude()) + "," +  String.valueOf(currentGeoLocation.getLongitude());
-
-            }
-
-        if (stampsLoaded.equals("") || stampsLoaded.equals("[]") ) {
-            String newstamp = "[{\"c\":0,\"s\":\"" + context.getString(R.string.add_from_widget) + "\",\"g\":\"" + GPScoords + "\",\"i\":" + maxId + ",\"t\":" + Long.toString(time) + "}]";
-            stampsLoaded = newstamp;
-        }  else {
-            String newstamp = ",{\"c\":0,\"s\":\"" + context.getString(R.string.add_from_widget) + "\",\"g\":\"" + GPScoords + "\",\"i\":" + maxId + ",\"t\":" + Long.toString(time) + "}";
-            stampsLoaded = new StringBuilder(stampsLoaded).insert(stampsLoaded.length() - 1, newstamp).toString();
+        if (appSettings.isUse_gps()) {
+            final LocationManager mlocManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+            final Location currentGeoLocation = mlocManager
+                    .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            if (currentGeoLocation == null)
+                Toast.makeText(context, context.getString(R.string.null_location), Toast.LENGTH_LONG).show();
+            if (currentGeoLocation != null)
+                physicalLocation = new PhysicalLocation(currentGeoLocation.getLatitude(), currentGeoLocation.getLongitude());
         }
 
+        HashMap<JetUUID, Timestamp> widgetTimestamps = dataManager.readWidgetTimestamps();
+        Timestamp timestamp = new Timestamp(JetTimestamp.now(), physicalLocation, JetUUID.Zero, "added from widget", JetUUID.randomUUID());
+        widgetTimestamps.put(timestamp.getIdentifier(), timestamp);
+        dataManager.writeWidgetTimestamps(widgetTimestamps);
 
-        mPrefs.edit().putString(SHARED_PREFS_STAMPS, stampsLoaded).commit();
-        mPrefs.edit().putInt(SHARED_PREFS_MAX_ID, maxId).commit();
         Toast.makeText(context, context.getString(R.string.new_timestamp_created), Toast.LENGTH_SHORT).show();
     }
 }
-

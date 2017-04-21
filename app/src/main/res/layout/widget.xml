@@ -5,12 +5,11 @@
     android:padding="@dimen/widget_margin">
 
     <ImageView
+        android:id="@+id/widget_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/widget_button"
-        android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
-        android:src="@drawable/image_view_widget"
+        android:layout_centerVertical="true"
         android:clickable="true"
-        android:contentDescription="xxxxxx" />
+        android:src="@drawable/image_view_widget" />
 </RelativeLayout>
