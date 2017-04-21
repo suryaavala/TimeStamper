@@ -44,6 +44,6 @@ public class JetDatePicker extends DatePickerDialog implements DatePickerDialog.
 
     @Override
     public void onDateSet(DatePicker datePicker, int i, int i1, int i2) {
-        Log.v("stamper", "onDateSet Picker");
+        Log.v("srdx", "onDateSet Picker");
     }
 }

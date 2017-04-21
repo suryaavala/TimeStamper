@@ -6,7 +6,7 @@
     <item
         android:id="@+id/recycler_menu_edit_note"
         android:orderInCategory="100"
-        android:title="Edit note"
+        android:title="Add a note"
         app:showAsAction="never" />
     <item
         android:id="@+id/recycler_menu_edit_time"

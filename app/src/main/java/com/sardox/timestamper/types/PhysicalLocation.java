@@ -59,4 +59,8 @@ public final class PhysicalLocation {
                 ", longitude=" + longitude +
                 '}';
     }
+
+    public String toSimpleCommaString() {
+        return latitude + "," + longitude;
+    }
 }

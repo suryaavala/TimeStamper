@@ -5,8 +5,17 @@ import android.Manifest;
 
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -46,6 +55,7 @@ import com.sardox.timestamper.recyclerview.MyRecyclerViewIconPicker;
 import com.sardox.timestamper.types.JetDuration;
 import com.sardox.timestamper.types.JetTimestamp;
 import com.sardox.timestamper.types.JetUUID;
+import com.sardox.timestamper.types.PhysicalLocation;
 import com.sardox.timestamper.types.TimestampFormat;
 import com.sardox.timestamper.utils.AppSettings;
 import com.sardox.timestamper.utils.Consumer;
@@ -122,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (EasyPermissions.hasPermissions(this, perms)) {
             initApp();
         } else {
-            Log.v("test", " EasyPermissions not granted. Requesting Permissions...");
+            Log.v("srdx", " EasyPermissions not granted. Requesting Permissions...");
             EasyPermissions.requestPermissions(this, "App needs to write to storage",
                     RC_READWRITE, perms);
         }
@@ -131,9 +141,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Timestamp newTimestamp = timeStampManager.createTimestamp(lastSelectedCategory);
+                final Timestamp newTimestamp = timeStampManager.createTimestamp(lastSelectedCategory);
                 unfilteredTimestamps.put(newTimestamp.getIdentifier(), newTimestamp); //adding timestamp to main list
                 adapter.add(newTimestamp);
+
+                if (appSettings.isShowNoteAddDialog()) edit_note(newTimestamp);
+                if (appSettings.isUse_gps()) {
+                    getGPSCoordinates(new Consumer<PhysicalLocation>() {
+                        @Override
+                        public void accept(PhysicalLocation physicalLocation) {
+                            Log.v("srdx", "setPhysicalLocation");
+                            if (physicalLocation == null)
+                                physicalLocation = PhysicalLocation.Default;
+                            newTimestamp.setPhysicalLocation(physicalLocation);
+                        }
+                    });
+                }
 
                 Snackbar.make(view, getString(R.string.new_timestamp_created) + " in " + lastSelectedCategory.getName(), Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
@@ -145,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @AfterPermissionGranted(RC_READWRITE)
     private void initApp() {
         init_icons();
-        unfilteredTimestamps = dataManager.readTimestampsMap();
+        unfilteredTimestamps = dataManager.readTimestamps();
         categories = dataManager.readCategories();
 
         setup_user_action_callbacks();
@@ -235,7 +258,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         change_category(timestamp);
                         break;
                     case MAP_TO:
-                        //show_timestamp_on_map(timestamp);
+                        show_timestamp_on_map(timestamp);
                         break;
                 }
             }
@@ -271,7 +294,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
         recyclerViewTimestamps = (RecyclerView) findViewById(R.id.recyclerView);
-        adapter = new MyRecyclerViewAdapter(categories, metrics, icons, getApplicationContext(), userActionCallback);
+        adapter = new MyRecyclerViewAdapter(categories, metrics, icons, getApplicationContext(), userActionCallback, appSettings);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setReverseLayout(true);
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
@@ -284,6 +307,47 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         filterTimestamps(Category.Default);
 
     }
+
+    private void getGPSCoordinates(final Consumer<PhysicalLocation> consumer) {
+        final int GPS_REQUEST_TIMEOUT = 1000 * 10;
+        Log.v("srdx", "getGPSCoordinates");
+        Looper myLooper = Looper.myLooper();
+
+        final LocationManager mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        final LocationListener locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                Log.v("srdx", "onLocationChanged: " + location.getLatitude());
+                mlocManager.removeUpdates(this);
+                PhysicalLocation physicalLocation = new PhysicalLocation(location.getLatitude(), location.getLongitude());
+                consumer.accept(physicalLocation);
+            }
+
+            @Override
+            public void onStatusChanged(String s, int i, Bundle bundle) {
+            }
+
+            @Override
+            public void onProviderEnabled(String s) {
+            }
+
+            @Override
+            public void onProviderDisabled(String s) {
+                Snackbar.make(recyclerViewTimestamps, "Looks like your GPS if Off", Snackbar.LENGTH_LONG).show();
+                mlocManager.removeUpdates(this);
+            }
+        };
+        mlocManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, locationListener, myLooper);
+
+        final Handler myHandler = new Handler(myLooper);
+        myHandler.postDelayed(new Runnable() {
+            public void run() {
+                mlocManager.removeUpdates(locationListener);
+                Snackbar.make(recyclerViewTimestamps, "Unable to get your location", Snackbar.LENGTH_LONG).show();
+            }
+        }, GPS_REQUEST_TIMEOUT);
+    }
+
 
     private void filterTimestamps(Category selectedCategory) {
         adapter.removeAll();
@@ -299,15 +363,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         adapter.add(sortedTimestamps);
     }
 
-    public void loadData() {
-        //Log.v("stamper", "reading appSettings");
-        // appSettings = dataManager.readSettings();
-        //   applyAppSettings(appSettings);
-    }
 
     public void saveData() {
-        Log.v("stamper", "writing appSettings");
+        Log.v("srdx", "saving data...");
         dataManager.writeSettings(appSettings);
+        dataManager.writeTimestamps(unfilteredTimestamps);
+        dataManager.writeCategories(categories);
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -320,21 +381,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.checkable_menu_showMillis: {
                 appSettings.setShowMillis(!appSettings.isShowMillis());
                 ((Switch) item.getActionView()).toggle();
+                adapter.notifyDataSetChanged();
                 return true;
             }
             case R.id.checkable_menu_use24hr: {
                 appSettings.setUse24hrFormat(!appSettings.isUse24hrFormat());
                 ((Switch) item.getActionView()).toggle();
+                adapter.notifyDataSetChanged();
                 return true;
             }
 
             case R.id.action_category_add: {
                 add_new_category_dialog(getCurrentFocus());
-                // add_new_category_dialog(findViewById(R.id.recyclerViewCat));
                 break;
             }
             case R.id.action_category_delete: {
-                remove_category(getCurrentFocus());
+                if (categories.size() == 1) {
+                    Snackbar.make(recyclerViewTimestamps, "No categories left..", Snackbar.LENGTH_SHORT).show();
+                    break;
+                } else remove_category(getCurrentFocus());
                 break;
             }
             case R.id.action_export: {
@@ -371,6 +436,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
     }
 
+    private void show_timestamp_on_map(Timestamp timestamp) {
+
+        String uri = "geo:0,0?q=" + timestamp.getPhysicalLocation().toSimpleCommaString() + "(" + timestamp.getNote() + ")";
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+        try {
+           getApplicationContext().startActivity(intent);
+        } catch (ActivityNotFoundException ex) {
+            Snackbar.make(recyclerViewTimestamps, "Please install a maps application", Snackbar.LENGTH_SHORT).show();
+        }
+    }
+
     private void pick_date(final Timestamp old_timestamp) {
         final int old_year = old_timestamp.format(TimestampFormat.Year);
         final int old_month = old_timestamp.format(TimestampFormat.Month);
@@ -379,7 +455,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         DatePickerDialog jetDatePicker = new DatePickerDialog(this, new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet(DatePicker datePicker, int new_year, int new_month, int new_day) {
-                Log.v("stamper", "date is picked: " + new_year + " " + (new_month + 1) + " " + new_day);
+                Log.v("srdx", "date is picked: " + new_year + " " + (new_month + 1) + " " + new_day);
 
                 final Calendar c = Calendar.getInstance();
                 c.setTimeInMillis(old_timestamp.getTimestamp().toMilliseconds());
@@ -404,12 +480,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         TimePickerDialog timePickerDialog = new JetTimePicker(this, new TimePickerDialog.OnTimeSetListener() {
             @Override
             public void onTimeSet(TimePicker timePicker, int new_hr, int new_min) {
-                Log.v("stamper", "time is picked: " + new_hr + ":" + new_min);
+                Log.v("srdx", "time is picked: " + new_hr + ":" + new_min);
                 final long new_dif_in_millis = (new_hr * 60 + new_min) * 60 * 1000;
                 long delta = new_dif_in_millis - old_dif_in_millis;
 
                 JetTimestamp updatedDate = old_timestamp.getTimestamp();
-                Log.v("stamper", "delta " + delta);
+                Log.v("srdx", "delta " + delta);
 
                 updatedDate = updatedDate.add(JetDuration.fromMilliseconds(delta));
 
@@ -468,7 +544,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 JetUUID move_to_category = categories.get(clickedPos).getCategoryID();
 
                 unfilteredTimestamps.get(old_timestamp.getIdentifier()).setCategory_identifier(move_to_category);
-                if (lastSelectedCategory.getCategoryID().equals(move_to_category)) adapter.updateTimestamp(old_timestamp); else adapter.remove(old_timestamp);
+                if (lastSelectedCategory.getCategoryID().equals(move_to_category))
+                    adapter.updateTimestamp(old_timestamp);
+                else adapter.remove(old_timestamp);
             }
 
         });

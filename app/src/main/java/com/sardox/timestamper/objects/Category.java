@@ -9,6 +9,14 @@ public class Category {
 
     public static final Category Default = new Category();
 
+    @Override
+    public int hashCode() {
+        int result = name.hashCode();
+        result = 31 * result + identifier.hashCode();
+        result = 31 * result + icon_id;
+        return result;
+    }
+
     public Category() {
         this.name = "Default";
         this.identifier = JetUUID.Zero;
@@ -21,10 +29,10 @@ public class Category {
         this.icon_id = icon_id;
     }
 
-
     public int getIcon_id() {
         return icon_id;
     }
+
 
     private int icon_id=0;
 
@@ -42,6 +50,19 @@ public class Category {
 
     public void setCategoryID(JetUUID identifier) {
         this.identifier = identifier;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Category category = (Category) o;
+
+        if (icon_id != category.icon_id) return false;
+        if (!name.equals(category.name)) return false;
+        return identifier.equals(category.identifier);
+
     }
 
 

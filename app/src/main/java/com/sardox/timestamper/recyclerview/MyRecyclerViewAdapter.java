@@ -51,9 +51,10 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     private Context context;
     private Consumer<UserAction> userActionCallback;
 
-    public MyRecyclerViewAdapter(List<Category> categories, DisplayMetrics displayMetrics, List<TimestampIcon> icons, Context context, Consumer<UserAction> userActionCallback) {
+    public MyRecyclerViewAdapter(List<Category> categories, DisplayMetrics displayMetrics, List<TimestampIcon> icons, Context context, Consumer<UserAction> userActionCallback, AppSettings appSettings) {
         this.userActionCallback = userActionCallback;
         this.context = context;
+        this.appSettings = appSettings;
         this.categories = categories;
         this.displayMetrics = displayMetrics;
         this.icons = icons;
@@ -86,7 +87,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
             @Override
             public void onRemoved(int position, int count) {
-                Log.v("stamper", "SortedList onRemoved callback");
+                Log.v("srdx", "SortedList onRemoved callback");
                 notifyItemRangeRemoved(position, count);
             }
 
@@ -117,9 +118,21 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
         Calendar calendar = Calendar.getInstance();
         TimeZone localTZ = calendar.getTimeZone();
-
         calendar.setTimeInMillis(timestamp.getTimestamp().toMilliseconds());
-        String format = "hh:mm:ss.SSS a";
+
+        String format;
+
+        if (appSettings.isUse24hrFormat()) {
+            if (appSettings.isShowMillis()) {
+                format = "HH:mm:ss.SSS";
+
+            } else format = "HH:mm:ss";
+        } else {
+            if (appSettings.isShowMillis()) {
+                format = "hh:mm:ss.SSS a";
+            } else format = "hh:mm:ss a";
+        }
+
 
         SimpleDateFormat sdf = new SimpleDateFormat(format);
         sdf.setTimeZone(localTZ);
@@ -128,6 +141,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
         SimpleDateFormat sdfDAY = new SimpleDateFormat("d MMM");
         sdfDAY.setTimeZone(localTZ);
         String dMMM = sdfDAY.format(calendar.getTime());
+
 
         SimpleDateFormat sdfWeekDay = new SimpleDateFormat("EEE");
         sdfWeekDay.setTimeZone(localTZ);
