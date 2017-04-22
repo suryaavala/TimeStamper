@@ -1,0 +1,38 @@
+{
+  "project_info": {
+    "project_number": "241525923723",
+    "project_id": "timesamper"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:241525923723:android:ca2f1c4f4033b948",
+        "android_client_info": {
+          "package_name": "com.sardox.timestamper"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBonigHM3hAND9R6qyFHJXJf8t1g1iq2yM"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 2,
+          "analytics_property": {
+            "tracking_id": "UA-86246118-2"
+          }
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

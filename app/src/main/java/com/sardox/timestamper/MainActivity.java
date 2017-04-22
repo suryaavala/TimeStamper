@@ -43,6 +43,8 @@ import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TimePicker;
 
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 import com.sardox.timestamper.Managers.DataManager;
 import com.sardox.timestamper.Managers.TimeStampManager;
 import com.sardox.timestamper.PickerFragments.JetTimePicker;
@@ -95,6 +97,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private List<TimestampIcon> icons;
 
+    private Tracker mTracker;
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -129,6 +133,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.e("stamper", "-----------NEW RUN--------------");
+        Application application = (Application) getApplication();
+        mTracker = application.getDefaultTracker();
+
+        mTracker.send(new HitBuilders.EventBuilder()
+                .setCategory("Action")
+                .setAction("App launch")
+                .build());
+
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
@@ -156,6 +168,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                trackAction("New timestamp");
                 final Timestamp newTimestamp = timeStampManager.createTimestamp(lastSelectedCategory);
                 unfilteredTimestamps.put(newTimestamp.getIdentifier(), newTimestamp); //adding timestamp to main list
                 adapter.add(newTimestamp);
@@ -336,9 +349,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void getGPSCoordinates(final Consumer<PhysicalLocation> consumer) {
+        trackAction("Location was recorded");
         final int GPS_REQUEST_TIMEOUT = 1000 * 10;
         Log.v("srdx", "getGPSCoordinates");
-        Looper myLooper = Looper.myLooper();
+        final Looper myLooper = Looper.myLooper();
 
         final LocationManager mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         final LocationListener locationListener = new LocationListener() {
@@ -348,6 +362,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 mlocManager.removeUpdates(this);
                 PhysicalLocation physicalLocation = new PhysicalLocation(location.getLatitude(), location.getLongitude());
                 consumer.accept(physicalLocation);
+                //TODO remove runnable
             }
 
             @Override
@@ -370,7 +385,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         myHandler.postDelayed(new Runnable() {
             public void run() {
                 mlocManager.removeUpdates(locationListener);
-                Snackbar.make(recyclerViewTimestamps, "Unable to get your location", Snackbar.LENGTH_LONG).show();
+              //  Snackbar.make(recyclerViewTimestamps, "Unable to get your location", Snackbar.LENGTH_LONG).show();
             }
         }, GPS_REQUEST_TIMEOUT);
     }
@@ -467,6 +482,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void exportTimestampsToCsv() {
+        trackAction("Export timestamps");
         String[] storage_perms = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
         if (EasyPermissions.hasPermissions(this, storage_perms)) {
             emailCSV(dataManager.exportToCSV(lastSelectedCategory, unfilteredTimestamps.values()));
@@ -484,6 +500,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void show_timestamp_on_map(Timestamp timestamp) {
+        mTracker.send(new HitBuilders.EventBuilder()
+                .setCategory("Action")
+                .setAction("Show timestamp on a Map")
+                .build());
 
         String uri = "geo:0,0?q=" + timestamp.getPhysicalLocation().toSimpleCommaString() + "(" + timestamp.getNote() + ")";
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
@@ -494,7 +514,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    private void trackAction(String text){
+        mTracker.send(new HitBuilders.EventBuilder()
+                .setCategory("Action")
+                .setAction(text)
+                .build());
+    }
+
     private void pick_date(final Timestamp old_timestamp) {
+        trackAction("Edit date");
         final int old_year = old_timestamp.format(TimestampFormat.Year);
         final int old_month = old_timestamp.format(TimestampFormat.Month);
         final int old_day = old_timestamp.format(TimestampFormat.Day);
@@ -519,6 +547,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void pick_time(final Timestamp old_timestamp) {
+        trackAction("Edit time");
         final int old_hrs24 = old_timestamp.format(TimestampFormat.HRS24);
         final int old_min = old_timestamp.format(TimestampFormat.MIN);
 
@@ -574,6 +603,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }  // input dialog -- for a note
 
     private void change_category(final Timestamp old_timestamp) {
+        trackAction("Edit category");
         View v = recyclerViewTimestamps;
         AlertDialog.Builder b = new AlertDialog.Builder(v.getContext());
         b.setTitle("Move to");
@@ -607,7 +637,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void add_new_category_dialog(View v) {//new category dialog
-
+        trackAction("Add new category");
         AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
         View viewInflated = LayoutInflater.from(v.getContext()).inflate(R.layout.new_category, null, false);
         final EditText input = (EditText) viewInflated.findViewById(R.id.input_cat);
@@ -618,6 +648,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 input.setText(icon.getDescription());
             }
         }, getApplicationContext());
+
         RecyclerView iconRecycler = (RecyclerView) viewInflated.findViewById(R.id.recyclerView_icon);
         iconRecycler.setAdapter(iconPicker);
         iconRecycler.setHasFixedSize(true);
@@ -634,6 +665,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 int lastAdapterPosition = iconPicker.getLastSelected(); // which icon was selected
                 Category newCategory = new Category(input.getText().toString(), JetUUID.randomUUID(), lastAdapterPosition);
                 categories.add(newCategory);
+
+                mTracker.send(new HitBuilders.EventBuilder()
+                        .setCategory("Action")
+                        .setAction("New category")
+                        .setLabel(newCategory.getName())
+                        .build());
+
+                   mTracker.send(new HitBuilders.EventBuilder()
+                        .setCategory("Action")
+                        .setAction("Icon picked")
+                        .setLabel(icons.get(lastAdapterPosition).getDescription())
+                        .build());
 
                 lastSelectedCategory = newCategory;
                 adapterCategory.setSelected_category(newCategory);
@@ -658,6 +701,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }                // input dialog --   add  new category
 
     private void remove_category(View v) {      //category deletion dialog
+        trackAction("Remove category");
         AlertDialog.Builder b = new AlertDialog.Builder(v.getContext());
         b.setTitle("Select a category you want to delete");
         List<String> quickCategories = new ArrayList<>();//
