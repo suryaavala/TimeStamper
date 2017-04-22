@@ -17,10 +17,10 @@ public class Category {
         return result;
     }
 
-    public Category() {
+    private Category() {
         this.name = "Default";
         this.identifier = JetUUID.Zero;
-        this.icon_id=0;
+        this.icon_id = 0;
     }
 
     public Category(String name, JetUUID identifier, int icon_id) {
@@ -34,7 +34,7 @@ public class Category {
     }
 
 
-    private int icon_id=0;
+    private int icon_id = 0;
 
     public String getName() {
         return name;
@@ -48,10 +48,6 @@ public class Category {
         return identifier;
     }
 
-    public void setCategoryID(JetUUID identifier) {
-        this.identifier = identifier;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -62,17 +58,6 @@ public class Category {
         if (icon_id != category.icon_id) return false;
         if (!name.equals(category.name)) return false;
         return identifier.equals(category.identifier);
-
     }
 
-
 }
-
-
-
-
-
-
-
-
-

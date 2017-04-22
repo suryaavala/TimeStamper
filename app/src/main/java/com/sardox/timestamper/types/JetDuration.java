@@ -42,7 +42,7 @@ public class JetDuration {
     }
 
     public static JetDuration fromString(String str) {
-        if(str == null || "".equals(str)) {
+        if (str == null || "".equals(str)) {
             return Zero;
         }
 

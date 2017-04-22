@@ -1,15 +1,12 @@
 package com.sardox.timestamper.utils;
 
-
-import java.util.List;
-
 public class AppSettings {
 
     private boolean use24hrFormat = false;            //default values
     private boolean useDark = true;                   //default values
     private boolean showNoteAddDialog = false;        //default values
+    private boolean use_gps = false;                  //default values
     private boolean showMillis = false;               //default values
-
 
     public AppSettings() {
     }
@@ -53,6 +50,4 @@ public class AppSettings {
     public void setUse_gps(boolean use_gps) {
         this.use_gps = use_gps;
     }
-
-    public boolean use_gps = false;                  //default values
 }

@@ -1,5 +1,6 @@
 package com.sardox.timestamper.utils;
 
+import android.Manifest;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
@@ -10,6 +11,9 @@ import android.location.LocationManager;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
+import com.sardox.timestamper.Application;
 import com.sardox.timestamper.Managers.DataManager;
 import com.sardox.timestamper.R;
 import com.sardox.timestamper.objects.Timestamp;
@@ -18,6 +22,8 @@ import com.sardox.timestamper.types.JetUUID;
 import com.sardox.timestamper.types.PhysicalLocation;
 
 import java.util.HashMap;
+
+import pub.devrel.easypermissions.EasyPermissions;
 
 /**
  * Implementation of App Widget functionality.
@@ -68,19 +74,27 @@ public class InstantTimestampWidget extends AppWidgetProvider {
     }
 
     public void saveNewStamp(Context context) {
+        Tracker mTracker = ((Application) context.getApplicationContext()).getDefaultTracker();
+        mTracker.send(new HitBuilders.EventBuilder()
+                .setCategory("Action")
+                .setAction("Widget click")
+                .build());
+
         DataManager dataManager = new DataManager(context);
         AppSettings appSettings = dataManager.readSettings();
 
         PhysicalLocation physicalLocation = PhysicalLocation.Default;
 
         if (appSettings.isUse_gps()) {
-            final LocationManager mlocManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-            final Location currentGeoLocation = mlocManager
-                    .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            if (currentGeoLocation == null)
-                Toast.makeText(context, context.getString(R.string.null_location), Toast.LENGTH_LONG).show();
-            if (currentGeoLocation != null)
-                physicalLocation = new PhysicalLocation(currentGeoLocation.getLatitude(), currentGeoLocation.getLongitude());
+            if (hasGPSpermission(context)) {
+                final LocationManager mlocManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+                final Location currentGeoLocation = mlocManager
+                        .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                if (currentGeoLocation == null)
+                    Toast.makeText(context, context.getString(R.string.null_location), Toast.LENGTH_SHORT).show();
+                else
+                    physicalLocation = new PhysicalLocation(currentGeoLocation.getLatitude(), currentGeoLocation.getLongitude());
+            }
         }
 
         HashMap<JetUUID, Timestamp> widgetTimestamps = dataManager.readWidgetTimestamps();
@@ -89,5 +103,10 @@ public class InstantTimestampWidget extends AppWidgetProvider {
         dataManager.writeWidgetTimestamps(widgetTimestamps);
 
         Toast.makeText(context, context.getString(R.string.new_timestamp_created), Toast.LENGTH_SHORT).show();
+    }
+
+    private boolean hasGPSpermission(Context context) {
+        String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION};
+        return (EasyPermissions.hasPermissions(context, perms));
     }
 }

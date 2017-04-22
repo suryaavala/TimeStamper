@@ -13,6 +13,5 @@ public enum JetTimestampFormat {
 
     ShortDateTime,
     MediumDateTime,
-    LongDateTime,
-    ;
+    LongDateTime,;
 }

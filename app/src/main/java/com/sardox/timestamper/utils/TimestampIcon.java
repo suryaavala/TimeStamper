@@ -1,7 +1,6 @@
 package com.sardox.timestamper.utils;
 
 
-
 public class TimestampIcon {
     private int drawable_id;
     private int icon_id;

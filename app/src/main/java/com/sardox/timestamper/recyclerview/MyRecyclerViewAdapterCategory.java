@@ -66,12 +66,12 @@ public class MyRecyclerViewAdapterCategory extends RecyclerView.Adapter<MyRecycl
     }
 
 
-    public class MyViewHolderCategory extends RecyclerView.ViewHolder implements View.OnClickListener {
+    class MyViewHolderCategory extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         private TextView mCategoryTextView;
         private LinearLayout category_underline;
 
-        public MyViewHolderCategory(View itemView) {
+        MyViewHolderCategory(View itemView) {
             super(itemView);
             mCategoryTextView = (TextView) itemView.findViewById(R.id.CategoryTextView);
             category_underline = (LinearLayout) itemView.findViewById(R.id.recycler_category_underline);

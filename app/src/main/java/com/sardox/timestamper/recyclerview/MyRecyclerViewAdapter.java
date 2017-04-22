@@ -22,8 +22,6 @@ import android.widget.TextView;
 import com.sardox.timestamper.R;
 import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.objects.Timestamp;
-import com.sardox.timestamper.types.JetTimestamp;
-import com.sardox.timestamper.types.JetTimestampFormat;
 import com.sardox.timestamper.types.JetUUID;
 import com.sardox.timestamper.types.PhysicalLocation;
 import com.sardox.timestamper.utils.ActionType;
@@ -37,7 +35,6 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.TimeZone;
 
 

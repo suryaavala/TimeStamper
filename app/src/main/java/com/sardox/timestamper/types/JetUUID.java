@@ -19,13 +19,13 @@ public final class JetUUID implements Serializable {
     }
 
     public static JetUUID fromUUID(UUID uuid) {
-        if(uuid == null)
+        if (uuid == null)
             return Zero;
         return new JetUUID(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits());
     }
 
     public static JetUUID fromString(String str) {
-        if(str == null || "".equals(str)) {
+        if (str == null || "".equals(str)) {
             return Zero;
         }
         return fromUUID(UUID.fromString(str));
@@ -51,7 +51,7 @@ public final class JetUUID implements Serializable {
     }
 
     public UUID toSqlUuid() {
-        if(isZero())
+        if (isZero())
             return null;
         return toUuid();
     }
@@ -87,7 +87,7 @@ public final class JetUUID implements Serializable {
     }
 
     public static JetUUID fromBytes(byte[] bytes) {
-        if(bytes == null) {
+        if (bytes == null) {
             return Zero;
         }
         ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);

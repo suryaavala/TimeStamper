@@ -21,7 +21,7 @@ public class Timestamp {
         this.physicalLocation = location;
         this.category_identifier = category_identifier;
         this.note = note;
-        this.identifier=identifier;
+        this.identifier = identifier;
     }
 
     public Timestamp(JetTimestamp now, PhysicalLocation location, JetUUID category_identifier, JetUUID identifier) {
@@ -29,7 +29,7 @@ public class Timestamp {
         this.physicalLocation = location;
         this.category_identifier = category_identifier;
         this.note = "";
-        this.identifier=identifier;
+        this.identifier = identifier;
     }
 
     public int format(TimestampFormat format) {

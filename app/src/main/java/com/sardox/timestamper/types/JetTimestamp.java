@@ -185,11 +185,11 @@ public final class JetTimestamp {
     }
 
     private static String toStringTZ(long milliseconds, Locale locale, TimeZone tz) {
-        return  createISO8601TZ_Format(locale, tz).format(new Date(milliseconds));
+        return createISO8601TZ_Format(locale, tz).format(new Date(milliseconds));
     }
 
     public String toString(Locale locale, TimeZone timeZone) {
-          return toStringTZ(milliseconds, locale,timeZone);
+        return toStringTZ(milliseconds, locale, timeZone);
     }
 
     @Override

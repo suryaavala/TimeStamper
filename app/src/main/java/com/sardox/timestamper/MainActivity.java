@@ -47,7 +47,6 @@ import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.sardox.timestamper.Managers.DataManager;
 import com.sardox.timestamper.Managers.TimeStampManager;
-import com.sardox.timestamper.PickerFragments.JetTimePicker;
 import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.objects.Timestamp;
 import com.sardox.timestamper.recyclerview.MyRecyclerViewAdapter;
@@ -100,9 +99,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private Tracker mTracker;
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        saveData();
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         loadData();
+    }
+
+    public void saveData() {
+        Log.v("srdx", "saving data...");
+        dataManager.writeSettings(appSettings);
+        dataManager.writeTimestamps(unfilteredTimestamps);
+        dataManager.writeCategories(categories);
     }
 
     /**
@@ -118,12 +130,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         filterTimestamps(lastSelectedCategory);
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        saveData();
-    }
-
     /*
     1. verify permissions
     2. check first start
@@ -133,13 +139,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.e("stamper", "-----------NEW RUN--------------");
+
         Application application = (Application) getApplication();
         mTracker = application.getDefaultTracker();
-
-        mTracker.send(new HitBuilders.EventBuilder()
-                .setCategory("Action")
-                .setAction("App launch")
-                .build());
+        this.mTracker.setScreenName("Main screen");
+        trackAction("App launch");
 
         super.onCreate(savedInstanceState);
 
@@ -150,19 +154,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         dataManager = new DataManager(getApplicationContext());
         appSettings = dataManager.readSettings();
 
-        //   if (appSettings.isUseDark()) setTheme(R.style.AppThemeCustomMaterialDark); else setTheme(R.style.AppThemeCustom);
+        //if (appSettings.isUseDark()) setTheme(R.style.AppThemeCustomMaterialDark); else setTheme(R.style.AppThemeCustom);
         setupDrawer(toolbar);
 
-
         initApp();
-//        String[] perms = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
-//        if (EasyPermissions.hasPermissions(this, perms)) {
-//            initApp();
-//        } else {
-//            Log.v("srdx", " EasyPermissions not granted. Requesting Permissions...");
-//            EasyPermissions.requestPermissions(this, "App needs to write to storage",
-//                    RC_READWRITE, perms);
-//        }
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -175,23 +170,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 if (appSettings.isShowNoteAddDialog()) edit_note(newTimestamp);
                 if (appSettings.isUse_gps()) {
-                    getGPSCoordinates(new Consumer<PhysicalLocation>() {
-                        @Override
-                        public void accept(PhysicalLocation physicalLocation) {
-                            Log.v("srdx", "setPhysicalLocation");
-                            if (physicalLocation == null)
-                                physicalLocation = PhysicalLocation.Default;
-                            newTimestamp.setPhysicalLocation(physicalLocation);
-                        }
-                    });
+                    if (hasGPSpermission()) {
+                        getGPSCoordinates(new Consumer<PhysicalLocation>() {
+                            @Override
+                            public void accept(PhysicalLocation physicalLocation) {
+                                Log.v("srdx", "setPhysicalLocation");
+                                if (physicalLocation == null)
+                                    physicalLocation = PhysicalLocation.Default;
+                                newTimestamp.setPhysicalLocation(physicalLocation);
+                            }
+                        });
+                    }
                 }
-
                 scrollTop();
                 Snackbar.make(view, getString(R.string.new_timestamp_created) + " in " + lastSelectedCategory.getName(), Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
         });
-
     }
 
     @AfterPermissionGranted(RC_READWRITE)
@@ -204,37 +199,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         initRecyclerView();
         timeStampManager = new TimeStampManager();
-    }
-
-    private void emailCSV(File file) {
-        if (file==null) {
-            Log.wtf("srdx", "WTF Unexpected behavior. file is null in emailCSV");
-            return;
-        }
-        Uri u1 = Uri.fromFile(file);
-        Intent sendIntent = new Intent(Intent.ACTION_SEND);
-        sendIntent.putExtra(Intent.EXTRA_SUBJECT, "My timestamps");
-        sendIntent.putExtra(Intent.EXTRA_STREAM, u1);
-        sendIntent.setType("text/html");
-        startActivity(sendIntent);
-    }
-
-    private void init_icons() {
-        icons = new ArrayList<>();
-        icons.add(new TimestampIcon(R.drawable.category_default, "Default", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_baby, "Baby", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_sport, "Sport", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_home, "Home", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_love, "Favorite", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_pill, "Pills", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_sleep, "Sleep", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_car, "Car", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_food, "Food", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_map, "Map", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_phone, "Phone", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_timer, "Timer", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_wallet, "Money", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_weather, "Weather", icons.size()));
     }
 
     private View setupDrawer(Toolbar toolbar) {
@@ -348,46 +312,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         filterTimestamps(Category.Default);
     }
 
-    private void getGPSCoordinates(final Consumer<PhysicalLocation> consumer) {
-        trackAction("Location was recorded");
-        final int GPS_REQUEST_TIMEOUT = 1000 * 10;
-        Log.v("srdx", "getGPSCoordinates");
-        final Looper myLooper = Looper.myLooper();
-
-        final LocationManager mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        final LocationListener locationListener = new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
-                Log.v("srdx", "onLocationChanged: " + location.getLatitude());
-                mlocManager.removeUpdates(this);
-                PhysicalLocation physicalLocation = new PhysicalLocation(location.getLatitude(), location.getLongitude());
-                consumer.accept(physicalLocation);
-                //TODO remove runnable
-            }
-
-            @Override
-            public void onStatusChanged(String s, int i, Bundle bundle) {
-            }
-
-            @Override
-            public void onProviderEnabled(String s) {
-            }
-
-            @Override
-            public void onProviderDisabled(String s) {
-                Snackbar.make(recyclerViewTimestamps, "Looks like your GPS if Off", Snackbar.LENGTH_LONG).show();
-                mlocManager.removeUpdates(this);
-            }
-        };
-        mlocManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, locationListener, myLooper);
-
-        final Handler myHandler = new Handler(myLooper);
-        myHandler.postDelayed(new Runnable() {
-            public void run() {
-                mlocManager.removeUpdates(locationListener);
-              //  Snackbar.make(recyclerViewTimestamps, "Unable to get your location", Snackbar.LENGTH_LONG).show();
-            }
-        }, GPS_REQUEST_TIMEOUT);
+    private void init_icons() {
+        icons = new ArrayList<>();
+        icons.add(new TimestampIcon(R.drawable.category_default, "Default", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_baby, "Baby", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_sport, "Sport", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_home, "Home", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_love, "Favorite", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_pill, "Pills", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_sleep, "Sleep", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_car, "Car", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_food, "Food", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_map, "Map", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_phone, "Phone", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_timer, "Timer", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_wallet, "Money", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_weather, "Weather", icons.size()));
     }
 
     private void filterTimestamps(Category selectedCategory) {
@@ -413,13 +353,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void scrollTop() {
         recyclerViewTimestamps.smoothScrollToPosition(adapter.getItemCount());
-    }
-
-    public void saveData() {
-        Log.v("srdx", "saving data...");
-        dataManager.writeSettings(appSettings);
-        dataManager.writeTimestamps(unfilteredTimestamps);
-        dataManager.writeCategories(categories);
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -481,45 +414,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    private void exportTimestampsToCsv() {
-        trackAction("Export timestamps");
-        String[] storage_perms = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
-        if (EasyPermissions.hasPermissions(this, storage_perms)) {
-            emailCSV(dataManager.exportToCSV(lastSelectedCategory, unfilteredTimestamps.values()));
-        } else {
-            Log.v("srdx", " EasyPermissions not granted. Requesting Permissions...");
-            EasyPermissions.requestPermissions(this, "App needs to write to storage",
-                    RC_READWRITE, storage_perms);
-        }
-    }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
     }
 
-    private void show_timestamp_on_map(Timestamp timestamp) {
-        mTracker.send(new HitBuilders.EventBuilder()
-                .setCategory("Action")
-                .setAction("Show timestamp on a Map")
-                .build());
-
-        String uri = "geo:0,0?q=" + timestamp.getPhysicalLocation().toSimpleCommaString() + "(" + timestamp.getNote() + ")";
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
-        try {
-            getApplicationContext().startActivity(intent);
-        } catch (ActivityNotFoundException ex) {
-            Snackbar.make(recyclerViewTimestamps, "Please install a maps application", Snackbar.LENGTH_SHORT).show();
-        }
-    }
-
-    private void trackAction(String text){
-        mTracker.send(new HitBuilders.EventBuilder()
-                .setCategory("Action")
-                .setAction(text)
-                .build());
-    }
+    //<Timestamp editing>
 
     private void pick_date(final Timestamp old_timestamp) {
         trackAction("Edit date");
@@ -553,7 +454,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         final long old_dif_in_millis = (old_hrs24 * 60 + old_min) * 60 * 1000;
 
-        TimePickerDialog timePickerDialog = new JetTimePicker(this, new TimePickerDialog.OnTimeSetListener() {
+        TimePickerDialog timePickerDialog = new TimePickerDialog(this, new TimePickerDialog.OnTimeSetListener() {
             @Override
             public void onTimeSet(TimePicker timePicker, int new_hr, int new_min) {
                 Log.v("srdx", "time is picked: " + new_hr + ":" + new_min);
@@ -621,7 +522,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 JetUUID move_to_category = categories.get(clickedPos).getCategoryID();
 
                 unfilteredTimestamps.get(old_timestamp.getIdentifier()).setCategory_identifier(move_to_category);
-                if (lastSelectedCategory.getCategoryID().equals(move_to_category))
+                if (lastSelectedCategory.getCategoryID().equals(move_to_category) || lastSelectedCategory.equals(Category.Default))
                     adapter.updateTimestamp(old_timestamp);
                 else adapter.remove(old_timestamp);
             }
@@ -635,6 +536,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         adapter.remove(timestamp);
         unfilteredTimestamps.remove(timestamp.getIdentifier());
     }
+
+    private void show_timestamp_on_map(Timestamp timestamp) {
+        trackAction("Open Map");
+
+        String uri = "geo:0,0?q=" + timestamp.getPhysicalLocation().toSimpleCommaString() + "(" + timestamp.getNote() + ")";
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+        try {
+            getApplicationContext().startActivity(intent);
+        } catch (ActivityNotFoundException ex) {
+            Snackbar.make(recyclerViewTimestamps, "Please install a maps application", Snackbar.LENGTH_SHORT).show();
+        }
+    }
+
+    //<Category editing>
 
     private void add_new_category_dialog(View v) {//new category dialog
         trackAction("Add new category");
@@ -672,7 +587,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         .setLabel(newCategory.getName())
                         .build());
 
-                   mTracker.send(new HitBuilders.EventBuilder()
+                mTracker.send(new HitBuilders.EventBuilder()
                         .setCategory("Action")
                         .setAction("Icon picked")
                         .setLabel(icons.get(lastAdapterPosition).getDescription())
@@ -744,4 +659,101 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         b.show();
 
     }                       // spinner dialog -- delete  a category
+
+    //<Utils>
+
+    private void trackAction(String text) {
+        mTracker.send(new HitBuilders.EventBuilder()
+                .setCategory("Action")
+                .setAction(text)
+                .build());
+    }
+
+    private void exportTimestampsToCsv() {
+        trackAction("Export timestamps");
+        String[] storage_perms = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
+        if (EasyPermissions.hasPermissions(this, storage_perms)) {
+            emailCSV(dataManager.exportToCSV(lastSelectedCategory, unfilteredTimestamps.values()));
+        } else {
+            Log.v("srdx", " EasyPermissions not granted. Requesting Permissions...");
+            EasyPermissions.requestPermissions(this, "App needs to write to storage",
+                    RC_READWRITE, storage_perms);
+        }
+    }
+
+    private void getGPSCoordinates(final Consumer<PhysicalLocation> consumer) {
+        trackAction("Location was recorded");
+        final int GPS_REQUEST_TIMEOUT = 1000 * 10;
+        Log.v("srdx", "getGPSCoordinates");
+        final Looper myLooper = Looper.myLooper();
+
+        final LocationManager mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        final Handler myHandler = new Handler(myLooper);
+        final LocationListener locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                Log.v("srdx", "onLocationChanged: " + location.getLatitude());
+                mlocManager.removeUpdates(this);
+                PhysicalLocation physicalLocation = new PhysicalLocation(location.getLatitude(), location.getLongitude());
+                consumer.accept(physicalLocation);
+                myHandler.removeCallbacksAndMessages(null);
+            }
+
+            @Override
+            public void onStatusChanged(String s, int i, Bundle bundle) {
+            }
+
+            @Override
+            public void onProviderEnabled(String s) {
+            }
+
+            @Override
+            public void onProviderDisabled(String s) {
+                Snackbar.make(recyclerViewTimestamps, "Looks like your GPS if Off", Snackbar.LENGTH_LONG).show();
+                mlocManager.removeUpdates(this);
+
+            }
+        };
+        mlocManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, locationListener, myLooper);
+
+
+        myHandler.postDelayed(new Runnable() {
+            public void run() {
+                mlocManager.removeUpdates(locationListener);
+                Location location = mlocManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                if (location != null)
+                    consumer.accept(new PhysicalLocation(location.getLatitude(), location.getLongitude()));
+                else
+                    Snackbar.make(recyclerViewTimestamps, "Unable to get your location", Snackbar.LENGTH_LONG).show();
+            }
+        }, GPS_REQUEST_TIMEOUT);
+    }
+
+    private boolean hasGPSpermission() {
+        final int RC_LOCATION = 9863;
+
+        String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION};
+
+        if (EasyPermissions.hasPermissions(this, perms)) {
+            return true;
+        } else {
+            Log.v("srdx", " EasyPermissions not granted. Requesting Permissions...");
+            EasyPermissions.requestPermissions(this, "To save your location, Timestamper needs the access to Location services",
+                    RC_LOCATION, perms);
+            return false;
+        }
+    }
+
+    private void emailCSV(File file) {
+        if (file == null) {
+            Log.wtf("srdx", "WTF Unexpected behavior. file is null in emailCSV");
+            return;
+        }
+        Uri u1 = Uri.fromFile(file);
+        Intent sendIntent = new Intent(Intent.ACTION_SEND);
+        sendIntent.putExtra(Intent.EXTRA_SUBJECT, "My timestamps");
+        sendIntent.putExtra(Intent.EXTRA_STREAM, u1);
+        sendIntent.setType("text/html");
+        startActivity(sendIntent);
+    }
 }

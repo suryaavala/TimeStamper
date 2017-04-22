@@ -10,7 +10,6 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.sardox.timestamper.types.JetDuration;
-import com.sardox.timestamper.types.JetTimestampFormat;
 import com.sardox.timestamper.types.JetUUID;
 import com.sardox.timestamper.utils.AppSettings;
 import com.sardox.timestamper.objects.Category;
@@ -26,7 +25,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -119,6 +117,7 @@ public class DataManager {
 
 
     public HashMap<JetUUID, Timestamp> readWidgetTimestamps() {
+        if (!hasPreviousData()) return new HashMap<>();
         Gson gson = new Gson();
         String json = mPrefs.getString(SHARED_PREFS_WIDGET_TIMESTAMPS, "");
         Type type = new TypeToken<List<Timestamp>>() {
@@ -176,10 +175,10 @@ public class DataManager {
         String filename = "MyTimestamps.csv";
         final String newLine = "\n";
         final String newComma = ",";
-        String plain_text="";
+        String plain_text = "";
 
         String categoryName = category.getName();
-        plain_text +=categoryName + newLine;
+        plain_text += categoryName + newLine;
 
         Calendar calendar = Calendar.getInstance();
         TimeZone localTZ = calendar.getTimeZone();
@@ -209,7 +208,7 @@ public class DataManager {
                 FileOutputStream out = new FileOutputStream(file);
                 out.write(plain_text.getBytes());
                 out.close();
-               return file;
+                return file;
 
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
