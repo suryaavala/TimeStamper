@@ -62,21 +62,29 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignStart="@+id/recycler_timestamp_time"
+                            android:layout_alignWithParentIfMissing="false"
                             android:layout_below="@+id/recycler_timestamp_time"
-                            android:text="my parking expires" />
+                            android:layout_marginBottom="5dp"
+                            android:layout_toLeftOf="@+id/recycler_timestamp_category"
+                            android:ellipsize="end"
+                            android:maxLines="3"
+                            android:minLines="1"
+                            android:text="sample" />
 
                         <ImageView
                             android:id="@+id/recycler_timestamp_category"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_alignBottom="@+id/recycler_timestamp_note"
-                            android:layout_alignParentEnd="true"
+                            android:layout_alignBottom="@+id/recycler_timestamp_weekday"
+                            android:layout_alignEnd="@+id/recycler_timestamp_button_menu"
+                            android:layout_alignParentEnd="false"
                             android:layout_alignParentTop="false"
                             android:layout_alignTop="@+id/recycler_timestamp_day"
                             android:layout_centerVertical="true"
                             android:layout_marginRight="40dp"
                             android:adjustViewBounds="true"
-                            android:gravity="center" />
+                            android:gravity="center"
+                            android:src="@drawable/category_weather" />
 
                         <TextView
                             android:id="@+id/recycler_timestamp_button_menu"
