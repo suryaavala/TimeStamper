@@ -11,6 +11,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.sardox.timestamper.types.JetDuration;
 import com.sardox.timestamper.types.JetUUID;
+import com.sardox.timestamper.types.Timestamp_old;
 import com.sardox.timestamper.utils.AppSettings;
 import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.objects.Timestamp;
@@ -44,6 +45,32 @@ public class DataManager {
 
     public DataManager(Context context) {
         mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+    }
+
+    public HashMap<JetUUID, Timestamp> read_old_timestamps() {
+        final String SHARED_PREFS_STAMPS = "stamps";
+
+        if (mPrefs.contains(SHARED_PREFS_STAMPS)) {
+            Gson gson = new Gson();
+            String json = mPrefs.getString(SHARED_PREFS_STAMPS, "");
+            Type type = new TypeToken<List<Timestamp_old>>() {
+            }.getType();
+
+            List<Timestamp_old> olds = gson.fromJson(json, type);
+            if (olds.size() == 0) return null;
+
+            List<Timestamp> migrated = new ArrayList<>();
+
+            for (Timestamp_old item : olds) {
+                migrated.add(new Timestamp(item.getJetTime(), PhysicalLocation.Default, JetUUID.Zero, item.getNote(), JetUUID.randomUUID()));
+            }
+
+            HashMap<JetUUID, Timestamp> hashMap = new HashMap<>();
+            for (Timestamp timestamp : migrated)
+                hashMap.put(timestamp.getIdentifier(), timestamp);
+
+            return hashMap;
+        } else return null;
     }
 
     public AppSettings readSettings() {

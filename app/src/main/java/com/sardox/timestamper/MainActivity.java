@@ -117,6 +117,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         dataManager.writeCategories(categories);
     }
 
+    private void migrate() {
+        if (dataManager == null || unfilteredTimestamps == null) return;
+
+        HashMap<JetUUID, Timestamp> migrated = dataManager.read_old_timestamps();
+        if (migrated == null) return;
+
+        unfilteredTimestamps.putAll(migrated);
+        filterTimestamps(Category.Default);
+    }
+
     /**
      * while app is in background, user can create timestamps with widget. when user back in app, we need to read them and add them to recycler view
      */
@@ -388,6 +398,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             case R.id.action_export: {
                 exportTimestampsToCsv();
+                break;
+            }
+            case R.id.action_migrate: {
+                migrate();
                 break;
             }
 //       case R.id.checkable_menu_use_dark_theme) {
