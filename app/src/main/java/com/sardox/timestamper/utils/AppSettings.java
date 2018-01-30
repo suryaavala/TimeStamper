@@ -1,6 +1,10 @@
 package com.sardox.timestamper.utils;
 
+import com.sardox.timestamper.types.JetUUID;
+
 public class AppSettings {
+
+    public static final JetUUID NO_DEFAULT_CATEGORY =  JetUUID.fromString("3f02dce5-d2de-4d3c-96d6-de0f6123baa8");
 
     private boolean use24hrFormat = false;            //default values
     private boolean useDark = true;                   //default values

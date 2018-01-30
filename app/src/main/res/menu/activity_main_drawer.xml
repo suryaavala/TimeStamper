@@ -13,7 +13,7 @@
 
     </group>
 
-    <item android:title="Settings" android:checkableBehavior="none">
+    <item android:title="@string/settings" android:checkableBehavior="none">
         <menu>
             <item
                 android:id="@+id/checkable_menu_showMillis"
@@ -42,9 +42,7 @@
         </menu>
     </item>
 
-
-
-    <item android:title="Import / Export"  android:checkableBehavior="all">
+    <item android:title="@string/import_export"  android:checkableBehavior="none">
         <menu>
             <item
                 android:id="@+id/action_export"
@@ -53,7 +51,7 @@
             <item
                 android:id="@+id/action_migrate"
                 android:checkable="true"
-                android:title="Try to Recover" />
+                android:title="@string/recover_try" />
         </menu>
 
 

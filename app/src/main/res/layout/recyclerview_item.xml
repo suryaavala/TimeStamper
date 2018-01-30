@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
@@ -67,19 +68,16 @@
                             android:layout_marginBottom="5dp"
                             android:layout_toLeftOf="@+id/recycler_timestamp_category"
                             android:ellipsize="end"
-                            android:maxLines="3"
                             android:minLines="1"
                             android:text="sample" />
 
                         <ImageView
                             android:id="@+id/recycler_timestamp_category"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignBottom="@+id/recycler_timestamp_weekday"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
                             android:layout_alignEnd="@+id/recycler_timestamp_button_menu"
                             android:layout_alignParentEnd="false"
                             android:layout_alignParentTop="false"
-                            android:layout_alignTop="@+id/recycler_timestamp_day"
                             android:layout_centerVertical="true"
                             android:layout_marginRight="40dp"
                             android:adjustViewBounds="true"

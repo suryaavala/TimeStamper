@@ -10,9 +10,7 @@ public final class JetUUID implements Serializable {
     private final long high;
     private final long low;
 
-
     public static final JetUUID Zero = new JetUUID();
-
 
     public static JetUUID randomUUID() {
         return fromUUID(UUID.randomUUID());

@@ -8,12 +8,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
+import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.sardox.timestamper.Application;
+import com.sardox.timestamper.DialogActivity;
 import com.sardox.timestamper.Managers.DataManager;
 import com.sardox.timestamper.R;
 import com.sardox.timestamper.objects.Timestamp;
@@ -25,9 +27,9 @@ import java.util.HashMap;
 
 import pub.devrel.easypermissions.EasyPermissions;
 
-/**
- * Implementation of App Widget functionality.
- */
+import static com.sardox.timestamper.utils.AppSettings.NO_DEFAULT_CATEGORY;
+
+
 public class InstantTimestampWidget extends AppWidgetProvider {
 
     private static final String ADD_TIMESTAMP = "AddNewTimestamp";
@@ -38,6 +40,11 @@ public class InstantTimestampWidget extends AppWidgetProvider {
         return PendingIntent.getBroadcast(context, 0, intent, 0);
     }
 
+    private void showSetupDialog(Context context) {
+        Intent myIntent = new Intent(context, DialogActivity.class);
+        myIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(myIntent);
+    }
 
     private void updateAppWidget(Context context, AppWidgetManager appWidgetManager,  //this runs first
                                  int appWidgetId) {
@@ -51,7 +58,13 @@ public class InstantTimestampWidget extends AppWidgetProvider {
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
         if (ADD_TIMESTAMP.equals(intent.getAction())) {
-            saveNewStamp(context);
+            DataManager dataManager = new DataManager(context);
+            JetUUID defaultCategoryForWidget = dataManager.readDefaultCategoryForWidget();
+            if (defaultCategoryForWidget.equals(NO_DEFAULT_CATEGORY)) {
+                showSetupDialog(context);
+            } else {
+                saveNewStamp(context, defaultCategoryForWidget);
+            }
         }
     }
 
@@ -65,15 +78,19 @@ public class InstantTimestampWidget extends AppWidgetProvider {
 
     @Override
     public void onEnabled(Context context) {
+        Log.e("srdx", "First widget was created");
         // Enter relevant functionality for when the first InstantTimestampWidget is created
     }
 
     @Override
-    public void onDisabled(Context context) {
-        // Enter relevant functionality for when the last InstantTimestampWidget is disabled
+    public void onDeleted(Context context, int[] appWidgetIds) {
+        super.onDeleted(context, appWidgetIds);
+        Log.e("srdx", "Last widget was deleted");
+        DataManager dataManager = new DataManager(context);
+        dataManager.saveDefaultCategoryForWidget(AppSettings.NO_DEFAULT_CATEGORY);
     }
 
-    public void saveNewStamp(Context context) {
+    public void saveNewStamp(Context context, JetUUID defaultCategoryForWidget) {
         Tracker mTracker = ((Application) context.getApplicationContext()).getDefaultTracker();
         mTracker.send(new HitBuilders.EventBuilder()
                 .setCategory("Action")
@@ -98,7 +115,7 @@ public class InstantTimestampWidget extends AppWidgetProvider {
         }
 
         HashMap<JetUUID, Timestamp> widgetTimestamps = dataManager.readWidgetTimestamps();
-        Timestamp timestamp = new Timestamp(JetTimestamp.now(), physicalLocation, JetUUID.Zero, "added from widget", JetUUID.randomUUID());
+        Timestamp timestamp = new Timestamp(JetTimestamp.now(), physicalLocation, defaultCategoryForWidget, "added from widget", JetUUID.randomUUID());
         widgetTimestamps.put(timestamp.getIdentifier(), timestamp);
         dataManager.writeWidgetTimestamps(widgetTimestamps);
 

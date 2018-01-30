@@ -9,14 +9,14 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.sardox.timestamper.types.JetDuration;
-import com.sardox.timestamper.types.JetUUID;
-import com.sardox.timestamper.types.Timestamp_old;
-import com.sardox.timestamper.utils.AppSettings;
 import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.objects.Timestamp;
+import com.sardox.timestamper.types.JetDuration;
 import com.sardox.timestamper.types.JetTimestamp;
+import com.sardox.timestamper.types.JetUUID;
 import com.sardox.timestamper.types.PhysicalLocation;
+import com.sardox.timestamper.types.Timestamp_old;
+import com.sardox.timestamper.utils.AppSettings;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -42,6 +41,9 @@ public class DataManager {
     private static final String SHARED_PREFS_USEDARK = "USE_DARK";
     private static final String SHARED_PREFS_CATEGORIES = "CATEGORIES";
     private static final String SHARED_PREFS_USE_GPS = "USE_GPS";
+    private static final String SHARED_PREFS_WIDGET_DEFAULT_TIMESTAMP = "WIDGET_CATEGORY";
+    private final String newLine = "\n";
+    private final String newComma = ",";
 
     private SharedPreferences mPrefs;
 
@@ -200,31 +202,23 @@ public class DataManager {
         return jetList;
     }
 
-    private List<Timestamp> sortDesc(List<Timestamp> timestamps){
-        Collections.sort(timestamps, new Comparator<Timestamp>(){
+    private List<Timestamp> sortDesc(List<Timestamp> timestamps) {
+        Collections.sort(timestamps, new Comparator<Timestamp>() {
             public int compare(Timestamp t1, Timestamp t2) {
                 return t2.getTimestamp().compareTo(t1.getTimestamp());
-             }
+            }
         });
-     return timestamps;
+        return timestamps;
     }
 
-    public File exportToCSV(Category category, List<Timestamp> timestamps) {
-        final Calendar calendar = Calendar.getInstance();
-        final TimeZone localTZ = calendar.getTimeZone();
-        final String newLine = "\n";
-        final String newComma = ",";
+    public File exportToCSV(Category category, List<Timestamp> timestamps, List<Category> categories) {
         final String filename = "MyTimestamps.csv";
-        String plain_text = category.getName() + newLine;
-
-        for (Timestamp item : sortDesc(timestamps)) {
-            plain_text += item.getTimestamp().toString(Locale.getDefault(), localTZ) + newComma;
-            plain_text += item.getNote() + newComma;
-            plain_text += item.getPhysicalLocation().toCsvString();
-            plain_text += newLine;
+        String plain_text;
+        if (category.getCategoryID().equals(JetUUID.Zero)) {
+            plain_text = prepareAllTimestampsForExport(timestamps, categories);
+        } else {
+            plain_text = prepareCategoryTimestampsForExport(timestamps, category);
         }
-
-        calendar.clear();
         Log.d("RawFile", plain_text);
 
         File root = Environment.getExternalStorageDirectory();
@@ -259,4 +253,57 @@ public class DataManager {
         }
         return null;
     }
+
+    private String prepareCategoryTimestampsForExport(List<Timestamp> timestamps, Category category) {
+        final Calendar calendar = Calendar.getInstance();
+        final TimeZone localTZ = calendar.getTimeZone();
+        String plain_text = category.getName() + newLine;
+        for (Timestamp item : sortDesc(timestamps)) {
+            if (item.getCategoryId().equals(category.getCategoryID())) {
+                plain_text += item.getTimestamp().toString(Locale.getDefault(), localTZ) + newComma;
+                plain_text += item.getNote() + newComma;
+                plain_text += item.getPhysicalLocation().toCsvString();
+                plain_text += newLine;
+            }
+        }
+        calendar.clear();
+        return plain_text;
+    }
+
+    private String getCategoryNameByUUID(List<Category> categories, JetUUID uuid) {
+        for (Category category : categories) {
+            if (category.getCategoryID().equals(uuid)) return category.getName();
+        }
+        return "Unknown";
+    }
+
+    private String prepareAllTimestampsForExport(List<Timestamp> timestamps, List<Category> categories) {
+        final Calendar calendar = Calendar.getInstance();
+        final TimeZone localTZ = calendar.getTimeZone();
+
+        String plain_text = "All categories export" + newLine;
+        ;
+        for (Timestamp item : sortDesc(timestamps)) {
+            plain_text += item.getTimestamp().toString(Locale.getDefault(), localTZ) + newComma;
+            plain_text += getCategoryNameByUUID(categories, item.getCategoryId()) + newComma;
+            plain_text += item.getNote() + newComma;
+            plain_text += item.getPhysicalLocation().toCsvString();
+            plain_text += newLine;
+        }
+        calendar.clear();
+        return plain_text;
+    }
+
+    public void saveDefaultCategoryForWidget(JetUUID selectedCategoryId) {
+        mPrefs.edit().putString(SHARED_PREFS_WIDGET_DEFAULT_TIMESTAMP, selectedCategoryId.toUuid().toString()).apply();
+    }
+
+    public JetUUID readDefaultCategoryForWidget() {
+        if (mPrefs.contains(SHARED_PREFS_WIDGET_DEFAULT_TIMESTAMP)) {
+            return JetUUID.fromString(mPrefs.getString(SHARED_PREFS_WIDGET_DEFAULT_TIMESTAMP, AppSettings.NO_DEFAULT_CATEGORY.toString()));
+        } else {
+            return AppSettings.NO_DEFAULT_CATEGORY;
+        }
+    }
+
 }

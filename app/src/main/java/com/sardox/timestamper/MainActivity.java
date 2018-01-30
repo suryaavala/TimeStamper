@@ -2,7 +2,6 @@ package com.sardox.timestamper;
 
 
 import android.Manifest;
-
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.ActivityNotFoundException;
@@ -19,24 +18,20 @@ import android.os.Looper;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
-
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.View;
-
 import android.view.MenuItem;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -52,7 +47,6 @@ import com.sardox.timestamper.objects.Timestamp;
 import com.sardox.timestamper.recyclerview.MyRecyclerViewAdapter;
 import com.sardox.timestamper.recyclerview.MyRecyclerViewAdapterCategory;
 import com.sardox.timestamper.recyclerview.MyRecyclerViewIconPicker;
-
 import com.sardox.timestamper.types.JetDuration;
 import com.sardox.timestamper.types.JetTimestamp;
 import com.sardox.timestamper.types.JetUUID;
@@ -69,7 +63,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
-
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -646,6 +639,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 dialog.dismiss();
                 JetUUID categoryToRemove = categories.get(clickedPos + 1).getCategoryID();
 
+                resetWidgetCategoryToNoneIfNeeded(categoryToRemove);
                 // remove all timestamps  that belongs to this category
                 List<JetUUID> itemsToRemove = new ArrayList<>();
 
@@ -674,7 +668,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }                       // spinner dialog -- delete  a category
 
-    //<Utils>
+    private void resetWidgetCategoryToNoneIfNeeded(JetUUID categoryToRemove) {
+        JetUUID defaultCategory = dataManager.readDefaultCategoryForWidget();
+        if (defaultCategory.equals(categoryToRemove)) {
+            dataManager.saveDefaultCategoryForWidget(AppSettings.NO_DEFAULT_CATEGORY);
+        }
+    }
 
     private void trackAction(String text) {
         mTracker.send(new HitBuilders.EventBuilder()
@@ -687,7 +686,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         trackAction("Export timestamps");
         String[] storage_perms = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
         if (EasyPermissions.hasPermissions(this, storage_perms)) {
-            emailCSV(dataManager.exportToCSV(lastSelectedCategory, new ArrayList<>(unfilteredTimestamps.values())));
+            emailCSV(dataManager.exportToCSV(lastSelectedCategory, new ArrayList<>(unfilteredTimestamps.values()), categories));
         } else {
             Log.v("srdx", " EasyPermissions not granted. Requesting Permissions...");
             EasyPermissions.requestPermissions(this, "App needs to write to storage",
