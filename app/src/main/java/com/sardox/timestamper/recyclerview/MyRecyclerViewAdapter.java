@@ -1,34 +1,38 @@
 package com.sardox.timestamper.recyclerview;
 
-import android.content.ActivityNotFoundException;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.net.Uri;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v7.app.AlertDialog;
+
+import android.content.Context;
+
+import android.support.v4.content.ContextCompat;
+import android.support.v7.util.SortedList;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
+
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
-import android.widget.EditText;
-import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.sardox.timestamper.objects.Category;
-import com.sardox.timestamper.MainActivity;
+
 import com.sardox.timestamper.R;
+import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.objects.Timestamp;
-import com.sardox.timestamper.pickers.DatePickerFragment;
-import com.sardox.timestamper.pickers.TimePickerFragment;
+import com.sardox.timestamper.types.JetUUID;
+import com.sardox.timestamper.types.PhysicalLocation;
+import com.sardox.timestamper.utils.ActionType;
+import com.sardox.timestamper.utils.AppSettings;
+import com.sardox.timestamper.utils.Consumer;
+import com.sardox.timestamper.utils.TimestampIcon;
+import com.sardox.timestamper.utils.UserAction;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.TimeZone;
@@ -36,16 +40,59 @@ import java.util.TimeZone;
 
 public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder> {
 
-    public  MainActivity mainActivity;
-    public List<Timestamp> mStampsList;
-    public List<Timestamp> mStampsListCopy;
-    public FragmentManager fragmentmanager;
+    private SortedList<Timestamp> sortedTimeStamps; // filteredTimestamps
+    private List<Category> categories;
+    private DisplayMetrics displayMetrics;
+    private AppSettings appSettings;
+    private List<TimestampIcon> icons;
+    private Context context;
+    private Consumer<UserAction> userActionCallback;
 
+    public MyRecyclerViewAdapter(List<Category> categories, DisplayMetrics displayMetrics, List<TimestampIcon> icons, Context context, Consumer<UserAction> userActionCallback, AppSettings appSettings) {
+        this.userActionCallback = userActionCallback;
+        this.context = context;
+        this.appSettings = appSettings;
+        this.categories = categories;
+        this.displayMetrics = displayMetrics;
+        this.icons = icons;
 
-    public MyRecyclerViewAdapter(List<Timestamp> stampsList, MainActivity mainActivity) {
-        this.mStampsList = stampsList;
-        this.mainActivity = mainActivity;
-        this.mStampsListCopy = new ArrayList<>(mStampsList);
+        sortedTimeStamps = new SortedList<>(Timestamp.class, new SortedList.Callback<Timestamp>() {
+            @Override
+            public int compare(Timestamp o1, Timestamp o2) {
+                return TIMESTAMP_COMPARATOR_NEW_TOP.compare(o1, o2);
+            }
+
+            @Override
+            public void onChanged(int position, int count) {
+                notifyItemRangeChanged(position, count);
+            }
+
+            @Override
+            public boolean areContentsTheSame(Timestamp oldItem, Timestamp newItem) {
+                return false;
+            }
+
+            @Override
+            public boolean areItemsTheSame(Timestamp item1, Timestamp item2) {
+                return item1.equals(item2);
+            }
+
+            @Override
+            public void onInserted(int position, int count) {
+                notifyItemRangeInserted(position, count);
+            }
+
+            @Override
+            public void onRemoved(int position, int count) {
+                Log.v("srdx", "SortedList onRemoved callback");
+                notifyItemRangeRemoved(position, count);
+            }
+
+            @Override
+            public void onMoved(int fromPosition, int toPosition) {
+                notifyItemMoved(fromPosition, toPosition);
+            }
+        });
     }
 
     @Override
@@ -58,293 +105,197 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
 
     @Override
-    public void onBindViewHolder(MyRecyclerViewAdapter.MyViewHolder holder, int position) {
-        Timestamp timestamp = mStampsList.get(position);
+    public void onBindViewHolder(final MyRecyclerViewAdapter.MyViewHolder holder, int position) {
+        final int w = displayMetrics.widthPixels;
+        holder.left_container.setMinimumWidth(w);
+        //Log.e("stamper", "setMinimumWidth: " + w);
+        //Log.e("stamper", "left_container w: " + holder.left_container.getWidth());
 
-        Calendar c = Calendar.getInstance();
-        TimeZone tz = c.getTimeZone();
+        Timestamp timestamp = sortedTimeStamps.get(position);
 
-        c.setTimeInMillis(timestamp.getTime());
-
-
-        //Log.e("aaa", "onBindViewHolder run");
+        Calendar calendar = Calendar.getInstance();
+        TimeZone localTZ = calendar.getTimeZone();
+        calendar.setTimeInMillis(timestamp.getTimestamp().toMilliseconds());
 
         String format;
 
-        if (mainActivity.use24hrFormat) {
-            if (mainActivity.showMillis) {
+        if (appSettings.isUse24hrFormat()) {
+            if (appSettings.isShowMillis()) {
                 format = "HH:mm:ss.SSS";
 
             } else format = "HH:mm:ss";
         } else {
-            if (mainActivity.showMillis) {
+            if (appSettings.isShowMillis()) {
                 format = "hh:mm:ss.SSS a";
-
             } else format = "hh:mm:ss a";
-
         }
+
 
         SimpleDateFormat sdf = new SimpleDateFormat(format);
-        sdf.setTimeZone(tz);
-        String hhmmss = sdf.format(c.getTime());
-        holder.mNameTextView.setText(hhmmss);
+        sdf.setTimeZone(localTZ);
+        String hhmmss = sdf.format(calendar.getTime());
 
         SimpleDateFormat sdfDAY = new SimpleDateFormat("d MMM");
-        sdfDAY.setTimeZone(tz);
-        String dMMM = sdfDAY.format(c.getTime());
-        holder.mPosTextView.setText(dMMM);
+        sdfDAY.setTimeZone(localTZ);
+        String dMMM = sdfDAY.format(calendar.getTime());
+
 
         SimpleDateFormat sdfWeekDay = new SimpleDateFormat("EEE");
-        sdfWeekDay.setTimeZone(tz);
-        String EEE = sdfWeekDay.format(c.getTime());
-        holder.mWeekDay.setText(EEE);
+        sdfWeekDay.setTimeZone(localTZ);
+        String EEE = sdfWeekDay.format(calendar.getTime());
 
-        holder.mGPSpinButton.setVisibility(View.INVISIBLE);
-        String subtitle = timestamp.getSubtitle();
+        holder.recycler_timestamp_day.setText(dMMM);
 
-         Log.e("gps", "holder for: " + position + ", its gps: " + timestamp.getGps());
-        if (timestamp.getGps()!="") {
-            holder.mGPSpinButton.setVisibility(View.VISIBLE);
-            //subtitle =  subtitle+ ", "+ timestamp.getGps();
+        JetUUID category_id = timestamp.getCategoryId();
+
+        for (Category category : categories) {
+            if (category.getCategoryID().equals(category_id)) {
+                holder.recycler_timestamp_category.setImageDrawable(ContextCompat.getDrawable(context, icons.get(category.getIcon_id()).getDrawable_id()));
+                break;
+            }
         }
-        holder.mSubtitleTextView.setText(subtitle);
 
-        holder.mCategoryTextView.setText(mainActivity.getCategoryByID(timestamp.getCategoryID()).getName());
-
+        holder.recycler_timestamp_note.setText(timestamp.getNote());
+        holder.recycler_timestamp_time.setText(hhmmss);
+        holder.recycler_timestamp_weekday.setText(EEE);
     }
+
 
     @Override
     public int getItemCount() {
-        return mStampsList.size();
+        return sortedTimeStamps.size();
     }
 
-    public void sortByCategory(int categoryID) {
-        mStampsList.clear();
+    public void add(Timestamp timestamp) {
+        sortedTimeStamps.add(timestamp);
+    }
 
+    public void add(List<Timestamp> timestamps) {
+        sortedTimeStamps.addAll(timestamps);
+    }
 
-        Collections.sort(mStampsListCopy, new Comparator() {
-
-            public int compare(Object arg0, Object arg1) {
-                if (!(arg0 instanceof Timestamp)) {
-                    return -1;
-                }
-                if (!(arg1 instanceof Timestamp)) {
-                    return -1;
-                }
-                Timestamp pers0 = (Timestamp)arg0;
-                Timestamp pers1 = (Timestamp)arg1;
-                return (int) (pers0.getTime() - pers1.getTime());
-            }
-        });
-
-
-        if (categoryID == 0) {
-            mStampsList.addAll(mStampsListCopy);
-            notifyDataSetChanged();
-            //Log.e("aaa", "category sorted=0");
-            return;
-        }
-
-        for (final Timestamp item : mStampsListCopy) {
-
-            if (item.getCategoryID() == categoryID) {
-                mStampsList.add(item);
-            }
-        }
-      //  Log.e("aaa", "mStampsList.size after sorting: " + mStampsList.size());
-
-
-
-
-        notifyDataSetChanged();
+    public void add(Collection<Timestamp> values) {
+        sortedTimeStamps.addAll(values);
     }
 
 
-    public int findStampPositionInListByID(int stampID) {
-        int a = 0;
-        for (final Timestamp item : mStampsListCopy) {
-            if (item.getStampID() == stampID) {
-                return a;
+    public void remove(Timestamp timestamp) {
+        sortedTimeStamps.remove(timestamp);
+    }
+
+    public void remove(List<Timestamp> timestamps) {
+        sortedTimeStamps.beginBatchedUpdates();
+        for (Timestamp model : timestamps) {
+            sortedTimeStamps.remove(model);
+        }
+        sortedTimeStamps.endBatchedUpdates();
+    }
+
+    public void removeAll() {
+        sortedTimeStamps.clear();
+    }
+
+    public void setAppSettings(AppSettings appSettings) {
+        this.appSettings = appSettings;
+    }
+
+    private int find_timestamp_index_by_id(JetUUID id) {
+        for (int i = 0; i < sortedTimeStamps.size(); i++) {
+            if (sortedTimeStamps.get(i).getIdentifier().equals(id)) {
+                return i;
             }
-            a++;
         }
         return -1;
     }
 
-
-    public void addStamp(Timestamp timestamp) {
-
-        mStampsListCopy.add(timestamp);
-        mStampsList.add(timestamp);
-
-
-        notifyDataSetChanged();
-        sortByCategory(mainActivity.LastCategoryFilter);
-        mainActivity.recyclerView.scrollToPosition(mStampsList.size() - 1);
-
+    public void updateTimestamp(Timestamp updatedTimestamp) {
+        for (int i = 0; i < sortedTimeStamps.size(); i++) {
+            if (sortedTimeStamps.get(i).getIdentifier().equals(updatedTimestamp.getIdentifier())) {
+                sortedTimeStamps.updateItemAt(i, updatedTimestamp);
+                return;
+            }
+        }
     }
 
+    class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-    public class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
+        private TextView recycler_timestamp_weekday, recycler_timestamp_day, recycler_timestamp_note, recycler_timestamp_time, recycler_timestamp_button_menu;
+        // private ImageButton
+        private LinearLayout left_container;
+        private ImageView recycler_timestamp_category;
 
-        private TextView mNameTextView;
-        private TextView mSubtitleTextView;
-        private TextView mPosTextView;
-        private TextView mCategoryTextView;
-        private ImageButton mGPSpinButton;
-        private TextView mWeekDay;
-
-        public MyViewHolder(View itemView) {
+        MyViewHolder(View itemView) {
             super(itemView);
-            mNameTextView = (TextView) itemView.findViewById(R.id.textViewTime);
-            mSubtitleTextView = (TextView) itemView.findViewById(R.id.textViewNote);
-            mPosTextView = (TextView) itemView.findViewById(R.id.textViewPos);
-            mCategoryTextView = (TextView) itemView.findViewById(R.id.textViewCategory);
-            mGPSpinButton = (ImageButton) itemView.findViewById(R.id.gpsPinButton);
-            mWeekDay = (TextView) itemView.findViewById(R.id.textViewWeekday);
 
-            mNameTextView.setOnClickListener(this);
-            mNameTextView.setOnLongClickListener(this);
-            mCategoryTextView.setOnClickListener(this);
-            mGPSpinButton.setOnClickListener(this);
-            mSubtitleTextView.setOnClickListener(this);
+            recycler_timestamp_category = (ImageView) itemView.findViewById(R.id.recycler_timestamp_category);
+            recycler_timestamp_day = (TextView) itemView.findViewById(R.id.recycler_timestamp_day);
+            recycler_timestamp_note = (TextView) itemView.findViewById(R.id.recycler_timestamp_note);
+            recycler_timestamp_time = (TextView) itemView.findViewById(R.id.recycler_timestamp_time);
+            recycler_timestamp_weekday = (TextView) itemView.findViewById(R.id.recycler_timestamp_weekday);
+            recycler_timestamp_button_menu = (TextView) itemView.findViewById(R.id.recycler_timestamp_button_menu);
+            left_container = (LinearLayout) itemView.findViewById(R.id.left_container);
 
+            recycler_timestamp_button_menu.setOnClickListener(this);
         }
 
-        @Override
-        public boolean onLongClick (View v) {
-            if (v.getId() == mNameTextView.getId()) {
-
-                DatePickerFragment.time=mStampsList.get(getAdapterPosition()).getTime();
-                TimePickerFragment.pos=getAdapterPosition();
-                DatePickerFragment.fragmentmanager=fragmentmanager;
-                DialogFragment newFragment = new DatePickerFragment();
-                newFragment.show(fragmentmanager, "Change the date");
-            }
-            return false;
-        }
 
         @Override
         public void onClick(View v) {
-            int a = getAdapterPosition();
-            if (v.getId() == mNameTextView.getId() || v.getId() == mSubtitleTextView.getId()) {
-
-                showDialog(v, getAdapterPosition()); // input dialog -- for a note
-
-            } else if (v.getId() == mGPSpinButton.getId()) { //delete item from list
-
-                String gps = mStampsList.get(a).getGps();
-                Log.e("aaa", "gps: " +  mStampsList.get(a).getGps());
-
-
-              //  String uri = String.format(Locale.ENGLISH, "geo:%f,%f", gps[0], gps[1]);
-              //  String uri = String.format(Locale.ENGLISH, "geo:%f,%f", currentGeoLocation.getLatitude(), currentGeoLocation.getLongitude());
-                String uri = "geo:0,0?q="+gps + "("+mStampsList.get(a).getSubtitle()+")";
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
-                try
-                {
-                    v.getContext().startActivity(intent);
+            switch (v.getId()) {
+                case R.id.recycler_timestamp_button_menu: {
+                    show_popup(v, sortedTimeStamps.get(getAdapterPosition()));
+                    break;
                 }
-                catch(ActivityNotFoundException ex)
-                {
-                    Toast.makeText(v.getContext(), "Please install a maps application", Toast.LENGTH_LONG).show();
-                }
-
-//                mStampsListCopy.remove(findStampPositionInListByID(mStampsList.get(a).getStampID()));
-//
-//
-//
-//                mStampsList.remove(a);
-//                notifyItemRemoved(a);
-//                notifyItemRangeChanged(a, mStampsList.size());
-
-            } else if (v.getId() == mCategoryTextView.getId()) {
-
-                showSpinner(v, getAdapterPosition()); // spinner dialog -- change items category
-
-            } else if (v.getId() == mSubtitleTextView.getId()) {
-
-                showDialog(v, getAdapterPosition()); // input dialog -- for a note
-                //click on category
-                //Toast.makeText(v.getContext(), "edit category " + String.valueOf(getAdapterPosition()), Toast.LENGTH_SHORT).show();
-                // changeCategory(getAdapterPosition());
-                //filter("Sport");
-
             }
+        }
+    }
 
-
+    private void show_popup(View v, final Timestamp timestamp) {
+        PopupMenu popup = new PopupMenu(v.getContext(), v);
+        popup.inflate(R.menu.options_menu);
+        if (timestamp.getPhysicalLocation().equals(PhysicalLocation.Default)) {
+            MenuItem map_to_menu_item = popup.getMenu().findItem(R.id.recycler_menu_map_to);
+            if (map_to_menu_item != null) map_to_menu_item.setVisible(false);
         }
 
-
-        private void showSpinner(View v, final int pos) {
-            AlertDialog.Builder b = new AlertDialog.Builder(v.getContext());
-            b.setTitle("Select a category");
-
-            List<String> types = new ArrayList<>();// = {"Sport", "Work shifts", "Gym training"};
-
-            for (Category item : mainActivity.getCategoryList()) {   //for (Category item : mainActivity.CategoryList
-                types.add(item.getName());
+        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.recycler_menu_edit_date:
+                        userActionCallback.accept(new UserAction(ActionType.EDIT_DATE, timestamp));
+                        break;
+                    case R.id.recycler_menu_edit_time:
+                        userActionCallback.accept(new UserAction(ActionType.EDIT_TIME, timestamp));
+                        break;
+                    case R.id.recycler_menu_edit_note:
+                        userActionCallback.accept(new UserAction(ActionType.EDIT_NOTE, timestamp));
+                        break;
+                    case R.id.recycler_menu_map_to:
+                        userActionCallback.accept(new UserAction(ActionType.MAP_TO, timestamp));
+                        break;
+                    case R.id.recycler_menu_move:
+                        userActionCallback.accept(new UserAction(ActionType.CHANGE_CATEGORY, timestamp));
+                        break;
+                    case R.id.recycler_menu_remove:
+                        userActionCallback.accept(new UserAction(ActionType.REMOVE, timestamp));
+                        break;
+                    case R.id.recycler_menu_share:
+                        userActionCallback.accept(new UserAction(ActionType.SHARE, timestamp));
+                        break;
+                }
+                return false;
             }
-
-            b.setItems(types.toArray(new String[types.size()]), new DialogInterface.OnClickListener() {
-
-                @Override
-                public void onClick(DialogInterface dialog, int clickedPos) {
-                    dialog.dismiss();
-
-                    int newCategoryID = mainActivity.getCategoryList().get(clickedPos).getCategoryID(); //int newCategoryID = mainActivity.CategoryList.get(clickedPos).getCategoryID();
-
-                    int ourItemIDInList = mStampsList.get(pos).getStampID();
-                    mStampsListCopy.get(findStampPositionInListByID(ourItemIDInList)).setCategoryID(newCategoryID);
-
-                    // mStampsListCopy.get(findStampPositionInListByID(mStampsList.get(pos).getStampID())).setCategoryID(clickedPos);
-
-                    // mStampsList.get(pos).setCategoryID(clickedPos);
-                    notifyDataSetChanged();
-                    mStampsList.remove(pos);
-                    mainActivity.filterList();
-
-                }
-
-            });
-
-            b.show();
-
-        } // spinner dialog -- change items category
-
-
-        public void showDialog(View v, final int pos) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
-            View viewInflated = LayoutInflater.from(v.getContext()).inflate(R.layout.text_input_note, null, false);
-            final EditText input = (EditText) viewInflated.findViewById(R.id.input);
-            builder.setView(viewInflated);
-
-            builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                    mStampsListCopy.get(findStampPositionInListByID(mStampsList.get(pos).getStampID())).setSubtitle(input.getText().toString());
-
-                    mStampsList.get(pos).setSubtitle(input.getText().toString());
-
-
-                    notifyDataSetChanged();
-
-
-                }
-            });
-            builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.cancel();
-                }
-            });
-
-
-
-            builder.show().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
-        }  // input dialog -- for a note
-
+        });
+        //displaying the popup
+        popup.show();
 
     }
+
+    private static final Comparator<Timestamp> TIMESTAMP_COMPARATOR_NEW_TOP = new Comparator<Timestamp>() {
+        @Override
+        public int compare(Timestamp a, Timestamp b) {
+            return a.getTimestamp().compareTo(b.getTimestamp());
+        }
+    };
 }

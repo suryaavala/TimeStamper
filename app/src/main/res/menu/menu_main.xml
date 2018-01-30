@@ -1,7 +1,5 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.sardox.timestamper.MainActivity">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/checkable_menu_auto_note1"
         android:checkable="true"
@@ -31,9 +29,10 @@
     <item
         android:id="@+id/checkable_menu_use_dark_theme1"
         android:checkable="true"
-        android:title="@string/action_use_dark_theme"
         android:orderInCategory="140"
-        app:showAsAction="never"/>
+        android:title="@string/action_use_dark_theme"
+        android:visible="true"
+        app:showAsAction="never" />
 
     <item
         android:id="@+id/action_category_add1"
@@ -45,13 +44,5 @@
         android:orderInCategory="160"
         android:title="@string/action_category_delete"
         app:showAsAction="never" />
-
-
-
-
-
-
-
-
 
 </menu>

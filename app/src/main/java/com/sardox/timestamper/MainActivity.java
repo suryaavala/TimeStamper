@@ -1,23 +1,23 @@
 package com.sardox.timestamper;
 
+
 import android.Manifest;
-import android.app.Activity;
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.preference.PreferenceManager;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -27,74 +27,69 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.Switch;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.TimePicker;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
+import com.sardox.timestamper.Managers.DataManager;
+import com.sardox.timestamper.Managers.TimeStampManager;
 import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.objects.Timestamp;
 import com.sardox.timestamper.recyclerview.MyRecyclerViewAdapter;
 import com.sardox.timestamper.recyclerview.MyRecyclerViewAdapterCategory;
+import com.sardox.timestamper.recyclerview.MyRecyclerViewIconPicker;
+import com.sardox.timestamper.types.JetDuration;
+import com.sardox.timestamper.types.JetTimestamp;
+import com.sardox.timestamper.types.JetUUID;
+import com.sardox.timestamper.types.PhysicalLocation;
+import com.sardox.timestamper.types.TimestampFormat;
+import com.sardox.timestamper.utils.AppSettings;
+import com.sardox.timestamper.utils.Consumer;
+import com.sardox.timestamper.utils.TimestampIcon;
+import com.sardox.timestamper.utils.UserAction;
+import com.sardox.timestamper.utils.VerticalSpaceItemDecoration;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
-import java.util.TimeZone;
 
-public class MainActivity extends AppCompatActivity  implements NavigationView.OnNavigationItemSelectedListener {
-
-    public static final String SHARED_PREFS_USE_GPS = "gps";
-    public static final String SHARED_PREFS_STAMPS = "stamps";
-    public static final String SHARED_PREFS_CATS = "cats";
-    public static final String SHARED_PREFS_USE24HR = "use24hr";
-    public static final String SHARED_PREFS_AUTONOTE = "autoNote";
-    public static final String SHARED_PREFS_USEDARK = "useDark";
-    public static final String SHARED_PREFS_SHOW_MILLIS = "showMillis";
-    public static final String SHARED_PREFS_MAX_ID = "maxID";
-    public static final String SHARED_PREFS_MAXCAT_ID = "maxCatID";
-    public static SharedPreferences mPrefs;
-  //  public static SharedPreferences.Editor prefsEditor;
-    public boolean use24hrFormat = false;             //default values
-    public boolean useDark = true;             //default values
-    public boolean showNoteAddDialog = false;             //default values
-    public boolean showMillis = false;                 //default values
-    public boolean use_gps = false;                 //default values
-
-    public int maxListID = 0;                         //default values
-    public int maxCatID = 0;                         //default values
-
-    public int currentPhrase=0;
-
-    public int LastCategoryFilter;
-
-    public RecyclerView recyclerView;
-    public static MyRecyclerViewAdapter adapter;
+import pub.devrel.easypermissions.AfterPermissionGranted;
+import pub.devrel.easypermissions.EasyPermissions;
 
 
-    public RecyclerView recyclerViewCat;
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+
+    private final int RC_READWRITE = 9863;
+    private TimeStampManager timeStampManager;
+    private DataManager dataManager;
+    private AppSettings appSettings;
+
+    private Consumer<UserAction> userActionCallback;
+    public RecyclerView recyclerViewTimestamps;
+    public MyRecyclerViewAdapter adapter;
+
+    public RecyclerView recyclerViewCategory;
     public MyRecyclerViewAdapterCategory adapterCategory;
 
+    private Category lastSelectedCategory = Category.Default;
 
-    public List<Category> CategoryList = new ArrayList<>();
-    public final List<Timestamp> timestampList = new ArrayList<>();
+    private HashMap<JetUUID, Timestamp> unfilteredTimestamps;
+    private List<Category> categories;
+
+    private List<TimestampIcon> icons;
+
+    private Tracker mTracker;
 
     @Override
     protected void onPause() {
@@ -108,165 +103,260 @@ public class MainActivity extends AppCompatActivity  implements NavigationView.O
         loadData();
     }
 
+    public void saveData() {
+        Log.v("srdx", "saving data...");
+        dataManager.writeSettings(appSettings);
+        dataManager.writeTimestamps(unfilteredTimestamps);
+        dataManager.writeCategories(categories);
+    }
+
+    private void migrate() {
+        if (dataManager == null || unfilteredTimestamps == null) return;
+
+        HashMap<JetUUID, Timestamp> migrated = dataManager.read_old_timestamps();
+        if (migrated == null) return;
+
+        unfilteredTimestamps.putAll(migrated);
+        filterTimestamps(Category.Default);
+    }
+
+    /**
+     * while app is in background, user can create timestamps with widget. when user back in app, we need to read them and add them to recycler view
+     */
+    private void loadData() {
+        if (dataManager == null || unfilteredTimestamps == null) return;
+
+        HashMap<JetUUID, Timestamp> widgetTimestamps = dataManager.readWidgetTimestamps();
+        if (widgetTimestamps.size() == 0) return;
+
+        unfilteredTimestamps.putAll(widgetTimestamps);
+        filterTimestamps(lastSelectedCategory);
+    }
+
+    /*
+    1. verify permissions
+    2. check first start
+    2-init.  apply default setting. populate default categories. add sample timestamp.
+    2-repeat. read user setting.  apply user settings . read categories, timestamps
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        LastCategoryFilter = 0;
+        Log.e("stamper", "-----------NEW RUN--------------");
 
-
-        Log.e("aaa", "-----------NEW RUN--------------");
-
-        mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-
-        if (mPrefs.contains(SHARED_PREFS_USE_GPS))      use_gps = mPrefs.getBoolean(SHARED_PREFS_USE_GPS, false);
-        if (mPrefs.contains(SHARED_PREFS_USEDARK))      useDark = mPrefs.getBoolean(SHARED_PREFS_USEDARK, true);
-        if (useDark) setTheme(R.style.AppThemeCustomMaterialDark); else setTheme(R.style.AppThemeCustom);
-        if (mPrefs.contains(SHARED_PREFS_SHOW_MILLIS)) showMillis = mPrefs.getBoolean(SHARED_PREFS_SHOW_MILLIS, false);
-        if (mPrefs.contains(SHARED_PREFS_USE24HR))     use24hrFormat = mPrefs.getBoolean(SHARED_PREFS_USE24HR, false);
-        if (mPrefs.contains(SHARED_PREFS_AUTONOTE))    showNoteAddDialog = mPrefs.getBoolean(SHARED_PREFS_AUTONOTE, false);
-        if (mPrefs.contains(SHARED_PREFS_AUTONOTE))    showNoteAddDialog = mPrefs.getBoolean(SHARED_PREFS_AUTONOTE, false);
-
-
+        Application application = (Application) getApplication();
+        mTracker = application.getDefaultTracker();
+        this.mTracker.setScreenName("Main screen");
+        trackAction("App launch");
 
         super.onCreate(savedInstanceState);
-        verifyStoragePermissions(this);
 
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        dataManager = new DataManager(getApplicationContext());
+        appSettings = dataManager.readSettings();
+
+        //if (appSettings.isUseDark()) setTheme(R.style.AppThemeCustomMaterialDark); else setTheme(R.style.AppThemeCustom);
+        setupDrawer(toolbar);
+
+        initApp();
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, getString(R.string.new_timestamp_created), Snackbar.LENGTH_LONG)
+                trackAction("New timestamp");
+                final Timestamp newTimestamp = timeStampManager.createTimestamp(lastSelectedCategory);
+                unfilteredTimestamps.put(newTimestamp.getIdentifier(), newTimestamp); //adding timestamp to main list
+                adapter.add(newTimestamp);
+
+                if (appSettings.isShowNoteAddDialog()) edit_note(newTimestamp);
+                if (appSettings.isUse_gps()) {
+                    if (hasGPSpermission()) {
+                        getGPSCoordinates(new Consumer<PhysicalLocation>() {
+                            @Override
+                            public void accept(PhysicalLocation physicalLocation) {
+                                Log.v("srdx", "setPhysicalLocation");
+                                if (physicalLocation == null)
+                                    physicalLocation = PhysicalLocation.Default;
+                                newTimestamp.setPhysicalLocation(physicalLocation);
+                            }
+                        });
+                    }
+                }
+                scrollTop();
+                Snackbar.make(view, getString(R.string.new_timestamp_created) + " in " + lastSelectedCategory.getName(), Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
-
-                Calendar c = Calendar.getInstance();
-
-                maxListID++;                              // need to save it in Shared PREFS
-                Timestamp timestamp = new Timestamp();
-                timestamp.setCategoryID(LastCategoryFilter);
-                timestamp.setSubtitle(getString(R.string.add_note_here));
-
-               timestamp.setGps(getGPSCoordinates());
-
-                timestamp.setStampID(maxListID);
-                timestamp.setTime(c.getTimeInMillis());
-                adapter.addStamp(timestamp);
-
-               if(showNoteAddDialog) showDialogForNote(view, maxListID);
-
-
-
             }
-             });
-
-
-
-            DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-            ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                    this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-            drawer.setDrawerListener(toggle);
-            toggle.syncState();
-
-
-            NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-            navigationView.setNavigationItemSelectedListener(this);
-            View header = navigationView.getHeaderView(0);
-
-            navigationView.getMenu().findItem(R.id.checkable_menu_auto_note)
-                    .setActionView(new Switch(this));
-            ((Switch)  navigationView.getMenu().findItem(R.id.checkable_menu_auto_note).getActionView()).setChecked(showNoteAddDialog);
-             navigationView.getMenu().findItem(R.id.checkable_menu_auto_note).getActionView().setClickable(false);
-
-            navigationView.getMenu().findItem(R.id.checkable_menu_showMillis)
-                    .setActionView(new Switch(this));
-            ((Switch) navigationView.getMenu().findItem(R.id.checkable_menu_showMillis).getActionView()).setChecked(showMillis);
-             navigationView.getMenu().findItem(R.id.checkable_menu_showMillis).getActionView().setClickable(false);
-
-
-             navigationView.getMenu().findItem(R.id.checkable_menu_use_dark_theme)
-                .setActionView(new Switch(this));
-             ((Switch) navigationView.getMenu().findItem(R.id.checkable_menu_use_dark_theme).getActionView()).setChecked(useDark);
-             navigationView.getMenu().findItem(R.id.checkable_menu_use_dark_theme).getActionView().setClickable(false);
-
-            navigationView.getMenu().findItem(R.id.checkable_menu_useGPS)
-                .setActionView(new Switch(this));
-            ((Switch) navigationView.getMenu().findItem(R.id.checkable_menu_useGPS).getActionView()).setChecked(use_gps);
-            navigationView.getMenu().findItem(R.id.checkable_menu_useGPS).getActionView().setClickable(false);
-
-            navigationView.getMenu().findItem(R.id.checkable_menu_use24hr)
-                .setActionView(new Switch(this));
-            ((Switch) navigationView.getMenu().findItem(R.id.checkable_menu_use24hr).getActionView()).setChecked(use24hrFormat);
-            navigationView.getMenu().findItem(R.id.checkable_menu_use24hr).getActionView().setClickable(false);
-
-
-            Random r = new Random();
-            currentPhrase = r.nextInt(11 - 1) + 1;
-            Log.e("aaa", "random: " + currentPhrase);
-            String[] phrases = getResources().getStringArray(R.array.phrases);
-            TextView phrase = (TextView) header.findViewById(R.id.phrase);
-            phrase.setText(phrases[currentPhrase - 1]);
-
-
-        //populateCategories();
-        recyclerViewCat = (RecyclerView) findViewById(R.id.recyclerViewCat);
-        adapterCategory = new MyRecyclerViewAdapterCategory(CategoryList, this);
-        LinearLayoutManager linearLayoutManagerCat = new LinearLayoutManager(this);
-        RecyclerView.ItemAnimator itemAnimatorCat = new DefaultItemAnimator();
-        recyclerViewCat.setAdapter(adapterCategory);
-        recyclerViewCat.setHasFixedSize(true);
-        linearLayoutManagerCat.setOrientation(LinearLayoutManager.HORIZONTAL);
-        recyclerViewCat.setLayoutManager(linearLayoutManagerCat);
-        recyclerViewCat.setItemAnimator(itemAnimatorCat);
-
-
-        ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
-
-            @Override
-            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-                return false;
-            }
-
-            @Override
-            public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
-                adapter.mStampsListCopy.remove(adapter.findStampPositionInListByID(adapter.mStampsList.get(viewHolder.getAdapterPosition()).getStampID()));
-                adapter.mStampsList.remove(viewHolder.getAdapterPosition());
-                adapter.notifyItemRemoved(viewHolder.getAdapterPosition());
-                Log.e("aaa", "swyped!!!");
-            }
-        };
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
-
-        //populateRecords(timestampList);
-        recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        adapter = new MyRecyclerViewAdapter(timestampList, this);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        linearLayoutManager.setReverseLayout(true);                                                  //setReverseLayout
-        RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
-        itemTouchHelper.attachToRecyclerView(recyclerView);
-        recyclerView.setAdapter(adapter);
-        recyclerView.addItemDecoration(new VerticalSpaceItemDecoration(10));                        //VerticalSpaceItemDecoration(10
-        linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
-        recyclerView.setLayoutManager(linearLayoutManager);
-        recyclerView.setItemAnimator(itemAnimator);
-        adapter.fragmentmanager=getSupportFragmentManager();
-       // getGPSCoordinates();
-
-
+        });
     }
 
+    @AfterPermissionGranted(RC_READWRITE)
+    private void initApp() {
+        init_icons();
+        unfilteredTimestamps = dataManager.readTimestamps();
+        categories = dataManager.readCategories();
 
+        setup_user_action_callbacks();
 
+        initRecyclerView();
+        timeStampManager = new TimeStampManager();
+    }
 
+    private View setupDrawer(Toolbar toolbar) {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.setDrawerListener(toggle);
+        toggle.syncState();
 
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+        View header = navigationView.getHeaderView(0);
 
+        navigationView.getMenu().findItem(R.id.checkable_menu_auto_note)
+                .setActionView(new Switch(this));
+        ((Switch) navigationView.getMenu().findItem(R.id.checkable_menu_auto_note).getActionView()).setChecked(appSettings.isShowNoteAddDialog());
+        navigationView.getMenu().findItem(R.id.checkable_menu_auto_note).getActionView().setClickable(false);
 
+        navigationView.getMenu().findItem(R.id.checkable_menu_showMillis)
+                .setActionView(new Switch(this));
+        ((Switch) navigationView.getMenu().findItem(R.id.checkable_menu_showMillis).getActionView()).setChecked(appSettings.isShowMillis());
+        navigationView.getMenu().findItem(R.id.checkable_menu_showMillis).getActionView().setClickable(false);
 
+//        navigationView.getMenu().findItem(R.id.checkable_menu_use_dark_theme)
+//                .setActionView(new Switch(this));
+//        ((Switch) navigationView.getMenu().findItem(R.id.checkable_menu_use_dark_theme).getActionView()).setChecked(appSettings.isUseDark());
+//        navigationView.getMenu().findItem(R.id.checkable_menu_use_dark_theme).getActionView().setClickable(false);
 
+        navigationView.getMenu().findItem(R.id.checkable_menu_useGPS)
+                .setActionView(new Switch(this));
+        ((Switch) navigationView.getMenu().findItem(R.id.checkable_menu_useGPS).getActionView()).setChecked(appSettings.isUse_gps());
+        navigationView.getMenu().findItem(R.id.checkable_menu_useGPS).getActionView().setClickable(false);
 
+        navigationView.getMenu().findItem(R.id.checkable_menu_use24hr)
+                .setActionView(new Switch(this));
+        ((Switch) navigationView.getMenu().findItem(R.id.checkable_menu_use24hr).getActionView()).setChecked(appSettings.isUse24hrFormat());
+        navigationView.getMenu().findItem(R.id.checkable_menu_use24hr).getActionView().setClickable(false);
+        return header;
+    }
 
+    private void setup_user_action_callbacks() {
+        userActionCallback = new Consumer<UserAction>() {
+            @Override
+            public void accept(UserAction action) {
+                Timestamp timestamp = action.getTimestamp();
+                switch (action.getActionType()) {
+                    case REMOVE:
+                        remove_timestamp(timestamp);
+                        break;
+                    case EDIT_NOTE:
+                        edit_note(timestamp);
+                        break;
+                    case EDIT_TIME:
+                        pick_time(timestamp);
+                        break;
+                    case EDIT_DATE:
+                        pick_date(timestamp);
+                        break;
+                    case SHARE:
+                        //share_timestamp(timestamp);
+                        break;
+                    case CHANGE_CATEGORY:
+                        change_category(timestamp);
+                        break;
+                    case MAP_TO:
+                        show_timestamp_on_map(timestamp);
+                        break;
+                }
+            }
+        };
+    }
+
+    private void initRecyclerView() {
+
+        Consumer<Category> categoryUpdate = new Consumer<Category>() {
+            @Override
+            public void accept(Category selectedCategory) {
+                Log.e("stamper", "selected_category: " + selectedCategory.getName() + " #" + selectedCategory.getCategoryID());
+                lastSelectedCategory = selectedCategory;
+                filterTimestamps(lastSelectedCategory);
+            }
+        };
+
+        adapterCategory = new MyRecyclerViewAdapterCategory(categories, categoryUpdate, getApplicationContext());
+
+        recyclerViewCategory = (RecyclerView) findViewById(R.id.recyclerViewCat);
+        recyclerViewCategory.setAdapter(adapterCategory);
+        recyclerViewCategory.setHasFixedSize(true);
+
+        LinearLayoutManager linearLayoutManagerCat = new LinearLayoutManager(this);
+        linearLayoutManagerCat.setOrientation(LinearLayoutManager.HORIZONTAL);
+        recyclerViewCategory.setLayoutManager(linearLayoutManagerCat);
+
+        RecyclerView.ItemAnimator itemAnimatorCat = new DefaultItemAnimator();
+        recyclerViewCategory.setItemAnimator(itemAnimatorCat);
+
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+
+        recyclerViewTimestamps = (RecyclerView) findViewById(R.id.recyclerView);
+        adapter = new MyRecyclerViewAdapter(categories, metrics, icons, getApplicationContext(), userActionCallback, appSettings);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        linearLayoutManager.setReverseLayout(true);
+        RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
+        recyclerViewTimestamps.setAdapter(adapter);
+        recyclerViewTimestamps.addItemDecoration(new VerticalSpaceItemDecoration(10));
+        linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        recyclerViewTimestamps.setLayoutManager(linearLayoutManager);
+        recyclerViewTimestamps.setItemAnimator(itemAnimator);
+
+        filterTimestamps(Category.Default);
+    }
+
+    private void init_icons() {
+        icons = new ArrayList<>();
+        icons.add(new TimestampIcon(R.drawable.category_default, "Default", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_baby, "Baby", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_sport, "Sport", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_home, "Home", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_love, "Favorite", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_pill, "Pills", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_sleep, "Sleep", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_car, "Car", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_food, "Food", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_map, "Map", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_phone, "Phone", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_timer, "Timer", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_wallet, "Money", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_weather, "Weather", icons.size()));
+    }
+
+    private void filterTimestamps(Category selectedCategory) {
+        if (lastSelectedCategory == null) {
+            Log.wtf("srdx", "WTF Unexpected behavior. selectedCategory is null in filterTimestamps");
+            lastSelectedCategory = Category.Default;
+        }
+
+        adapter.removeAll();
+        if (selectedCategory.equals(Category.Default)) {
+            adapter.add(unfilteredTimestamps.values());
+            scrollTop();
+            return;
+        }
+        List<Timestamp> sortedTimestamps = new ArrayList<>();
+        for (Timestamp timestamp : unfilteredTimestamps.values()) {
+            if (timestamp.getCategoryId().equals(selectedCategory.getCategoryID()))
+                sortedTimestamps.add(timestamp);
+        }
+        adapter.add(sortedTimestamps);
+        scrollTop();
+    }
+
+    private void scrollTop() {
+        recyclerViewTimestamps.smoothScrollToPosition(adapter.getItemCount());
+    }
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
@@ -274,328 +364,138 @@ public class MainActivity extends AppCompatActivity  implements NavigationView.O
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
+        switch (id) {
+            case R.id.checkable_menu_showMillis: {
+                appSettings.setShowMillis(!appSettings.isShowMillis());
+                ((Switch) item.getActionView()).toggle();
+                adapter.notifyDataSetChanged();
+                return true;
+            }
+            case R.id.checkable_menu_use24hr: {
+                appSettings.setUse24hrFormat(!appSettings.isUse24hrFormat());
+                ((Switch) item.getActionView()).toggle();
+                adapter.notifyDataSetChanged();
+                return true;
+            }
 
-        if (id == R.id.checkable_menu_showMillis) {
-            showMillis = !showMillis;
-           // item.setChecked(showMillis);
-            ((Switch) item.getActionView()).toggle();
-            filterList();
-            return true;
+            case R.id.action_category_add: {
+                add_new_category_dialog(getCurrentFocus());
+                break;
+            }
+            case R.id.action_category_delete: {
+                if (categories.size() == 1) {
+                    Snackbar.make(recyclerViewTimestamps, "No categories left..", Snackbar.LENGTH_SHORT).show();
+                    break;
+                } else remove_category(getCurrentFocus());
+                break;
+            }
+            case R.id.action_export: {
+                exportTimestampsToCsv();
+                break;
+            }
+            case R.id.action_migrate: {
+                migrate();
+                break;
+            }
+//       case R.id.checkable_menu_use_dark_theme) {
+//            appSettings.setUseDark(!appSettings.isUseDark());
+//            ((Switch) item.getActionView()).toggle();
+//            recreate();
+//            return true;
+//        }
+            case R.id.checkable_menu_auto_note: {
+                ((Switch) item.getActionView()).toggle();
+                appSettings.setShowNoteAddDialog(!appSettings.isShowNoteAddDialog());
+                return true;
+            }
+
+            case R.id.checkable_menu_useGPS: {
+
+                appSettings.setUse_gps(!appSettings.isUse_gps());
+                ((Switch) item.getActionView()).toggle();
+                return true;
+            }
         }
-        if (id == R.id.checkable_menu_use24hr) {
-            use24hrFormat = !use24hrFormat;
-            ((Switch) item.getActionView()).toggle();
-            //item.setChecked(use24hrFormat);
-            filterList();
-            return true;
-        }
-
-        if (id == R.id.action_category_add) {
-            showDialog(findViewById(R.id.recyclerViewCat));
-            return true;
-        }
-        if (id == R.id.action_category_delete) {
-            showSpinner(findViewById(R.id.recyclerView));
-            return true;
-        }
-        if (id == R.id.action_export) {
-            exportToCSV();
-            return true;
-        }
-
-        if (id == R.id.checkable_menu_use_dark_theme) {
-
-            useDark =!useDark;
-            ((Switch) item.getActionView()).toggle();
-
-
-            mPrefs.edit().putBoolean(SHARED_PREFS_USEDARK, useDark).commit();
-
-
-            recreate();
-            return true;
-        }
-
-        if (id == R.id.checkable_menu_auto_note) {
-            ((Switch) item.getActionView()).toggle();
-            showNoteAddDialog = !showNoteAddDialog;
-            //item.setChecked(showNoteAddDialog);
-            return true;
-        }
-
-        if (id == R.id.checkable_menu_useGPS) {
-
-            use_gps =!use_gps;
-            ((Switch) item.getActionView()).toggle();
-            return true;
-        }
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
 
-
-
-
-    public List<Category> getCategoryList(){
-       return adapterCategory.mCategoryList;
-    }
-
-    public Category getCategoryByID(int categoryID) {
-        for (Category item : adapterCategory.mCategoryList) { //!!! added adapter
-            if (item.getCategoryID() == categoryID) {
-                //Log.e("aaa",  "category: " + item.getCategoryID());
-                return item;
-            }
-        }
-        return null;  //if category was deleted then we assign  a text: "to nofilter" but not changing cat id
-    }
-
-
-    public void filterList() { //i call this fron MyRecViewAdapter to filter by category when clicked
-        adapter.sortByCategory(LastCategoryFilter);
-    }
-
-
-    private void populateCategories() {
-        List<String> tempcatlist = Arrays.asList("No filter", "Sport", "Baby sleep", "Medication", "Work shifts");
-
-        for (int i = 0; i < tempcatlist.size(); i++) {
-            Category category = new Category();
-            category.setName(tempcatlist.get(i));
-            category.setCategoryID(i);
-            adapterCategory.mCategoryList.add(category);
-
-        }
-        maxCatID = adapterCategory.mCategoryList.size();
-        Log.e("aaa", "maxCatID after populateCategories: " + maxCatID);
-    }
-
-
-    private static final int REQUEST_EXTERNAL_STORAGE = 1;
-    private static String[] PERMISSIONS_STORAGE = {
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-    };
-
-    //persmission method.
-    public static void verifyStoragePermissions(Activity activity) {
-        // Check if we have read or write permission
-        int writePermission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        int readPermission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE);
-
-        if (writePermission != PackageManager.PERMISSION_GRANTED || readPermission != PackageManager.PERMISSION_GRANTED) {
-            // We don't have permission so prompt the user
-            ActivityCompat.requestPermissions(
-                    activity,
-                    PERMISSIONS_STORAGE,
-                    REQUEST_EXTERNAL_STORAGE
-            );
-        }
-    }
-
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-
-      //  getMenuInflater().inflate(R.menu.menu_main, menu);
-
-
-//        MenuItem menuItem = menu.findItem(R.id.myswitch);
-//        View view = MenuItemCompat.getActionView(menuItem);
-//        Switch switcha = (Switch) view.findViewById(R.id.switchForActionBar);
-//        switcha.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-//
-//            @Override
-//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-//                Log.e("aaa", "switch clicked");
-//                showMillis=!showMillis;
-//
-//                filterList();
-//            }
-//        });
-
-        return super.onCreateOptionsMenu(menu);
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
     }
 
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-//        MenuItem showMillisItem = menu.findItem(R.id.checkable_menu_showMillis);
-//        showMillisItem.setCheckable(showMillis);
-//
-//        MenuItem use24hrItem = menu.findItem(R.id.checkable_menu_use24hr);
-//        use24hrItem.setCheckable(use24hrFormat);
-//
-//        MenuItem useDarkitem = menu.findItem(R.id.checkable_menu_use_dark_theme);
-//        useDarkitem.setCheckable(useDark);
-//
-//        MenuItem showNote = menu.findItem(R.id.checkable_menu_auto_note);
-//        showNote.setCheckable(showNoteAddDialog);
+    //<Timestamp editing>
 
-        return true;
-    }
+    private void pick_date(final Timestamp old_timestamp) {
+        trackAction("Edit date");
+        final int old_year = old_timestamp.format(TimestampFormat.Year);
+        final int old_month = old_timestamp.format(TimestampFormat.Month);
+        final int old_day = old_timestamp.format(TimestampFormat.Day);
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-//        int id = item.getItemId();
-//
-//        if (id == R.id.checkable_menu_showMillis) {
-//            showMillis = !showMillis;
-//            item.setChecked(showMillis);
-//            filterList();
-//            return true;
-//        }
+        DatePickerDialog jetDatePicker = new DatePickerDialog(this, new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker datePicker, int new_year, int new_month, int new_day) {
+                Log.v("srdx", "date is picked: " + new_year + " " + (new_month + 1) + " " + new_day);
 
-        return super.onOptionsItemSelected(item);
-    }  // not used, empty
+                final Calendar c = Calendar.getInstance();
+                c.setTimeInMillis(old_timestamp.getTimestamp().toMilliseconds());
+                c.set(new_year, new_month, new_day);
+                JetTimestamp updatedDate = JetTimestamp.fromMilliseconds(c.getTimeInMillis());
+                c.clear();
 
-
-
-    public String getGPSCoordinates(){
-        Log.e("gps", "use GPS: "+ use_gps);
-        if (!use_gps) return "";
-        final LocationManager mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        final Location currentGeoLocation = mlocManager
-                .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        if (currentGeoLocation==null) {
-            Toast.makeText(this, R.string.null_location, Toast.LENGTH_LONG).show();
-            return "";
-        }
-        Log.e("gps","getGPSCoordinates: " + String.valueOf(currentGeoLocation.getLatitude()) +  "," +  String.valueOf(currentGeoLocation.getLongitude() ));
-
-
-
-
-//        String uri = String.format(Locale.ENGLISH, "geo:%f,%f", currentGeoLocation.getLatitude(), currentGeoLocation.getLongitude());
-//        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
-//        try
-//        {
-//           // startActivity(intent);
-//        }
-//        catch(ActivityNotFoundException ex)
-//        {
-//            Toast.makeText(this, "Please install a maps application", Toast.LENGTH_LONG).show();
-//        }
-
-        return  String.valueOf(currentGeoLocation.getLatitude() + "," +  String.valueOf(currentGeoLocation.getLongitude()));
-    }
-
-
-    public void exportToCSV() {
-        String filename = "TimeStampExport.csv";
-        final String newLine = "\n";
-        final String newComma = ",";
-
-
-
-
-       // int currentCategoryID = adapterCategory.mCategoryList.get(LastCategoryFilter).getCategoryID(); //added adapter
-        String string =  getCategoryByID(LastCategoryFilter).getName() + newLine;  //aname of the category will be stored on 1st  line of csv file
-
-
-        Calendar c = Calendar.getInstance();
-        TimeZone tz = c.getTimeZone();
-
-        for (Timestamp item : adapter.mStampsListCopy) {
-            if (LastCategoryFilter == 0) {
-                c.setTimeInMillis(item.getTime());
-                String format = "EEE d MMM yyyy hh:mm:ss.SSS a z";
-                SimpleDateFormat sdf = new SimpleDateFormat(format);
-                sdf.setTimeZone(tz);
-                String dateForCSV = sdf.format(c.getTime());
-
-                string += dateForCSV + newComma;
-                string += item.getSubtitle() + newComma;
-                string += getCategoryByID(item.getCategoryID()).getName();
-                string += newLine;
-            } else if (item.getCategoryID() == LastCategoryFilter) {
-
-                c.setTimeInMillis(item.getTime());
-                String format = "EEE d MMM yyyy HH:mm:ss.SSS a z";
-                SimpleDateFormat sdf = new SimpleDateFormat(format);
-                sdf.setTimeZone(tz);
-                String dateForCSV = sdf.format(c.getTime());
-                string += dateForCSV + newComma;
-                string += item.getSubtitle();
-                string += newLine;
+                unfilteredTimestamps.get(old_timestamp.getIdentifier()).setTimestamp(updatedDate);
+                adapter.updateTimestamp(old_timestamp);
             }
-        }
-        Log.e("aaa", "string:" + string);
+        }, old_year, old_month, old_day);
 
+        jetDatePicker.show();
+    }
 
-        //  File file = new File();
-        File root = Environment.getExternalStorageDirectory();
+    private void pick_time(final Timestamp old_timestamp) {
+        trackAction("Edit time");
+        final int old_hrs24 = old_timestamp.format(TimestampFormat.HRS24);
+        final int old_min = old_timestamp.format(TimestampFormat.MIN);
 
-        String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state)) {
-            Log.d("aaa", "sdcard mounted and writable");
+        final long old_dif_in_millis = (old_hrs24 * 60 + old_min) * 60 * 1000;
 
+        TimePickerDialog timePickerDialog = new TimePickerDialog(this, new TimePickerDialog.OnTimeSetListener() {
+            @Override
+            public void onTimeSet(TimePicker timePicker, int new_hr, int new_min) {
+                Log.v("srdx", "time is picked: " + new_hr + ":" + new_min);
+                final long new_dif_in_millis = (new_hr * 60 + new_min) * 60 * 1000;
+                long delta = new_dif_in_millis - old_dif_in_millis;
 
-            File dir = new File(root.getAbsolutePath());
+                JetTimestamp updatedDate = old_timestamp.getTimestamp();
+                Log.v("srdx", "delta " + delta);
 
-            dir.getParentFile().mkdirs();
+                updatedDate = updatedDate.add(JetDuration.fromMilliseconds(delta));
 
-            try {
-
-                File file = new File(dir, filename);
-                FileOutputStream out = new FileOutputStream(file);
-                out.write(string.getBytes());
-                out.close();
-                emailCSV(file);
-
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-                Log.e("aaa", "FileNotFoundException");
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                Log.e("aaa", "IOException");
+                unfilteredTimestamps.get(old_timestamp.getIdentifier()).setTimestamp(updatedDate);
+                adapter.updateTimestamp(old_timestamp);
             }
-        } else if (Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
-            Log.d("aaa", "sdcard mounted readonly");
-        } else {
-            Log.d("aaa", "sdcard state: " + state);
-        }
+        }, old_hrs24, old_min, appSettings.isUse24hrFormat());
+
+        timePickerDialog.show();
     }
 
-    private void emailCSV(File file) {
-
-        Uri u1 = Uri.fromFile(file);
-
-
-        Intent sendIntent = new Intent(Intent.ACTION_SEND);
-        sendIntent.putExtra(Intent.EXTRA_SUBJECT, "My timestamps");
-        sendIntent.putExtra(Intent.EXTRA_STREAM, u1);
-        sendIntent.setType("text/html");
-        startActivity(sendIntent);
-
-    }
-
-    private void showDialog(View v) {
+    private void edit_note(final Timestamp old_timestamp) {
+        View v = recyclerViewTimestamps;
         AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
-        View viewInflated = LayoutInflater.from(v.getContext()).inflate(R.layout.text_input_cat, null, false);
-        final EditText input = (EditText) viewInflated.findViewById(R.id.input_cat);
+        View viewInflated = LayoutInflater.from(v.getContext()).inflate(R.layout.text_input_note, null, false);
+        final EditText input = (EditText) viewInflated.findViewById(R.id.input);
+        input.setText(old_timestamp.getNote());
         builder.setView(viewInflated);
 
         builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
-                maxCatID++;
-                Category newCategorytoAdd = new Category(input.getText().toString(), maxCatID);
-                adapterCategory.mCategoryList.add(newCategorytoAdd); //!!!
-                int pos = adapterCategory.mCategoryList.size(); //!!!
-                LastCategoryFilter = maxCatID; //error was here!!!
-                filterList();
-                adapterCategory.notifyDataSetChanged();
-                //adapter.notifyDataSetChanged();
-                recyclerViewCat.scrollToPosition(pos-1); // scroll to the end
 
-                adapterCategory.selectedPos = pos-1;
-                Log.e("aaa", "New category added: " +input.getText().toString() + " with id= " + maxCatID);
+                unfilteredTimestamps.get(old_timestamp.getIdentifier()).setNote(input.getText().toString());
+                adapter.updateTimestamp(old_timestamp);
 
             }
         });
@@ -607,133 +507,266 @@ public class MainActivity extends AppCompatActivity  implements NavigationView.O
         });
 
 
-      //  builder.show();
         builder.show().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+    }  // input dialog -- for a note
 
-    }  // input dialog --   add  new category
-
-    private void showSpinner(View v) {
+    private void change_category(final Timestamp old_timestamp) {
+        trackAction("Edit category");
+        View v = recyclerViewTimestamps;
         AlertDialog.Builder b = new AlertDialog.Builder(v.getContext());
-        b.setTitle("Select a category you want to delete");
-        List<String> types = new ArrayList<>();//
+        b.setTitle("Move to");
+        List<String> quickCategories = new ArrayList<>();//
 
-        int a = 0;
-        for (Category item : adapterCategory.mCategoryList) {
-            if (a > 0) types.add(item.getName());
-            a = 1; // dont want to show 0 item "no filter" sicne u cant delete it
+        for (int a = 0; a < categories.size(); a++) {
+            quickCategories.add(categories.get(a).getName());
         }
 
-        b.setItems(types.toArray(new String[types.size()]), new DialogInterface.OnClickListener() {
+        b.setItems(quickCategories.toArray(new String[quickCategories.size()]), new DialogInterface.OnClickListener() {
 
             @Override
             public void onClick(DialogInterface dialog, int clickedPos) {
                 dialog.dismiss();
+                JetUUID move_to_category = categories.get(clickedPos).getCategoryID();
 
-                int oldID;
-                oldID = adapterCategory.mCategoryList.get(clickedPos + 1).getCategoryID();
-                adapterCategory.mCategoryList.remove(clickedPos + 1);
+                unfilteredTimestamps.get(old_timestamp.getIdentifier()).setCategory_identifier(move_to_category);
+                if (lastSelectedCategory.getCategoryID().equals(move_to_category) || lastSelectedCategory.equals(Category.Default))
+                    adapter.updateTimestamp(old_timestamp);
+                else adapter.remove(old_timestamp);
+            }
 
-                for (Timestamp item : adapter.mStampsListCopy) {
-                    if (item.getCategoryID() == oldID) item.setCategoryID(0);
+        });
+
+        b.show();
+    }
+
+    private void remove_timestamp(Timestamp timestamp) {
+        adapter.remove(timestamp);
+        unfilteredTimestamps.remove(timestamp.getIdentifier());
+    }
+
+    private void show_timestamp_on_map(Timestamp timestamp) {
+        trackAction("Open Map");
+
+        String uri = "geo:0,0?q=" + timestamp.getPhysicalLocation().toSimpleCommaString() + "(" + timestamp.getNote() + ")";
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+        try {
+            getApplicationContext().startActivity(intent);
+        } catch (ActivityNotFoundException ex) {
+            Snackbar.make(recyclerViewTimestamps, "Please install a maps application", Snackbar.LENGTH_SHORT).show();
+        }
+    }
+
+    //<Category editing>
+
+    private void add_new_category_dialog(View v) {//new category dialog
+        trackAction("Add new category");
+        AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
+        View viewInflated = LayoutInflater.from(v.getContext()).inflate(R.layout.new_category, null, false);
+        final EditText input = (EditText) viewInflated.findViewById(R.id.input_cat);
+
+        final MyRecyclerViewIconPicker iconPicker = new MyRecyclerViewIconPicker(icons, new Consumer<TimestampIcon>() {
+            @Override
+            public void accept(TimestampIcon icon) {
+                input.setText(icon.getDescription());
+            }
+        }, getApplicationContext());
+
+        RecyclerView iconRecycler = (RecyclerView) viewInflated.findViewById(R.id.recyclerView_icon);
+        iconRecycler.setAdapter(iconPicker);
+        iconRecycler.setHasFixedSize(true);
+
+        LinearLayoutManager linearLayoutManagerCat = new LinearLayoutManager(this);
+        linearLayoutManagerCat.setOrientation(LinearLayoutManager.HORIZONTAL);
+        iconRecycler.setLayoutManager(linearLayoutManagerCat);
+
+        builder.setView(viewInflated);
+
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                int lastAdapterPosition = iconPicker.getLastSelected(); // which icon was selected
+                Category newCategory = new Category(input.getText().toString(), JetUUID.randomUUID(), lastAdapterPosition);
+                categories.add(newCategory);
+
+                mTracker.send(new HitBuilders.EventBuilder()
+                        .setCategory("Action")
+                        .setAction("New category")
+                        .setLabel(newCategory.getName())
+                        .build());
+
+                mTracker.send(new HitBuilders.EventBuilder()
+                        .setCategory("Action")
+                        .setAction("Icon picked")
+                        .setLabel(icons.get(lastAdapterPosition).getDescription())
+                        .build());
+
+                lastSelectedCategory = newCategory;
+                adapterCategory.setSelected_category(newCategory);
+                adapterCategory.notifyDataSetChanged();
+
+                recyclerViewCategory.smoothScrollToPosition(adapterCategory.getItemCount()); //scrolling to new category
+                filterTimestamps(newCategory);
+
+                iconPicker.destroy();
+                dialog.cancel();
+            }
+        });
+        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                iconPicker.destroy();
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+    }                // input dialog --   add  new category
+
+    private void remove_category(View v) {      //category deletion dialog
+        trackAction("Remove category");
+        AlertDialog.Builder b = new AlertDialog.Builder(v.getContext());
+        b.setTitle("Select a category you want to delete");
+        List<String> quickCategories = new ArrayList<>();//
+
+        for (int a = 1; a < categories.size(); a++) {
+            quickCategories.add(categories.get(a).getName());
+        }
+
+        b.setItems(quickCategories.toArray(new String[quickCategories.size()]), new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialog, int clickedPos) {
+                dialog.dismiss();
+                JetUUID categoryToRemove = categories.get(clickedPos + 1).getCategoryID();
+
+                resetWidgetCategoryToNoneIfNeeded(categoryToRemove);
+                // remove all timestamps  that belongs to this category
+                List<JetUUID> itemsToRemove = new ArrayList<>();
+
+                for (Timestamp timestamp : unfilteredTimestamps.values()) {
+                    if (timestamp.getCategoryId().equals(categoryToRemove))
+                        itemsToRemove.add(timestamp.getIdentifier());  //what to remove
                 }
 
+                for (JetUUID id : itemsToRemove) {
+                    unfilteredTimestamps.remove(id); //removing
+                }
 
-                LastCategoryFilter = 0;
-                filterList();
+                //remove category
+                categories.remove(clickedPos + 1);
+
+                recyclerViewCategory.smoothScrollToPosition(0); //scrolling to default category
+                lastSelectedCategory = Category.Default;        //switch to default category
+                adapterCategory.setSelected_category(lastSelectedCategory);
                 adapterCategory.notifyDataSetChanged();
-                adapter.notifyDataSetChanged();
-                recyclerViewCat.scrollToPosition(0);
-                adapterCategory.selectedPos = 0;
-
+                filterTimestamps(lastSelectedCategory);
             }
 
         });
 
         b.show();
 
-    } // spinner dialog -- delete  a category
+    }                       // spinner dialog -- delete  a category
 
-    private void showDialogForNote(View v, final int stampID) {
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
-        View viewInflated = LayoutInflater.from(v.getContext()).inflate(R.layout.text_input_note, null, false);
-        final EditText input = (EditText) viewInflated.findViewById(R.id.input);
-        builder.setView(viewInflated);
-
-        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                adapter.mStampsListCopy.get(adapter.findStampPositionInListByID(stampID)).setSubtitle(input.getText().toString());
-                adapter.notifyDataSetChanged();
-                dialog.dismiss();
-
-            }
-        });
-        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-
-
-
-        builder.show().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+    private void resetWidgetCategoryToNoneIfNeeded(JetUUID categoryToRemove) {
+        JetUUID defaultCategory = dataManager.readDefaultCategoryForWidget();
+        if (defaultCategory.equals(categoryToRemove)) {
+            dataManager.saveDefaultCategoryForWidget(AppSettings.NO_DEFAULT_CATEGORY);
+        }
     }
 
-    public void saveData() {
-
-        Gson gson = new Gson();
-        String json = gson.toJson(adapter.mStampsListCopy);
-        mPrefs.edit().putString(SHARED_PREFS_STAMPS, json).commit();
-        json = gson.toJson(adapterCategory.mCategoryList);
-        mPrefs.edit().putString(SHARED_PREFS_CATS, json).commit();
-        mPrefs.edit().putBoolean(SHARED_PREFS_SHOW_MILLIS, showMillis).commit();
-        mPrefs.edit().putBoolean(SHARED_PREFS_USE24HR, use24hrFormat).commit();
-        mPrefs.edit().putBoolean(SHARED_PREFS_AUTONOTE, showNoteAddDialog).commit();
-        mPrefs.edit().putBoolean(SHARED_PREFS_USEDARK, useDark).commit();
-        mPrefs.edit().putBoolean(SHARED_PREFS_USE_GPS, use_gps).commit();
-        mPrefs.edit().putInt(SHARED_PREFS_MAX_ID, maxListID).commit();
-        mPrefs.edit().putInt(SHARED_PREFS_MAXCAT_ID, maxCatID).commit();
-
+    private void trackAction(String text) {
+        mTracker.send(new HitBuilders.EventBuilder()
+                .setCategory("Action")
+                .setAction(text)
+                .build());
     }
 
-    public void loadData() {
-
-        if (mPrefs.contains(SHARED_PREFS_CATS)) {
-            Gson gson = new Gson();
-            String json = mPrefs.getString(SHARED_PREFS_CATS, "");
-            Type type = new TypeToken<List<Category>>() {
-            }.getType();
-            Log.e("aaa", "Loaded cats: " + json);
-            adapterCategory.mCategoryList = gson.fromJson(json, type);
-            filterList();
+    private void exportTimestampsToCsv() {
+        trackAction("Export timestamps");
+        String[] storage_perms = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
+        if (EasyPermissions.hasPermissions(this, storage_perms)) {
+            emailCSV(dataManager.exportToCSV(lastSelectedCategory, new ArrayList<>(unfilteredTimestamps.values()), categories));
         } else {
-            populateCategories(); //if there are no categories in shared prefs (means its a 1st run right after install) we populate with some template categories
-            Log.e("aaa", "1st run right after install.  populating categories with templates...");
+            Log.v("srdx", " EasyPermissions not granted. Requesting Permissions...");
+            EasyPermissions.requestPermissions(this, "App needs to write to storage",
+                    RC_READWRITE, storage_perms);
         }
-
-        if (mPrefs.contains(SHARED_PREFS_STAMPS)) {
-            Gson gson = new Gson();
-            String json = mPrefs.getString(SHARED_PREFS_STAMPS, "");
-            Log.e("aaa", "all stamps to string: "+json);
-            Type type = new TypeToken<List<Timestamp>>() {
-            }.getType();
-            adapter.mStampsListCopy = gson.fromJson(json, type);
-            filterList();
-        }
-
-
-        if (mPrefs.contains(SHARED_PREFS_MAX_ID)) {
-            maxListID = mPrefs.getInt(SHARED_PREFS_MAX_ID, 0);
-        }
-
-        if (mPrefs.contains(SHARED_PREFS_MAXCAT_ID)) {
-            maxCatID = mPrefs.getInt(SHARED_PREFS_MAXCAT_ID, 0);
-        }
-
-
     }
 
+    private void getGPSCoordinates(final Consumer<PhysicalLocation> consumer) {
+        trackAction("Location was recorded");
+        final int GPS_REQUEST_TIMEOUT = 1000 * 10;
+        Log.v("srdx", "getGPSCoordinates");
+        final Looper myLooper = Looper.myLooper();
 
+        final LocationManager mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        final Handler myHandler = new Handler(myLooper);
+        final LocationListener locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                Log.v("srdx", "onLocationChanged: " + location.getLatitude());
+                mlocManager.removeUpdates(this);
+                PhysicalLocation physicalLocation = new PhysicalLocation(location.getLatitude(), location.getLongitude());
+                consumer.accept(physicalLocation);
+                myHandler.removeCallbacksAndMessages(null);
+            }
+
+            @Override
+            public void onStatusChanged(String s, int i, Bundle bundle) {
+            }
+
+            @Override
+            public void onProviderEnabled(String s) {
+            }
+
+            @Override
+            public void onProviderDisabled(String s) {
+                Snackbar.make(recyclerViewTimestamps, "Looks like your GPS if Off", Snackbar.LENGTH_LONG).show();
+                mlocManager.removeUpdates(this);
+
+            }
+        };
+        mlocManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, locationListener, myLooper);
+
+
+        myHandler.postDelayed(new Runnable() {
+            public void run() {
+                mlocManager.removeUpdates(locationListener);
+                Location location = mlocManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                if (location != null)
+                    consumer.accept(new PhysicalLocation(location.getLatitude(), location.getLongitude()));
+                else
+                    Snackbar.make(recyclerViewTimestamps, "Unable to get your location", Snackbar.LENGTH_LONG).show();
+            }
+        }, GPS_REQUEST_TIMEOUT);
+    }
+
+    private boolean hasGPSpermission() {
+        final int RC_LOCATION = 9863;
+
+        String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION};
+
+        if (EasyPermissions.hasPermissions(this, perms)) {
+            return true;
+        } else {
+            Log.v("srdx", " EasyPermissions not granted. Requesting Permissions...");
+            EasyPermissions.requestPermissions(this, "To save your location, Timestamper needs the access to Location services",
+                    RC_LOCATION, perms);
+            return false;
+        }
+    }
+
+    private void emailCSV(File file) {
+        if (file == null) {
+            Log.wtf("srdx", "WTF Unexpected behavior. file is null in emailCSV");
+            return;
+        }
+        Uri u1 = Uri.fromFile(file);
+        Intent sendIntent = new Intent(Intent.ACTION_SEND);
+        sendIntent.putExtra(Intent.EXTRA_SUBJECT, "My timestamps");
+        sendIntent.putExtra(Intent.EXTRA_STREAM, u1);
+        sendIntent.setType("text/html");
+        startActivity(sendIntent);
+    }
 }

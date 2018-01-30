@@ -1,12 +1,10 @@
-package com.sardox.timestamper;
+package com.sardox.timestamper.utils;
 
 import android.graphics.Rect;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
-/**
- * Created by sardox on 7/25/2016.
- */
+
 public class VerticalSpaceItemDecoration extends RecyclerView.ItemDecoration {
 
     private final int mVerticalSpaceHeight;

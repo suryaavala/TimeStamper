@@ -45,6 +45,9 @@
     </string-array>
     <string name="appwidget_text">EXAMPLE</string>
     <string name="add_widget">Add widget</string>
+    <string name="recover_try">Try to Recover</string>
+    <string name="import_export">Import / Export</string>
+    <string name="settings">Settings</string>
 
 
 </resources>

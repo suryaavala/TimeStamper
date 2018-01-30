@@ -1,45 +1,63 @@
 package com.sardox.timestamper.objects;
 
 
-
+import com.sardox.timestamper.types.JetUUID;
 
 public class Category {
-    private String n; //mName
-    private int c;//mCategoryID
+    private String name;
+    private JetUUID identifier;
 
-    public Category() {
+    public static final Category Default = new Category();
+
+    @Override
+    public int hashCode() {
+        int result = name.hashCode();
+        result = 31 * result + identifier.hashCode();
+        result = 31 * result + icon_id;
+        return result;
     }
 
-    public Category(String name, int mCategoryID) {
-        this.n = name;
-        this.c=mCategoryID;
-
+    private Category() {
+        this.name = "Default";
+        this.identifier = JetUUID.Zero;
+        this.icon_id = 0;
     }
+
+    public Category(String name, JetUUID identifier, int icon_id) {
+        this.name = name;
+        this.identifier = identifier;
+        this.icon_id = icon_id;
+    }
+
+    public int getIcon_id() {
+        return icon_id;
+    }
+
+
+    private int icon_id = 0;
 
     public String getName() {
-        return n;
+        return name;
     }
 
     public void setName(String name) {
-        this.n = name;
+        this.name = name;
     }
 
-    public int getCategoryID() {
-        return c;
+    public JetUUID getCategoryID() {
+        return identifier;
     }
 
-    public void setCategoryID(int mCategoryID) {
-        this.c = mCategoryID;
-    }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
+        Category category = (Category) o;
+
+        if (icon_id != category.icon_id) return false;
+        if (!name.equals(category.name)) return false;
+        return identifier.equals(category.identifier);
+    }
 
 }
-
-
-
-
-
-
-
-
-
