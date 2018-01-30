@@ -26,6 +26,8 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -198,19 +200,24 @@ public class DataManager {
         return jetList;
     }
 
-    public File exportToCSV(Category category, Collection<Timestamp> timestamps) {
-        String filename = "MyTimestamps.csv";
+    private List<Timestamp> sortDesc(List<Timestamp> timestamps){
+        Collections.sort(timestamps, new Comparator<Timestamp>(){
+            public int compare(Timestamp t1, Timestamp t2) {
+                return t2.getTimestamp().compareTo(t1.getTimestamp());
+             }
+        });
+     return timestamps;
+    }
+
+    public File exportToCSV(Category category, List<Timestamp> timestamps) {
+        final Calendar calendar = Calendar.getInstance();
+        final TimeZone localTZ = calendar.getTimeZone();
         final String newLine = "\n";
         final String newComma = ",";
-        String plain_text = "";
+        final String filename = "MyTimestamps.csv";
+        String plain_text = category.getName() + newLine;
 
-        String categoryName = category.getName();
-        plain_text += categoryName + newLine;
-
-        Calendar calendar = Calendar.getInstance();
-        TimeZone localTZ = calendar.getTimeZone();
-
-        for (Timestamp item : timestamps) {
+        for (Timestamp item : sortDesc(timestamps)) {
             plain_text += item.getTimestamp().toString(Locale.getDefault(), localTZ) + newComma;
             plain_text += item.getNote() + newComma;
             plain_text += item.getPhysicalLocation().toCsvString();
@@ -218,7 +225,7 @@ public class DataManager {
         }
 
         calendar.clear();
-        Log.v("srdx", plain_text);
+        Log.d("RawFile", plain_text);
 
         File root = Environment.getExternalStorageDirectory();
 

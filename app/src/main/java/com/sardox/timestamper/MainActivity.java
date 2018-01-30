@@ -687,7 +687,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         trackAction("Export timestamps");
         String[] storage_perms = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
         if (EasyPermissions.hasPermissions(this, storage_perms)) {
-            emailCSV(dataManager.exportToCSV(lastSelectedCategory, unfilteredTimestamps.values()));
+            emailCSV(dataManager.exportToCSV(lastSelectedCategory, new ArrayList<>(unfilteredTimestamps.values())));
         } else {
             Log.v("srdx", " EasyPermissions not granted. Requesting Permissions...");
             EasyPermissions.requestPermissions(this, "App needs to write to storage",
