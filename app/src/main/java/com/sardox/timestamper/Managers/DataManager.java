@@ -175,8 +175,8 @@ public class DataManager {
     private static List<Category> sampleCategories() {
         List<Category> sample = new ArrayList<>();
         sample.add(Category.Default);
-        sample.add(new Category("Baby", categories().get(1), 1));
-        sample.add(new Category("Sport", categories().get(2), 2));
+        sample.add(new Category("BABY", categories().get(1), 1));
+        sample.add(new Category("SPORT", categories().get(2), 2));
         return sample;
     }
 

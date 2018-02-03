@@ -17,6 +17,9 @@
     <string name="add_from_widget">добавлено через виджет</string>
     <string name="use_gps">Сохранять координаты</string>
     <string name="null_location">Координаты не сохранены, убедитесь что GPS включен</string>
+    <string name="recover_try">Try to Recover</string>
+    <string name="import_export">Import / Export</string>
+    <string name="settings">Настройки</string>
 
     <string name="s1">Better three hours too soon than a minute too late.</string>
     <string name="s2">Time is nature\'s way of keeping everything from happening at once.</string>

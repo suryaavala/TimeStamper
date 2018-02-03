@@ -18,7 +18,7 @@ public class Category {
     }
 
     private Category() {
-        this.name = "Default";
+        this.name = "DEFAULT";
         this.identifier = JetUUID.Zero;
         this.icon_id = 0;
     }

@@ -22,7 +22,7 @@
             android:paddingTop="10dp"
             android:text="Default"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textSize="20sp" />
+            android:textSize="16sp" />
 
         <LinearLayout
             android:id="@+id/recycler_category_underline"
