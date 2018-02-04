@@ -46,9 +46,9 @@ import com.sardox.timestamper.Managers.DataManager;
 import com.sardox.timestamper.Managers.TimeStampManager;
 import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.objects.Timestamp;
-import com.sardox.timestamper.recyclerview.TimestampsAdapter;
 import com.sardox.timestamper.recyclerview.CategoryAdapter;
 import com.sardox.timestamper.recyclerview.IconAdapter;
+import com.sardox.timestamper.recyclerview.TimestampsAdapter;
 import com.sardox.timestamper.types.JetDuration;
 import com.sardox.timestamper.types.JetTimestamp;
 import com.sardox.timestamper.types.JetUUID;
@@ -548,13 +548,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void show_timestamp_on_map(Timestamp timestamp) {
         trackAction("Open Map");
-
-        String uri = "geo:0,0?q=" + timestamp.getPhysicalLocation().toSimpleCommaString() + "(" + timestamp.getNote() + ")";
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
-        try {
-            getApplicationContext().startActivity(intent);
-        } catch (ActivityNotFoundException ex) {
-            Snackbar.make(recyclerViewTimestamps, "Please install a maps application", Snackbar.LENGTH_SHORT).show();
+        if (timestamp.getPhysicalLocation() != null) {
+            String uri = "geo:0,0?q=" + timestamp.getPhysicalLocation().toSimpleCommaString() + "(" + timestamp.getNote() + ")";
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+            try {
+                startActivity(intent);
+            } catch (ActivityNotFoundException ex) {
+                Snackbar.make(recyclerViewTimestamps, "Please install a maps application", Snackbar.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -625,9 +626,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }                // input dialog --   add  new category
 
     private void remove_category() {      //category deletion dialog
-        trackAction("Remove category");
+        trackAction(getString(R.string.remove_category));
         AlertDialog.Builder b = new AlertDialog.Builder(this);
-        b.setTitle("Select a category you want to delete");
+        b.setTitle(R.string.select_cat_to_remove);
         List<String> quickCategories = new ArrayList<>();//
 
         for (int a = 1; a < categories.size(); a++) {
@@ -639,14 +640,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(DialogInterface dialog, int clickedPos) {
                 dialog.dismiss();
-                JetUUID categoryToRemove = categories.get(clickedPos + 1).getCategoryID();
+                showDeleteConfirmDialog(categories.get(clickedPos + 1));
+            }
+        });
 
-                resetWidgetCategoryToNoneIfNeeded(categoryToRemove);
+        b.show();
+    }                       // spinner dialog -- delete  a category
+
+    private void showDeleteConfirmDialog(final Category categoryToRemove) {
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        dialog.setTitle(R.string.delete);
+        dialog.setMessage(R.string.are_you_sure_delete);
+        dialog.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                resetWidgetCategoryToNoneIfNeeded(categoryToRemove.getCategoryID());
                 // remove all timestamps  that belongs to this category
                 List<JetUUID> itemsToRemove = new ArrayList<>();
 
                 for (Timestamp timestamp : unfilteredTimestamps.values()) {
-                    if (timestamp.getCategoryId().equals(categoryToRemove))
+                    if (timestamp.getCategoryId().equals(categoryToRemove.getCategoryID()))
                         itemsToRemove.add(timestamp.getIdentifier());  //what to remove
                 }
 
@@ -654,8 +667,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     unfilteredTimestamps.remove(id); //removing
                 }
 
-                //remove category
-                categories.remove(clickedPos + 1);
+                categories.remove(categoryToRemove); //remove category
 
                 recyclerViewCategory.smoothScrollToPosition(0); //scrolling to default category
                 lastSelectedCategory = Category.Default;        //switch to default category
@@ -663,11 +675,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 adapterCategory.notifyDataSetChanged();
                 filterTimestamps(lastSelectedCategory);
             }
-
         });
-
-        b.show();
-    }                       // spinner dialog -- delete  a category
+        dialog.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
+    }
 
     private void resetWidgetCategoryToNoneIfNeeded(JetUUID categoryToRemove) {
         JetUUID defaultCategory = dataManager.readDefaultCategoryForWidget();

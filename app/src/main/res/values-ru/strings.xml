@@ -18,7 +18,7 @@
     <string name="use_gps">Сохранять координаты</string>
     <string name="null_location">Координаты не сохранены, убедитесь что GPS включен</string>
     <string name="recover_try">Try to Recover</string>
-    <string name="import_export">Import / Export</string>
+    <string name="import_export">Импорт / Экспорт</string>
     <string name="settings">Настройки</string>
 
     <string name="s1">Better three hours too soon than a minute too late.</string>
@@ -45,6 +45,11 @@
         <item>@string/s10</item>
     </string-array>
     <string name="add_widget">Добавить виджет</string>
-
     <string name="appwidget_text">EXAMPLE</string>
+    <string name="remove_category">Удалить категорию</string>
+    <string name="select_cat_to_remove">Выберите категорию для удаления</string>
+    <string name="delete">Удаление</string>
+    <string name="are_you_sure_delete">Вы точно хотите удалить эту категорию?</string>
+    <string name="yes">Да</string>
+    <string name="no">Нет</string>
 </resources>
