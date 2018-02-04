@@ -30,6 +30,10 @@ import com.sardox.timestamper.utils.Consumer;
 import com.sardox.timestamper.utils.TimestampIcon;
 import com.sardox.timestamper.utils.UserAction;
 
+import org.joda.time.Period;
+import org.joda.time.format.PeriodFormat;
+import org.joda.time.format.PeriodFormatter;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collection;
@@ -38,7 +42,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 
-public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder> {
+public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.MyViewHolder> {
 
     private SortedList<Timestamp> sortedTimeStamps; // filteredTimestamps
     private List<Category> categories;
@@ -48,7 +52,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     private Context context;
     private Consumer<UserAction> userActionCallback;
 
-    public MyRecyclerViewAdapter(List<Category> categories, DisplayMetrics displayMetrics, List<TimestampIcon> icons, Context context, Consumer<UserAction> userActionCallback, AppSettings appSettings) {
+    public TimestampsAdapter(List<Category> categories, DisplayMetrics displayMetrics, List<TimestampIcon> icons, Context context, Consumer<UserAction> userActionCallback, AppSettings appSettings) {
         this.userActionCallback = userActionCallback;
         this.context = context;
         this.appSettings = appSettings;
@@ -96,7 +100,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     }
 
     @Override
-    public MyRecyclerViewAdapter.MyViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+    public TimestampsAdapter.MyViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
         View view = LayoutInflater.from(viewGroup.getContext())
                 .inflate(R.layout.recyclerview_item, viewGroup,
                         false);
@@ -105,7 +109,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
 
     @Override
-    public void onBindViewHolder(final MyRecyclerViewAdapter.MyViewHolder holder, int position) {
+    public void onBindViewHolder(final TimestampsAdapter.MyViewHolder holder, int position) {
         final int w = displayMetrics.widthPixels;
         holder.left_container.setMinimumWidth(w);
         //Log.e("stamper", "setMinimumWidth: " + w);
@@ -153,6 +157,14 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
                 holder.recycler_timestamp_category.setImageDrawable(ContextCompat.getDrawable(context, icons.get(category.getIcon_id()).getDrawable_id()));
                 break;
             }
+        }
+        if (position>0) {
+            Timestamp nexTimestamp = sortedTimeStamps.get(position-1);
+            Period period = new Period(nexTimestamp.getTimestamp().toMilliseconds(),timestamp.getTimestamp().toMilliseconds());
+            PeriodFormatter periodFormatter = PeriodFormat.getDefault();
+            holder.recycler_timestamp_delay.setText(periodFormatter.print(period));
+        } else {
+            holder.recycler_timestamp_delay.setText("");
         }
 
         holder.recycler_timestamp_note.setText(timestamp.getNote());
@@ -219,7 +231,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
     class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        private TextView recycler_timestamp_weekday, recycler_timestamp_day, recycler_timestamp_note, recycler_timestamp_time, recycler_timestamp_button_menu;
+        private TextView recycler_timestamp_weekday, recycler_timestamp_day, recycler_timestamp_note, recycler_timestamp_time, recycler_timestamp_button_menu, recycler_timestamp_delay;
         // private ImageButton
         private LinearLayout left_container;
         private ImageView recycler_timestamp_category;
@@ -233,6 +245,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
             recycler_timestamp_time = (TextView) itemView.findViewById(R.id.recycler_timestamp_time);
             recycler_timestamp_weekday = (TextView) itemView.findViewById(R.id.recycler_timestamp_weekday);
             recycler_timestamp_button_menu = (TextView) itemView.findViewById(R.id.recycler_timestamp_button_menu);
+            recycler_timestamp_delay = (TextView) itemView.findViewById(R.id.in_between);
             left_container = (LinearLayout) itemView.findViewById(R.id.left_container);
 
             recycler_timestamp_button_menu.setOnClickListener(this);

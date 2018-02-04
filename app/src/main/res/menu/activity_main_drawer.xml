@@ -1,18 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <group >
-        <item
-            android:id="@+id/action_category_add"
-
-            android:title="@string/action_category_add" />
-        <item
-            android:id="@+id/action_category_delete"
-
-            android:title="@string/action_category_delete" />
-
-    </group>
-
     <item android:title="@string/settings" android:checkableBehavior="none">
         <menu>
             <item
@@ -48,10 +36,6 @@
                 android:id="@+id/action_export"
                 android:checkable="true"
                 android:title="@string/action_export" />
-            <item
-                android:id="@+id/action_migrate"
-                android:checkable="true"
-                android:title="@string/recover_try" />
         </menu>
 
 

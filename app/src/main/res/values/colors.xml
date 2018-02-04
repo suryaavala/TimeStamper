@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#424242</color>
-    <color name="colorPrimaryDark">#212121</color>
-    <color name="colorAccent">#fe3f61</color>
+    <color name="colorPrimary">#303032</color>
+    <color name="colorPrimaryDark">#303032</color>
+    <color name="colorAccent">#e63e3e</color>
 
-   // <color name="color_card">#616161</color>
-  //  <color name="color_card2">#424242</color>
+    <color name="colorBackground">#212123</color>
+    <color name="colorItemBackground">#303032</color>
+    <color name="colorRecyclerViewItem">#10ffffff</color>
 
-   // <color name="category_background">#424242</color>
-    <color name="category_selected">#fe3f61</color>
-   // <color name="category_deselected">#424242</color>
+    <color name="category_background">#303032</color>
+    <color name="category_selected">#e63e3e</color>
+    <color name="category_deselected">#424242</color>
 
     <color name="selectedIcon">#E0E0E0</color>
 
