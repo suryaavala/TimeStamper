@@ -2,14 +2,14 @@
 <resources>
     <color name="colorPrimary">#303032</color>
     <color name="colorPrimaryDark">#303032</color>
-    <color name="colorAccent">#fb4055</color>
+    <color name="colorAccent">#e63e3e</color>
 
     <color name="colorBackground">#212123</color>
     <color name="colorItemBackground">#303032</color>
     <color name="colorRecyclerViewItem">#10ffffff</color>
 
     <color name="category_background">#303032</color>
-    <color name="category_selected">#ffffff</color>
+    <color name="category_selected">#e63e3e</color>
     <color name="category_deselected">#424242</color>
 
     <color name="selectedIcon">#E0E0E0</color>

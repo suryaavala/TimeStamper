@@ -42,7 +42,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 
-public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAdapter.MyViewHolder> {
+public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.MyViewHolder> {
 
     private SortedList<Timestamp> sortedTimeStamps; // filteredTimestamps
     private List<Category> categories;
@@ -52,7 +52,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     private Context context;
     private Consumer<UserAction> userActionCallback;
 
-    public MyRecyclerViewAdapter(List<Category> categories, DisplayMetrics displayMetrics, List<TimestampIcon> icons, Context context, Consumer<UserAction> userActionCallback, AppSettings appSettings) {
+    public TimestampsAdapter(List<Category> categories, DisplayMetrics displayMetrics, List<TimestampIcon> icons, Context context, Consumer<UserAction> userActionCallback, AppSettings appSettings) {
         this.userActionCallback = userActionCallback;
         this.context = context;
         this.appSettings = appSettings;
@@ -100,7 +100,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     }
 
     @Override
-    public MyRecyclerViewAdapter.MyViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+    public TimestampsAdapter.MyViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
         View view = LayoutInflater.from(viewGroup.getContext())
                 .inflate(R.layout.recyclerview_item, viewGroup,
                         false);
@@ -109,7 +109,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
 
     @Override
-    public void onBindViewHolder(final MyRecyclerViewAdapter.MyViewHolder holder, int position) {
+    public void onBindViewHolder(final TimestampsAdapter.MyViewHolder holder, int position) {
         final int w = displayMetrics.widthPixels;
         holder.left_container.setMinimumWidth(w);
         //Log.e("stamper", "setMinimumWidth: " + w);

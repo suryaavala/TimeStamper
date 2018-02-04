@@ -30,6 +30,8 @@ import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
@@ -44,9 +46,9 @@ import com.sardox.timestamper.Managers.DataManager;
 import com.sardox.timestamper.Managers.TimeStampManager;
 import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.objects.Timestamp;
-import com.sardox.timestamper.recyclerview.MyRecyclerViewAdapter;
-import com.sardox.timestamper.recyclerview.MyRecyclerViewAdapterCategory;
-import com.sardox.timestamper.recyclerview.MyRecyclerViewIconPicker;
+import com.sardox.timestamper.recyclerview.TimestampsAdapter;
+import com.sardox.timestamper.recyclerview.CategoryAdapter;
+import com.sardox.timestamper.recyclerview.IconAdapter;
 import com.sardox.timestamper.types.JetDuration;
 import com.sardox.timestamper.types.JetTimestamp;
 import com.sardox.timestamper.types.JetUUID;
@@ -77,10 +79,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private Consumer<UserAction> userActionCallback;
     public RecyclerView recyclerViewTimestamps;
-    public MyRecyclerViewAdapter adapter;
+    public TimestampsAdapter adapter;
 
     public RecyclerView recyclerViewCategory;
-    public MyRecyclerViewAdapterCategory adapterCategory;
+    public CategoryAdapter adapterCategory;
 
     private Category lastSelectedCategory = Category.Default;
 
@@ -108,16 +110,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         dataManager.writeSettings(appSettings);
         dataManager.writeTimestamps(unfilteredTimestamps);
         dataManager.writeCategories(categories);
-    }
-
-    private void migrate() {
-        if (dataManager == null || unfilteredTimestamps == null) return;
-
-        HashMap<JetUUID, Timestamp> migrated = dataManager.read_old_timestamps();
-        if (migrated == null) return;
-
-        unfilteredTimestamps.putAll(migrated);
-        filterTimestamps(Category.Default);
     }
 
     /**
@@ -204,6 +196,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         timeStampManager = new TimeStampManager();
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.category_menu, menu);
+        return true;
+    }
+
     private View setupDrawer(Toolbar toolbar) {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -285,7 +284,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         };
 
-        adapterCategory = new MyRecyclerViewAdapterCategory(categories, categoryUpdate, getApplicationContext());
+        adapterCategory = new CategoryAdapter(categories, categoryUpdate, getApplicationContext());
 
         recyclerViewCategory = (RecyclerView) findViewById(R.id.recyclerViewCat);
         recyclerViewCategory.setAdapter(adapterCategory);
@@ -302,7 +301,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
         recyclerViewTimestamps = (RecyclerView) findViewById(R.id.recyclerView);
-        adapter = new MyRecyclerViewAdapter(categories, metrics, icons, getApplicationContext(), userActionCallback, appSettings);
+        adapter = new TimestampsAdapter(categories, metrics, icons, getApplicationContext(), userActionCallback, appSettings);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setReverseLayout(true);
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
@@ -317,20 +316,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void init_icons() {
         icons = new ArrayList<>();
-        icons.add(new TimestampIcon(R.drawable.category_default, "Default", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_baby, "Baby", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_sport, "Sport", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_home, "Home", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_love, "Favorite", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_pill, "Pills", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_sleep, "Sleep", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_car, "Car", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_food, "Food", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_map, "Map", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_phone, "Phone", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_timer, "Timer", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_wallet, "Money", icons.size()));
-        icons.add(new TimestampIcon(R.drawable.category_weather, "Weather", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_default, "DEFAULT", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_baby, "BABY", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_sport, "SPORT", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_home, "HOME", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_love, "FAVORITE", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_pill, "PILLS", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_sleep, "SLEEP", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_car, "CAR", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_food, "FOOD", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_map, "MAP", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_phone, "PHONE", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_timer, "TIMER", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_wallet, "MONEY", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.category_weather, "WEATHER", icons.size()));
     }
 
     private void filterTimestamps(Category selectedCategory) {
@@ -358,6 +357,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         recyclerViewTimestamps.smoothScrollToPosition(adapter.getItemCount());
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        switch (id) {
+            case R.id.action_category_add: {
+                add_new_category_dialog(getCurrentFocus());
+                break;
+            }
+            case R.id.action_category_delete: {
+                if (categories.size() == 1) {
+                    Snackbar.make(recyclerViewTimestamps, "No categories left..", Snackbar.LENGTH_SHORT).show();
+                    break;
+                } else remove_category();
+                break;
+            }
+        }
+        return true;
+    }
+
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
@@ -377,24 +396,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 adapter.notifyDataSetChanged();
                 return true;
             }
-
-            case R.id.action_category_add: {
-                add_new_category_dialog(getCurrentFocus());
-                break;
-            }
-            case R.id.action_category_delete: {
-                if (categories.size() == 1) {
-                    Snackbar.make(recyclerViewTimestamps, "No categories left..", Snackbar.LENGTH_SHORT).show();
-                    break;
-                } else remove_category(getCurrentFocus());
-                break;
-            }
             case R.id.action_export: {
                 exportTimestampsToCsv();
-                break;
-            }
-            case R.id.action_migrate: {
-                migrate();
                 break;
             }
 //       case R.id.checkable_menu_use_dark_theme) {
@@ -410,7 +413,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
             case R.id.checkable_menu_useGPS: {
-
                 appSettings.setUse_gps(!appSettings.isUse_gps());
                 ((Switch) item.getActionView()).toggle();
                 return true;
@@ -564,7 +566,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         View viewInflated = LayoutInflater.from(v.getContext()).inflate(R.layout.new_category, null, false);
         final EditText input = (EditText) viewInflated.findViewById(R.id.input_cat);
 
-        final MyRecyclerViewIconPicker iconPicker = new MyRecyclerViewIconPicker(icons, new Consumer<TimestampIcon>() {
+        final IconAdapter iconPicker = new IconAdapter(icons, new Consumer<TimestampIcon>() {
             @Override
             public void accept(TimestampIcon icon) {
                 input.setText(icon.getDescription());
@@ -622,9 +624,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         builder.show();
     }                // input dialog --   add  new category
 
-    private void remove_category(View v) {      //category deletion dialog
+    private void remove_category() {      //category deletion dialog
         trackAction("Remove category");
-        AlertDialog.Builder b = new AlertDialog.Builder(v.getContext());
+        AlertDialog.Builder b = new AlertDialog.Builder(this);
         b.setTitle("Select a category you want to delete");
         List<String> quickCategories = new ArrayList<>();//
 
@@ -665,7 +667,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
         b.show();
-
     }                       // spinner dialog -- delete  a category
 
     private void resetWidgetCategoryToNoneIfNeeded(JetUUID categoryToRemove) {

@@ -17,7 +17,7 @@ import com.sardox.timestamper.utils.Consumer;
 import java.util.List;
 
 
-public class MyRecyclerViewAdapterCategory extends RecyclerView.Adapter<MyRecyclerViewAdapterCategory.MyViewHolderCategory> {
+public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.MyViewHolderCategory> {
 
     private List<Category> categories;
     private Consumer<Category> category_changed_callback;
@@ -32,7 +32,7 @@ public class MyRecyclerViewAdapterCategory extends RecyclerView.Adapter<MyRecycl
     private Category selected_category = Category.Default;
 
 
-    public MyRecyclerViewAdapterCategory(List<Category> categories, Consumer<Category> category_changed_callback, Context context) {
+    public CategoryAdapter(List<Category> categories, Consumer<Category> category_changed_callback, Context context) {
         //   this.context = context;
         this.category_changed_callback = category_changed_callback;
         this.categories = categories;
@@ -43,7 +43,7 @@ public class MyRecyclerViewAdapterCategory extends RecyclerView.Adapter<MyRecycl
     }
 
     @Override
-    public MyRecyclerViewAdapterCategory.MyViewHolderCategory onCreateViewHolder(ViewGroup viewGroup, int i) {
+    public CategoryAdapter.MyViewHolderCategory onCreateViewHolder(ViewGroup viewGroup, int i) {
         View view = LayoutInflater.from(viewGroup.getContext())
                 .inflate(R.layout.recyclerview_category, viewGroup,
                         false);
@@ -51,7 +51,7 @@ public class MyRecyclerViewAdapterCategory extends RecyclerView.Adapter<MyRecycl
     }
 
     @Override
-    public void onBindViewHolder(MyRecyclerViewAdapterCategory.MyViewHolderCategory holder, int position) {
+    public void onBindViewHolder(CategoryAdapter.MyViewHolderCategory holder, int position) {
         Category category = categories.get(position);
 
         holder.mCategoryTextView.setText(category.getName());

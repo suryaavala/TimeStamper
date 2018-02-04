@@ -19,7 +19,7 @@ import com.sardox.timestamper.utils.TimestampIcon;
 import java.util.List;
 
 
-public class MyRecyclerViewIconPicker extends RecyclerView.Adapter<MyRecyclerViewIconPicker.MyViewHolderCategory> {
+public class IconAdapter extends RecyclerView.Adapter<IconAdapter.MyViewHolderCategory> {
 
     private List<TimestampIcon> icons;
     private Consumer<TimestampIcon> consumer;
@@ -27,14 +27,14 @@ public class MyRecyclerViewIconPicker extends RecyclerView.Adapter<MyRecyclerVie
     private int lastSelected = 0;
     private Context context;
 
-    public MyRecyclerViewIconPicker(List<TimestampIcon> icons, Consumer<TimestampIcon> consumer, Context context) {
+    public IconAdapter(List<TimestampIcon> icons, Consumer<TimestampIcon> consumer, Context context) {
         this.context = context;
         this.consumer = consumer;
         this.icons = icons;
     }
 
     @Override
-    public MyRecyclerViewIconPicker.MyViewHolderCategory onCreateViewHolder(ViewGroup viewGroup, int i) {
+    public IconAdapter.MyViewHolderCategory onCreateViewHolder(ViewGroup viewGroup, int i) {
         View view = LayoutInflater.from(viewGroup.getContext())
                 .inflate(R.layout.recyclerview_icon_item, viewGroup,
                         false);
@@ -42,7 +42,7 @@ public class MyRecyclerViewIconPicker extends RecyclerView.Adapter<MyRecyclerVie
     }
 
     @Override
-    public void onBindViewHolder(MyRecyclerViewIconPicker.MyViewHolderCategory holder, int position) {
+    public void onBindViewHolder(IconAdapter.MyViewHolderCategory holder, int position) {
 
         if (lastSelected == position) holder.imageButton.setEnabled(false);
         else holder.imageButton.setEnabled(true);

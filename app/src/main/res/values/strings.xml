@@ -2,8 +2,8 @@
     <string name="app_name">TimeStamper</string>
     <string name="action_settings">Settings</string>
     <string name="action_category_add">Add a new category</string>
-    <string name="action_show_milliseconds">Show milliseconds</string>
-    <string name="action_show_24">Use 24HR format</string>
+    <string name="action_show_milliseconds">Milliseconds</string>
+    <string name="action_show_24">24HR format</string>
     <string name="action_export">Export to CSV</string>
     <string name="action_save">Save</string>
     <string name="action_open">Open</string>
