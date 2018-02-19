@@ -63,5 +63,9 @@
     <string name="no">Нет</string>
     <string name="cant_be_removed">Эта категория не может быть удалена</string>
     <string name="widget_hint">Совет: Используйте виджет для быстрого добавления таймстемпов</string>
+    <string name="save">СОХРАНИТЬ</string>
+    <string name="add_new_category">Добавление новой категории</string>
+    <string name="scroll_right_and_pick_an_icon">Выберете одну из 20 иконок</string>
+    <string name="enter_category_name">Введите имя категории</string>
 
 </resources>

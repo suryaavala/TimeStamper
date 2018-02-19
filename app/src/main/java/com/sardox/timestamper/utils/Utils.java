@@ -93,6 +93,16 @@ public class Utils {
         icons.add(new TimestampIcon(R.drawable.category_timer, "TIMER", icons.size()));
         icons.add(new TimestampIcon(R.drawable.category_wallet, "MONEY", icons.size()));
         icons.add(new TimestampIcon(R.drawable.category_weather, "WEATHER", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.zzz, "ZZZ", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.train, "TRAVEL", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.duck, "PLAY", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.call, "CALLS", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.workout, "WORKOUT", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.hospital, "HOSPITAL", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.education, "EDUCATION", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.fruits, "FRUITS", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.water, "WATER", icons.size()));
+        icons.add(new TimestampIcon(R.drawable.paper, "PAPER", icons.size()));
         return icons;
     }
 
