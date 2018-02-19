@@ -61,6 +61,7 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="cant_be_removed">This category can\'t be removed</string>
+    <string name="widget_hint">HINT: Try using widget for even quicker timestamps</string>
 
 
 </resources>
