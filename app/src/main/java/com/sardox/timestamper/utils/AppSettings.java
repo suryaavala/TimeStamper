@@ -6,16 +6,16 @@ public class AppSettings {
 
     public static final JetUUID NO_DEFAULT_CATEGORY =  JetUUID.fromString("3f02dce5-d2de-4d3c-96d6-de0f6123baa8");
 
-    private boolean use24hrFormat = false;            //default values
-    private boolean useDark = true;                   //default values
-    private boolean showNoteAddDialog = false;        //default values
-    private boolean use_gps = false;                  //default values
-    private boolean showMillis = false;               //default values
+    private boolean use24hrFormat = false;
+    private boolean useDark = true;
+    private boolean showNoteAddDialog = false;
+    private boolean shouldUseGps = false;
+    private boolean shouldShowMillis = false;
 
     public AppSettings() {
     }
 
-    public boolean isUse24hrFormat() {
+    public boolean shouldUse24hrFormat() {
         return use24hrFormat;
     }
 
@@ -23,7 +23,7 @@ public class AppSettings {
         this.use24hrFormat = use24hrFormat;
     }
 
-    public boolean isUseDark() {
+    public boolean shouldUseDarkTheme() {
         return useDark;
     }
 
@@ -31,7 +31,7 @@ public class AppSettings {
         this.useDark = useDark;
     }
 
-    public boolean isShowNoteAddDialog() {
+    public boolean shouldShowNoteAddDialog() {
         return showNoteAddDialog;
     }
 
@@ -39,19 +39,19 @@ public class AppSettings {
         this.showNoteAddDialog = showNoteAddDialog;
     }
 
-    public boolean isShowMillis() {
-        return showMillis;
+    public boolean shouldShowMillis() {
+        return shouldShowMillis;
     }
 
     public void setShowMillis(boolean showMillis) {
-        this.showMillis = showMillis;
+        this.shouldShowMillis = showMillis;
     }
 
-    public boolean isUse_gps() {
-        return use_gps;
+    public boolean shouldUseGps() {
+        return shouldUseGps;
     }
 
-    public void setUse_gps(boolean use_gps) {
-        this.use_gps = use_gps;
+    public void setShouldUseGps(boolean flag) {
+        this.shouldUseGps = flag;
     }
 }

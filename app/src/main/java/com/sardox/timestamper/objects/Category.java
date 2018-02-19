@@ -52,12 +52,8 @@ public class Category {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         Category category = (Category) o;
-
-        if (icon_id != category.icon_id) return false;
-        if (!name.equals(category.name)) return false;
-        return identifier.equals(category.identifier);
+        return icon_id == category.icon_id && name.equals(category.name) && identifier.equals(category.identifier);
     }
 
 }

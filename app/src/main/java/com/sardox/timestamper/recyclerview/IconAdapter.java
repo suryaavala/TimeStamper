@@ -1,18 +1,14 @@
 package com.sardox.timestamper.recyclerview;
 
 import android.content.Context;
-
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
 import android.widget.ImageButton;
 
-
 import com.sardox.timestamper.R;
-
 import com.sardox.timestamper.utils.Consumer;
 import com.sardox.timestamper.utils.TimestampIcon;
 
@@ -21,9 +17,8 @@ import java.util.List;
 
 public class IconAdapter extends RecyclerView.Adapter<IconAdapter.MyViewHolderCategory> {
 
-    private List<TimestampIcon> icons;
     private Consumer<TimestampIcon> consumer;
-
+    private List<TimestampIcon> icons;
     private int lastSelected = 0;
     private Context context;
 
@@ -43,9 +38,11 @@ public class IconAdapter extends RecyclerView.Adapter<IconAdapter.MyViewHolderCa
 
     @Override
     public void onBindViewHolder(IconAdapter.MyViewHolderCategory holder, int position) {
-
-        if (lastSelected == position) holder.imageButton.setEnabled(false);
-        else holder.imageButton.setEnabled(true);
+        if (lastSelected == position) {
+            holder.imageButton.setEnabled(false);
+        } else {
+            holder.imageButton.setEnabled(true);
+        }
         holder.imageButton.setImageDrawable(ContextCompat.getDrawable(context, icons.get(position).getDrawable_id()));
     }
 
@@ -59,24 +56,19 @@ public class IconAdapter extends RecyclerView.Adapter<IconAdapter.MyViewHolderCa
     }
 
     class MyViewHolderCategory extends RecyclerView.ViewHolder implements View.OnClickListener {
-
-
         private ImageButton imageButton;
 
         MyViewHolderCategory(View itemView) {
             super(itemView);
-
             imageButton = (ImageButton) itemView.findViewById(R.id.icon_item_button);
             imageButton.setOnClickListener(this);
         }
-
 
         @Override
         public void onClick(View v) {
             if (lastSelected != getAdapterPosition()) notifyItemChanged(lastSelected);
             lastSelected = getAdapterPosition();
             notifyItemChanged(lastSelected);
-
             consumer.accept(icons.get(getAdapterPosition()));
         }
     }

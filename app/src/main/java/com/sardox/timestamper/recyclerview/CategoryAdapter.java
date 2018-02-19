@@ -25,7 +25,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.MyView
     private final int category_color_selected;
     private final int category_color_deselected;
 
-    public void setSelected_category(Category selected_category) {
+    public void setSelectedCategory(Category selected_category) {
         this.selected_category = selected_category;
     }
 
@@ -75,7 +75,6 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.MyView
             super(itemView);
             mCategoryTextView = (TextView) itemView.findViewById(R.id.CategoryTextView);
             category_underline = (LinearLayout) itemView.findViewById(R.id.recycler_category_underline);
-
             mCategoryTextView.setOnClickListener(this);
         }
 
