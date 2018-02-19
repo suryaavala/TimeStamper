@@ -75,7 +75,6 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.MyView
             super(itemView);
             mCategoryTextView = (TextView) itemView.findViewById(R.id.CategoryTextView);
             category_underline = (LinearLayout) itemView.findViewById(R.id.recycler_category_underline);
-
             mCategoryTextView.setOnClickListener(this);
         }
 

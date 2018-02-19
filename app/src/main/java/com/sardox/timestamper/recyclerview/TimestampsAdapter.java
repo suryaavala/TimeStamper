@@ -44,13 +44,14 @@ import java.util.TimeZone;
 
 public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.MyViewHolder> {
 
-    private SortedList<Timestamp> sortedTimeStamps; // filteredTimestamps
+    private SortedList<Timestamp> sortedTimeStamps;
     private List<Category> categories;
     private DisplayMetrics displayMetrics;
     private AppSettings appSettings;
     private List<TimestampIcon> icons;
     private Context context;
     private Consumer<UserAction> userActionCallback;
+    private PeriodFormatter periodFormatter = PeriodFormat.getDefault();
 
     public TimestampsAdapter(List<Category> categories, DisplayMetrics displayMetrics, List<TimestampIcon> icons, Context context, Consumer<UserAction> userActionCallback, AppSettings appSettings) {
         this.userActionCallback = userActionCallback;
@@ -88,7 +89,6 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
 
             @Override
             public void onRemoved(int position, int count) {
-                Log.v("srdx", "SortedList onRemoved callback");
                 notifyItemRangeRemoved(position, count);
             }
 
@@ -112,11 +112,8 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
     public void onBindViewHolder(final TimestampsAdapter.MyViewHolder holder, int position) {
         final int w = displayMetrics.widthPixels;
         holder.left_container.setMinimumWidth(w);
-        //Log.e("stamper", "setMinimumWidth: " + w);
-        //Log.e("stamper", "left_container w: " + holder.left_container.getWidth());
 
         Timestamp timestamp = sortedTimeStamps.get(position);
-
         Calendar calendar = Calendar.getInstance();
         TimeZone localTZ = calendar.getTimeZone();
         calendar.setTimeInMillis(timestamp.getTimestamp().toMilliseconds());
@@ -126,14 +123,12 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
         if (appSettings.shouldUse24hrFormat()) {
             if (appSettings.shouldShowMillis()) {
                 format = "HH:mm:ss.SSS";
-
             } else format = "HH:mm:ss";
         } else {
             if (appSettings.shouldShowMillis()) {
                 format = "hh:mm:ss.SSS a";
             } else format = "hh:mm:ss a";
         }
-
 
         SimpleDateFormat sdf = new SimpleDateFormat(format);
         sdf.setTimeZone(localTZ);
@@ -142,7 +137,6 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
         SimpleDateFormat sdfDAY = new SimpleDateFormat("d MMM");
         sdfDAY.setTimeZone(localTZ);
         String dMMM = sdfDAY.format(calendar.getTime());
-
 
         SimpleDateFormat sdfWeekDay = new SimpleDateFormat("EEE");
         sdfWeekDay.setTimeZone(localTZ);
@@ -158,10 +152,9 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
                 break;
             }
         }
-        if (position>0) {
-            Timestamp nexTimestamp = sortedTimeStamps.get(position-1);
+        if (position<sortedTimeStamps.size()-1) {
+            Timestamp nexTimestamp = sortedTimeStamps.get(position+1);
             Period period = new Period(nexTimestamp.getTimestamp().toMilliseconds(),timestamp.getTimestamp().toMilliseconds());
-            PeriodFormatter periodFormatter = PeriodFormat.getDefault();
             holder.recycler_timestamp_delay.setText(periodFormatter.print(period));
         } else {
             holder.recycler_timestamp_delay.setText("");
@@ -171,7 +164,6 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
         holder.recycler_timestamp_time.setText(hhmmss);
         holder.recycler_timestamp_weekday.setText(EEE);
     }
-
 
     @Override
     public int getItemCount() {
@@ -190,34 +182,12 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
         sortedTimeStamps.addAll(values);
     }
 
-
     public void remove(Timestamp timestamp) {
         sortedTimeStamps.remove(timestamp);
     }
 
-    public void remove(List<Timestamp> timestamps) {
-        sortedTimeStamps.beginBatchedUpdates();
-        for (Timestamp model : timestamps) {
-            sortedTimeStamps.remove(model);
-        }
-        sortedTimeStamps.endBatchedUpdates();
-    }
-
     public void removeAll() {
         sortedTimeStamps.clear();
-    }
-
-    public void setAppSettings(AppSettings appSettings) {
-        this.appSettings = appSettings;
-    }
-
-    private int find_timestamp_index_by_id(JetUUID id) {
-        for (int i = 0; i < sortedTimeStamps.size(); i++) {
-            if (sortedTimeStamps.get(i).getIdentifier().equals(id)) {
-                return i;
-            }
-        }
-        return -1;
     }
 
     public void updateTimestamp(Timestamp updatedTimestamp) {
@@ -232,7 +202,6 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
     class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         private TextView recycler_timestamp_weekday, recycler_timestamp_day, recycler_timestamp_note, recycler_timestamp_time, recycler_timestamp_button_menu, recycler_timestamp_delay;
-        // private ImageButton
         private LinearLayout left_container;
         private ImageView recycler_timestamp_category;
 
@@ -256,14 +225,14 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
         public void onClick(View v) {
             switch (v.getId()) {
                 case R.id.recycler_timestamp_button_menu: {
-                    show_popup(v, sortedTimeStamps.get(getAdapterPosition()));
+                    showPopup(v, sortedTimeStamps.get(getAdapterPosition()));
                     break;
                 }
             }
         }
     }
 
-    private void show_popup(View v, final Timestamp timestamp) {
+    private void showPopup(View v, final Timestamp timestamp) {
         PopupMenu popup = new PopupMenu(v.getContext(), v);
         popup.inflate(R.menu.options_menu);
         if (timestamp.getPhysicalLocation().equals(PhysicalLocation.Default)) {
@@ -300,15 +269,13 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
                 return false;
             }
         });
-        //displaying the popup
         popup.show();
-
     }
 
     private static final Comparator<Timestamp> TIMESTAMP_COMPARATOR_NEW_TOP = new Comparator<Timestamp>() {
         @Override
         public int compare(Timestamp a, Timestamp b) {
-            return a.getTimestamp().compareTo(b.getTimestamp());
+            return b.getTimestamp().compareTo(a.getTimestamp());
         }
     };
 }

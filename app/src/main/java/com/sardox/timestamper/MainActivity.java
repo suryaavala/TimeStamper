@@ -2,6 +2,7 @@ package com.sardox.timestamper;
 
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
@@ -52,6 +53,7 @@ import com.sardox.timestamper.types.PhysicalLocation;
 import com.sardox.timestamper.utils.AppSettings;
 import com.sardox.timestamper.utils.Constants;
 import com.sardox.timestamper.utils.Consumer;
+import com.sardox.timestamper.utils.OnSwipeTouchListener;
 import com.sardox.timestamper.utils.TimestampIcon;
 import com.sardox.timestamper.utils.UserAction;
 import com.sardox.timestamper.utils.Utils;
@@ -78,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private AppSettings appSettings;
 
     public CategoryAdapter adapterCategory;
-    public TimestampsAdapter adapter;
+    public TimestampsAdapter timestampsAdapter;
     public RecyclerView recyclerViewCategory;
     public RecyclerView recyclerViewTimestamps;
 
@@ -138,27 +140,29 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void onClick(View view) {
         Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.NEW_TIMESTAMP);
-        final Timestamp newTimestamp = new Timestamp(
-                JetTimestamp.now(),
-                PhysicalLocation.Default,
-                lastSelectedCategory.getCategoryID(),
-                JetUUID.randomUUID());
+        for (int i=0; i<1; i++) {
+            final Timestamp newTimestamp = new Timestamp(
+                    JetTimestamp.now(),
+                    PhysicalLocation.Default,
+                    lastSelectedCategory.getCategoryID(),
+                    JetUUID.randomUUID());
 
-        unfilteredTimestamps.put(newTimestamp.getIdentifier(), newTimestamp);
-        adapter.add(newTimestamp);
-        if (appSettings.shouldShowNoteAddDialog()) editNote(newTimestamp);
-        if (appSettings.shouldUseGps()) {
-            if (hasGPSpermission()) {
-                getGPSCoordinates(new Consumer<PhysicalLocation>() {
-                    @Override
-                    public void accept(PhysicalLocation physicalLocation) {
-                        Log.d("srdx", "setPhysicalLocation");
-                        if (physicalLocation == null) {
-                            physicalLocation = PhysicalLocation.Default;
+            unfilteredTimestamps.put(newTimestamp.getIdentifier(), newTimestamp);
+            timestampsAdapter.add(newTimestamp);
+            if (appSettings.shouldShowNoteAddDialog()) editNote(newTimestamp);
+            if (appSettings.shouldUseGps()) {
+                if (hasGPSpermission()) {
+                    getGPSCoordinates(new Consumer<PhysicalLocation>() {
+                        @Override
+                        public void accept(PhysicalLocation physicalLocation) {
+                            Log.d("srdx", "setPhysicalLocation");
+                            if (physicalLocation == null) {
+                                physicalLocation = PhysicalLocation.Default;
+                            }
+                            newTimestamp.setPhysicalLocation(physicalLocation);
                         }
-                        newTimestamp.setPhysicalLocation(physicalLocation);
-                    }
-                });
+                    });
+                }
             }
         }
         scrollViewTop();
@@ -264,6 +268,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         };
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private void initRecyclerView() {
         Consumer<Category> categoryUpdate = new Consumer<Category>() {
             @Override
@@ -291,16 +296,38 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
         recyclerViewTimestamps = (RecyclerView) findViewById(R.id.recyclerView);
-        adapter = new TimestampsAdapter(categories, metrics, icons, this, userActionCallback, appSettings);
+        timestampsAdapter = new TimestampsAdapter(categories, metrics, icons, this, userActionCallback, appSettings);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        linearLayoutManager.setReverseLayout(true);
+        linearLayoutManager.setReverseLayout(false);
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
-        recyclerViewTimestamps.setAdapter(adapter);
+        recyclerViewTimestamps.setAdapter(timestampsAdapter);
         recyclerViewTimestamps.addItemDecoration(new VerticalSpaceItemDecoration(10));
         linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
         recyclerViewTimestamps.setLayoutManager(linearLayoutManager);
         recyclerViewTimestamps.setItemAnimator(itemAnimator);
 
+        recyclerViewTimestamps.setOnTouchListener(new OnSwipeTouchListener(this) {
+            public void onSwipeRight() {
+                int current_index = categories.indexOf(lastSelectedCategory);
+                if (current_index>0){
+                    lastSelectedCategory = categories.get(current_index-1);
+                    adapterCategory.setSelectedCategory(lastSelectedCategory);
+                    adapterCategory.notifyDataSetChanged();
+                    filterTimestampsByCategory(categories.get(current_index-1));
+                }
+
+            }
+            public void onSwipeLeft() {
+                int current_index = categories.indexOf(lastSelectedCategory);
+                if (current_index<categories.size()){
+                    lastSelectedCategory = categories.get(current_index+1);
+                    adapterCategory.setSelectedCategory(lastSelectedCategory);
+                    adapterCategory.notifyDataSetChanged();
+                    filterTimestampsByCategory(categories.get(current_index+1));
+                }
+
+            }
+        });
         filterTimestampsByCategory(Category.Default);
     }
 
@@ -312,13 +339,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (lastSelectedCategory == null) {
             lastSelectedCategory = Category.Default;
         }
-        adapter.removeAll();
-        adapter.add(Utils.filterTimestampsByCategory(unfilteredTimestamps, selectedCategory));
-        scrollViewTop();
+        timestampsAdapter.removeAll();
+        timestampsAdapter.add(Utils.filterTimestampsByCategory(unfilteredTimestamps, selectedCategory));
     }
 
     private void scrollViewTop() {
-        recyclerViewTimestamps.smoothScrollToPosition(adapter.getItemCount());
+        recyclerViewTimestamps.smoothScrollToPosition(0);
     }
 
     @Override
@@ -347,13 +373,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.checkable_menu_showMillis: {
                 appSettings.setShowMillis(!appSettings.shouldShowMillis());
                 ((Switch) item.getActionView()).toggle();
-                adapter.notifyDataSetChanged();
+                timestampsAdapter.notifyDataSetChanged();
                 return true;
             }
             case R.id.checkable_menu_use24hr: {
                 appSettings.setUse24hrFormat(!appSettings.shouldUse24hrFormat());
                 ((Switch) item.getActionView()).toggle();
-                adapter.notifyDataSetChanged();
+                timestampsAdapter.notifyDataSetChanged();
                 return true;
             }
             case R.id.action_export: {
@@ -388,7 +414,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void accept(JetTimestamp updatedDate) {
                 unfilteredTimestamps.get(timestampToUpdate.getIdentifier()).setTimestamp(updatedDate);
-                adapter.updateTimestamp(timestampToUpdate);
+                timestampsAdapter.updateTimestamp(timestampToUpdate);
             }
         }, appSettings.shouldUse24hrFormat());
     }
@@ -399,7 +425,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void accept(JetTimestamp updatedDate) {
                 unfilteredTimestamps.get(timestampToUpdate.getIdentifier()).setTimestamp(updatedDate);
-                adapter.updateTimestamp(timestampToUpdate);
+                timestampsAdapter.updateTimestamp(timestampToUpdate);
             }
         }, appSettings.shouldUse24hrFormat());
     }
@@ -409,7 +435,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void accept(String newNote) {
                 unfilteredTimestamps.get(timestamp.getIdentifier()).setNote(newNote);
-                adapter.updateTimestamp(timestamp);
+                timestampsAdapter.updateTimestamp(timestamp);
             }
         });
     }
@@ -421,14 +447,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void accept(JetUUID newCategoryId) {
                 unfilteredTimestamps.get(timestamp.getIdentifier()).setCategory_identifier(newCategoryId);
                 if (lastSelectedCategory.getCategoryID().equals(newCategoryId) || lastSelectedCategory.equals(Category.Default))
-                    adapter.updateTimestamp(timestamp);
-                else adapter.remove(timestamp);
+                    timestampsAdapter.updateTimestamp(timestamp);
+                else timestampsAdapter.remove(timestamp);
             }
         });
     }
 
     private void removeTimestamp(Timestamp timestampToRemove) {
-        adapter.remove(timestampToRemove);
+        timestampsAdapter.remove(timestampToRemove);
         unfilteredTimestamps.remove(timestampToRemove.getIdentifier());
         Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.TIMESTAMP_REMOVE);
     }
