@@ -70,6 +70,10 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
             @Override
             public void onChanged(int position, int count) {
                 notifyItemRangeChanged(position, count);
+                if (position>0) {
+                    // neighbor show be updated as well to update it's delta
+                    notifyItemRangeChanged(position - 1, 1);
+                }
             }
 
             @Override
@@ -90,6 +94,10 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
             @Override
             public void onRemoved(int position, int count) {
                 notifyItemRangeRemoved(position, count);
+                if (position>0) {
+                    // neighbor show be updated as well to update it's delta
+                    notifyItemRangeChanged(position - 1, 1);
+                }
             }
 
             @Override
