@@ -25,7 +25,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.MyView
     private final int category_color_selected;
     private final int category_color_deselected;
 
-    public void setSelected_category(Category selected_category) {
+    public void setSelectedCategory(Category selected_category) {
         this.selected_category = selected_category;
     }
 

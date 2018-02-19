@@ -78,14 +78,14 @@ public class InstantTimestampWidget extends AppWidgetProvider {
 
     @Override
     public void onEnabled(Context context) {
-        Log.e("srdx", "First widget was created");
+        Log.d("srdx", "First widget was created");
         // Enter relevant functionality for when the first InstantTimestampWidget is created
     }
 
     @Override
     public void onDeleted(Context context, int[] appWidgetIds) {
         super.onDeleted(context, appWidgetIds);
-        Log.e("srdx", "Last widget was deleted");
+        Log.d("srdx", "Last widget was deleted");
         DataManager dataManager = new DataManager(context);
         dataManager.saveDefaultCategoryForWidget(AppSettings.NO_DEFAULT_CATEGORY);
     }
@@ -93,16 +93,16 @@ public class InstantTimestampWidget extends AppWidgetProvider {
     public void saveNewStamp(Context context, JetUUID defaultCategoryForWidget) {
         Tracker mTracker = ((Application) context.getApplicationContext()).getDefaultTracker();
         mTracker.send(new HitBuilders.EventBuilder()
-                .setCategory("Action")
-                .setAction("Widget click")
+                .setCategory(Constants.Analytics.Events.ACTION)
+                .setAction(Constants.Analytics.Events.WIDGET_CLICK)
                 .build());
 
         DataManager dataManager = new DataManager(context);
-        AppSettings appSettings = dataManager.readSettings();
+        AppSettings appSettings = dataManager.loadUserSettings();
 
         PhysicalLocation physicalLocation = PhysicalLocation.Default;
 
-        if (appSettings.isUse_gps()) {
+        if (appSettings.shouldUseGps()) {
             if (hasGPSpermission(context)) {
                 final LocationManager mlocManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
                 final Location currentGeoLocation = mlocManager

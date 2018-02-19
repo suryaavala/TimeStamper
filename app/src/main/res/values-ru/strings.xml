@@ -52,4 +52,6 @@
     <string name="are_you_sure_delete">Вы точно хотите удалить эту категорию?</string>
     <string name="yes">Да</string>
     <string name="no">Нет</string>
+    <string name="cant_be_removed">Эта категория не может быть удалена</string>
+
 </resources>

@@ -54,6 +54,7 @@
     <string name="are_you_sure_delete">Are you sure you want to delete this category?</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
+    <string name="cant_be_removed">This category can\'t be removed</string>
 
 
 </resources>

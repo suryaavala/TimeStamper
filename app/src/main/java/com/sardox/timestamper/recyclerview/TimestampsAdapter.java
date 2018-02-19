@@ -123,13 +123,13 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
 
         String format;
 
-        if (appSettings.isUse24hrFormat()) {
-            if (appSettings.isShowMillis()) {
+        if (appSettings.shouldUse24hrFormat()) {
+            if (appSettings.shouldShowMillis()) {
                 format = "HH:mm:ss.SSS";
 
             } else format = "HH:mm:ss";
         } else {
-            if (appSettings.isShowMillis()) {
+            if (appSettings.shouldShowMillis()) {
                 format = "hh:mm:ss.SSS a";
             } else format = "hh:mm:ss a";
         }

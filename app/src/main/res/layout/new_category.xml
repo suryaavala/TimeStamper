@@ -42,7 +42,7 @@
             android:id="@+id/input_cat"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Sport"
+            android:hint="Name"
             android:textColor="@color/textColorPrimary"
             android:textSize="14sp" />
     </android.support.design.widget.TextInputLayout>
