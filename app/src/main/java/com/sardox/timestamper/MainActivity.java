@@ -1,6 +1,5 @@
 package com.sardox.timestamper;
 
-
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
@@ -13,6 +12,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -30,7 +30,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Switch;
 import android.widget.TextView;
 
 import com.google.android.gms.analytics.HitBuilders;
@@ -43,6 +42,7 @@ import com.sardox.timestamper.dialogs.EditNoteDialog;
 import com.sardox.timestamper.dialogs.MyDatePickerDialog;
 import com.sardox.timestamper.dialogs.MyTimePickerDialog;
 import com.sardox.timestamper.dialogs.PickToRemoveCategoryDialog;
+import com.sardox.timestamper.dialogs.SettingsDialog;
 import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.objects.Timestamp;
 import com.sardox.timestamper.recyclerview.CategoryAdapter;
@@ -140,34 +140,38 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void onClick(View view) {
         Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.NEW_TIMESTAMP);
-        for (int i=0; i<1; i++) {
-            final Timestamp newTimestamp = new Timestamp(
-                    JetTimestamp.now(),
-                    PhysicalLocation.Default,
-                    lastSelectedCategory.getCategoryID(),
-                    JetUUID.randomUUID());
+        final Timestamp newTimestamp = new Timestamp(
+                JetTimestamp.now(),
+                PhysicalLocation.Default,
+                lastSelectedCategory.getCategoryID(),
+                JetUUID.randomUUID());
 
-            unfilteredTimestamps.put(newTimestamp.getIdentifier(), newTimestamp);
-            timestampsAdapter.add(newTimestamp);
-            if (appSettings.shouldShowNoteAddDialog()) editNote(newTimestamp);
-            if (appSettings.shouldUseGps()) {
-                if (hasGPSpermission()) {
-                    getGPSCoordinates(new Consumer<PhysicalLocation>() {
-                        @Override
-                        public void accept(PhysicalLocation physicalLocation) {
-                            Log.d("srdx", "setPhysicalLocation");
-                            if (physicalLocation == null) {
-                                physicalLocation = PhysicalLocation.Default;
-                            }
-                            newTimestamp.setPhysicalLocation(physicalLocation);
+        unfilteredTimestamps.put(newTimestamp.getIdentifier(), newTimestamp);
+        timestampsAdapter.add(newTimestamp);
+        if (appSettings.shouldShowNoteAddDialog()) editNote(newTimestamp);
+        if (appSettings.shouldUseGps()) {
+            if (hasGPSpermission()) {
+                getGPSCoordinates(new Consumer<PhysicalLocation>() {
+                    @Override
+                    public void accept(PhysicalLocation physicalLocation) {
+                        Log.d("srdx", "setPhysicalLocation");
+                        if (physicalLocation == null) {
+                            physicalLocation = PhysicalLocation.Default;
                         }
-                    });
-                }
+                        newTimestamp.setPhysicalLocation(physicalLocation);
+                    }
+                });
             }
         }
         scrollViewTop();
         Snackbar.make(view, getString(R.string.new_timestamp_created) + " in " + lastSelectedCategory.getName(), Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show();
+    }
+
+    private void applyUserSettings() {
+        loadUserSettings();
+        timestampsAdapter.updateAppSettings(appSettings);
+        timestampsAdapter.notifyDataSetChanged();
     }
 
     @AfterPermissionGranted(RC_READWRITE)
@@ -205,36 +209,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
+        drawer.addDrawerListener(toggle);
         toggle.syncState();
-
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         View header = navigationView.getHeaderView(0);
-
         TextView phraseOfTheDay = (TextView) header.findViewById(R.id.phraseOfTheDay);
         phraseOfTheDay.setText(Utils.getPhraseOfTheDay(this));
-
         navigationView.setNavigationItemSelectedListener(this);
-
-        navigationView.getMenu().findItem(R.id.checkable_menu_auto_note)
-                .setActionView(new Switch(this));
-        ((Switch) navigationView.getMenu().findItem(R.id.checkable_menu_auto_note).getActionView()).setChecked(appSettings.shouldShowNoteAddDialog());
-        navigationView.getMenu().findItem(R.id.checkable_menu_auto_note).getActionView().setClickable(false);
-
-        navigationView.getMenu().findItem(R.id.checkable_menu_showMillis)
-                .setActionView(new Switch(this));
-        ((Switch) navigationView.getMenu().findItem(R.id.checkable_menu_showMillis).getActionView()).setChecked(appSettings.shouldShowMillis());
-        navigationView.getMenu().findItem(R.id.checkable_menu_showMillis).getActionView().setClickable(false);
-
-        navigationView.getMenu().findItem(R.id.checkable_menu_useGPS)
-                .setActionView(new Switch(this));
-        ((Switch) navigationView.getMenu().findItem(R.id.checkable_menu_useGPS).getActionView()).setChecked(appSettings.shouldUseGps());
-        navigationView.getMenu().findItem(R.id.checkable_menu_useGPS).getActionView().setClickable(false);
-
-        navigationView.getMenu().findItem(R.id.checkable_menu_use24hr)
-                .setActionView(new Switch(this));
-        ((Switch) navigationView.getMenu().findItem(R.id.checkable_menu_use24hr).getActionView()).setChecked(appSettings.shouldUse24hrFormat());
-        navigationView.getMenu().findItem(R.id.checkable_menu_use24hr).getActionView().setClickable(false);
     }
 
     private void setupUserActionCallbacks() {
@@ -309,21 +290,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         recyclerViewTimestamps.setOnTouchListener(new OnSwipeTouchListener(this) {
             public void onSwipeRight() {
                 int current_index = categories.indexOf(lastSelectedCategory);
-                if (current_index>0){
-                    lastSelectedCategory = categories.get(current_index-1);
+                if (current_index > 0) {
+                    lastSelectedCategory = categories.get(current_index - 1);
                     adapterCategory.setSelectedCategory(lastSelectedCategory);
                     adapterCategory.notifyDataSetChanged();
-                    filterTimestampsByCategory(categories.get(current_index-1));
+                    filterTimestampsByCategory(categories.get(current_index - 1));
                 }
-
             }
+
             public void onSwipeLeft() {
                 int current_index = categories.indexOf(lastSelectedCategory);
-                if (current_index<categories.size()){
-                    lastSelectedCategory = categories.get(current_index+1);
+                if (current_index < categories.size()) {
+                    lastSelectedCategory = categories.get(current_index + 1);
                     adapterCategory.setSelectedCategory(lastSelectedCategory);
                     adapterCategory.notifyDataSetChanged();
-                    filterTimestampsByCategory(categories.get(current_index+1));
+                    filterTimestampsByCategory(categories.get(current_index + 1));
                 }
 
             }
@@ -368,33 +349,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.checkable_menu_showMillis: {
-                appSettings.setShowMillis(!appSettings.shouldShowMillis());
-                ((Switch) item.getActionView()).toggle();
-                timestampsAdapter.notifyDataSetChanged();
-                return true;
-            }
-            case R.id.checkable_menu_use24hr: {
-                appSettings.setUse24hrFormat(!appSettings.shouldUse24hrFormat());
-                ((Switch) item.getActionView()).toggle();
-                timestampsAdapter.notifyDataSetChanged();
-                return true;
+            case R.id.showSettings: {
+                new SettingsDialog(this, new Consumer<Boolean>() {
+                    @Override
+                    public void accept(Boolean var1) {
+                        applyUserSettings();
+                    }
+                });
+                break;
             }
             case R.id.action_export: {
                 exportTimestampsToCsv();
                 break;
-            }
-            case R.id.checkable_menu_auto_note: {
-                ((Switch) item.getActionView()).toggle();
-                appSettings.setShowNoteAddDialog(!appSettings.shouldShowNoteAddDialog());
-                return true;
-            }
-            case R.id.checkable_menu_useGPS: {
-                appSettings.setShouldUseGps(!appSettings.shouldUseGps());
-                ((Switch) item.getActionView()).toggle();
-                return true;
             }
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -403,7 +371,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
     }
@@ -548,6 +516,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.LOCATION_RECORDED);
         final Looper myLooper = Looper.myLooper();
         final LocationManager mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (mlocManager == null) return;
         final Handler myHandler = new Handler(myLooper);
         final LocationListener locationListener = new LocationListener() {
             @Override

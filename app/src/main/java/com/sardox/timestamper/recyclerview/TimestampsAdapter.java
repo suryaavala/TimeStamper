@@ -99,6 +99,10 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
         });
     }
 
+    public void updateAppSettings(AppSettings appSettings){
+        this.appSettings = appSettings;
+    }
+
     @Override
     public TimestampsAdapter.MyViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
         View view = LayoutInflater.from(viewGroup.getContext())

@@ -2,24 +2,33 @@
     <string name="app_name">TimeStamper</string>
     <string name="action_settings">Настройки</string>
     <string name="action_category_add">Добавить категорию</string>
-    <string name="action_show_milliseconds">Миллисекнуды</string>
-    <string name="action_show_24">24ч формат</string>
+
     <string name="action_export">Экспорт в CSV</string>
     <string name="action_save">Сохранить</string>
     <string name="action_open">Открыть</string>
     <string name="action_category_delete">Удалить категорию</string>
     <string name="action_use_dark_theme">Использовать темный стиль</string>
-    <string name="add_note_to_new_stamps">Автоввод заметки</string>
     <string name="navigation_drawer_open">Открыть меню</string>
     <string name="navigation_drawer_close">Закрыть меню</string>
     <string name="new_timestamp_created">Новая запись была добавлена</string>
     <string name="add_note_here">введите заметку</string>
     <string name="add_from_widget">добавлено через виджет</string>
-    <string name="use_gps">Сохранять координаты</string>
     <string name="null_location">Координаты не сохранены, убедитесь что GPS включен</string>
     <string name="recover_try">Try to Recover</string>
     <string name="import_export">Импорт / Экспорт</string>
     <string name="settings">Настройки</string>
+
+    <string name="add_note_to_new_stamps">Автоввод заметки</string>
+    <string name="add_note_to_new_stamps_hint">Окно для ввода заметок будет появляться при создании каждого нового таймстемпа</string>
+
+    <string name="use_gps">Сохранять координаты</string>
+    <string name="use_gps_hint">Приложение будет записывать ваши коориданты в тайстемп. Experimental feature</string>
+
+    <string name="action_show_milliseconds">Использовать миллисекнуды</string>
+    <string name="action_show_milliseconds_hint">Включите если требуется высокая точность измерений</string>
+
+    <string name="action_show_24">Использовать 24ч формат</string>
+    <string name="action_show_24_hint">Используемый формат времени по умолчанию вместо AM/PM</string>
 
     <string name="s1">Better three hours too soon than a minute too late.</string>
     <string name="s2">Time is nature\'s way of keeping everything from happening at once.</string>
