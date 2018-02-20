@@ -40,7 +40,7 @@ public class AddCategoryDialog {
         iconRecycler.setLayoutManager(linearLayoutManagerCat);
 
         builder.setView(viewInflated);
-        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(R.string.save, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 int lastAdapterPosition = iconPicker.getLastSelected(); // which icon was selected
