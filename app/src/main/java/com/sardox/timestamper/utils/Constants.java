@@ -13,7 +13,12 @@ public class Constants {
 
         public class Events {
             public static final String ACTION = "Action";
+            public static final String SHOW_SETTINGS = "Show settings";
             public static final String NEW_TIMESTAMP = "New timestamp";
+            public static final String SWIPE_TO_CHANGE_CATEGORY = "Swipe to change category";
+            public static final String REMOVE_GROUP = "Remove group";
+            public static final String REMOVE_GROUP_UNDO = "Remove group undo";
+            public static final String EDIT_NOTE = "Edit note";
             public static final String APP_LAUNCH = "App launch";
             public static final String TIMESTAMP_REMOVE = "Timestamp removed";
             public static final String OPEN_MAP = "Open Map";

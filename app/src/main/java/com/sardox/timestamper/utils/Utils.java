@@ -16,7 +16,9 @@ import com.sardox.timestamper.types.PhysicalLocation;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 
@@ -142,4 +144,23 @@ public class Utils {
         int phraseToPick = r.nextInt(mTestArray.length);
         return mTestArray[phraseToPick];
     }
+
+    public static HashMap<JetUUID, Timestamp> listToHashMap(List<Timestamp> list) {
+        HashMap<JetUUID, Timestamp> hashMap = new HashMap<>();
+        for (Timestamp t : list) hashMap.put(t.getIdentifier(), t);
+        return hashMap;
+    }
+
+    public static List<Timestamp> getDeepCopyOfTimestampList(List<Timestamp> toCopy) {
+        Collection<Timestamp> copy = new HashSet<>(toCopy.size());
+        for (Timestamp selectedTimestamp : toCopy) {
+            try {
+                copy.add((Timestamp) selectedTimestamp.clone());
+            } catch (CloneNotSupportedException e) {
+                e.printStackTrace();
+            }
+        }
+        return new ArrayList<>(copy);
+    }
+
 }

@@ -7,7 +7,7 @@ import com.sardox.timestamper.types.TimestampFormat;
 
 import java.util.Calendar;
 
-public class Timestamp {
+public class Timestamp implements Cloneable {
 
     private JetUUID category_identifier;
     private JetUUID identifier;
@@ -117,6 +117,16 @@ public class Timestamp {
         if (note != null ? !note.equals(timestamp1.note) : timestamp1.note != null) return false;
         if (!category_identifier.equals(timestamp1.category_identifier)) return false;
         return identifier.equals(timestamp1.identifier);
+    }
 
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        Timestamp clone = null;
+        try {
+            clone = (Timestamp) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+        return clone;
     }
 }

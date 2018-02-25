@@ -7,6 +7,7 @@
     <color name="colorBackground">#212123</color>
     <color name="colorItemBackground">#303032</color>
     <color name="colorRecyclerViewItem">#10ffffff</color>
+    <color name="colorRecyclerViewItemSelected">#30ffffff</color>
 
     <color name="category_background">#303032</color>
     <color name="category_selected">#e63e3e</color>

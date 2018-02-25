@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public TimestampsAdapter timestampsAdapter;
     public RecyclerView recyclerViewCategory;
     public RecyclerView recyclerViewTimestamps;
-
+    private Toolbar toolbar;
     private Category lastSelectedCategory = Category.Default;
     private Tracker mTracker;
 
@@ -107,11 +107,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         dataManager.clearWidgetTimestamps();
     }
 
+    @Override
+    public void onBackPressed() {
+        if (timestampsAdapter.hasSelectedTimestamps()) {
+            timestampsAdapter.clearSelectionAndUpdateView();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
     /**
      * while app is in background, user can create timestamps with widget. when user back in app, we need to read them and add them to recycler view
      */
     private void loadData() {
         if (dataManager == null || unfilteredTimestamps == null) return;
+        if (timestampsAdapter.hasSelectedTimestamps()) {
+            timestampsAdapter.clearSelectionAndUpdateView();
+        }
         HashMap<JetUUID, Timestamp> widgetTimestamps = dataManager.readWidgetTimestamps();
         if (!widgetTimestamps.isEmpty()) {
             unfilteredTimestamps.putAll(widgetTimestamps);
@@ -124,14 +136,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Log.d("srdx", "-----------NEW RUN--------------");
         mTracker = ((Application) getApplication()).getDefaultTracker();
         mTracker.setScreenName(Constants.Analytics.Screens.MainScreen);
+        mTracker.enableExceptionReporting(!BuildConfig.DEBUG);
         Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.APP_LAUNCH);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle(R.string.app_name);
         setSupportActionBar(toolbar);
         dataManager = new DataManager(this);
         loadUserSettings();
-        setupDrawer(toolbar);
+        setupDrawer();
         initApp();
         FloatingActionButton actionButton = (FloatingActionButton) findViewById(R.id.fab);
         actionButton.setOnClickListener(this);
@@ -205,7 +219,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    private void setupDrawer(Toolbar toolbar) {
+    private void setupDrawer() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -224,7 +238,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void accept(UserAction action) {
                 Timestamp timestamp = action.getTimestamp();
                 switch (action.getActionType()) {
-                    case REMOVE:
+                    case REMOVE_TIMESTAMP:
                         removeTimestamp(timestamp);
                         break;
                     case EDIT_NOTE:
@@ -236,13 +250,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     case EDIT_DATE:
                         pickDate(timestamp);
                         break;
-                    case SHARE:
+                    case SHARE_TIMESTAMP:
                         break;
                     case CHANGE_CATEGORY:
                         changeCategory(timestamp);
                         break;
-                    case MAP_TO:
+                    case SHOW_MAP:
                         showTimestampOnMap(timestamp);
+                        break;
+                    case SELECTED:
+                        if (action.getCount() == 0) {
+                            toolbar.setTitle(R.string.app_name);
+                        } else {
+                            toolbar.setTitle(String.valueOf(action.getCount()));
+                        }
                         break;
                 }
             }
@@ -251,16 +272,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @SuppressLint("ClickableViewAccessibility")
     private void initRecyclerView() {
-        Consumer<Category> categoryUpdate = new Consumer<Category>() {
+        Consumer<Category> onCategorySelected = new Consumer<Category>() {
             @Override
             public void accept(Category selectedCategory) {
                 Log.d("srdx", "selected_category: " + selectedCategory.getName() + " #" + selectedCategory.getCategoryID());
                 lastSelectedCategory = selectedCategory;
+                timestampsAdapter.clearSelection();
                 filterTimestampsByCategory(lastSelectedCategory);
             }
         };
 
-        adapterCategory = new CategoryAdapter(categories, categoryUpdate, this);
+        adapterCategory = new CategoryAdapter(categories, onCategorySelected, this);
 
         recyclerViewCategory = (RecyclerView) findViewById(R.id.recyclerViewCat);
         recyclerViewCategory.setAdapter(adapterCategory);
@@ -291,6 +313,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onSwipeRight() {
                 int current_index = categories.indexOf(lastSelectedCategory);
                 if (current_index > 0) {
+                    Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.SWIPE_TO_CHANGE_CATEGORY);
                     lastSelectedCategory = categories.get(current_index - 1);
                     adapterCategory.setSelectedCategory(lastSelectedCategory);
                     adapterCategory.notifyDataSetChanged();
@@ -301,6 +324,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onSwipeLeft() {
                 int current_index = categories.indexOf(lastSelectedCategory);
                 if (current_index < categories.size()) {
+                    Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.SWIPE_TO_CHANGE_CATEGORY);
                     lastSelectedCategory = categories.get(current_index + 1);
                     adapterCategory.setSelectedCategory(lastSelectedCategory);
                     adapterCategory.notifyDataSetChanged();
@@ -339,7 +363,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if (categories.size() == 1) {
                     Snackbar.make(recyclerViewTimestamps, "No categories left..", Snackbar.LENGTH_SHORT).show();
                 } else {
-                    showRemoveCategoryDialog();
+                    if (timestampsAdapter.hasSelectedTimestamps()) {
+                        removeGroupOfTimestamps();
+                    } else {
+                        showRemoveCategoryDialog();
+                    }
                 }
                 break;
             }
@@ -347,11 +375,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
+    private void removeGroupOfTimestamps() {
+        Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.REMOVE_GROUP);
+        final List<Timestamp> copyOfRemovedItems = timestampsAdapter.getDeepCopyOfSelectedTimestamps();
+        final int size = copyOfRemovedItems.size();
+        unfilteredTimestamps.keySet().removeAll(timestampsAdapter.getSelectedTimestampsUUIDs());
+        timestampsAdapter.removeSelectedTimestamps(); //may be not necessary since we already removed from hasmap
+        timestampsAdapter.clearSelection();
+        Snackbar.make(recyclerViewTimestamps, size + " timestamps were removed", Snackbar.LENGTH_LONG)
+                .setAction("UNDO", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.REMOVE_GROUP_UNDO);
+                        timestampsAdapter.add(copyOfRemovedItems);
+                        unfilteredTimestamps.putAll(Utils.listToHashMap(copyOfRemovedItems));
+                        timestampsAdapter.notifyDataSetChanged();
+                    }
+                })
+                .show();
+    }
+
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.showSettings: {
+                Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.SHOW_SETTINGS);
                 new SettingsDialog(this, new Consumer<Boolean>() {
                     @Override
                     public void accept(Boolean var1) {
@@ -399,6 +448,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void editNote(final Timestamp timestamp) {
+        Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.EDIT_NOTE);
         new EditNoteDialog(this, timestamp, new Consumer<String>() {
             @Override
             public void accept(String newNote) {
@@ -422,9 +472,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void removeTimestamp(Timestamp timestampToRemove) {
+        Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.TIMESTAMP_REMOVE);
         timestampsAdapter.remove(timestampToRemove);
         unfilteredTimestamps.remove(timestampToRemove.getIdentifier());
-        Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.TIMESTAMP_REMOVE);
     }
 
     private void showTimestampOnMap(Timestamp timestamp) {
@@ -470,7 +520,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void showRemoveCategoryDialog() {
-        Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.REMOVE_CATEGORY);
         new PickToRemoveCategoryDialog(this, categories, new Consumer<Category>() {
             @Override
             public void accept(Category categoryToRemove) {
@@ -484,6 +533,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void showDeleteConfirmDialog(final Category categoryToRemove) {
+        Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.REMOVE_CATEGORY);
         new ConfirmRemoveCategoryDialog(this, new Consumer<Boolean>() {
             @Override
             public void accept(Boolean isConfirmed) {
