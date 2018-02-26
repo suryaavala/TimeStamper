@@ -44,6 +44,7 @@ import com.sardox.timestamper.dialogs.MyTimePickerDialog;
 import com.sardox.timestamper.dialogs.PickToRemoveCategoryDialog;
 import com.sardox.timestamper.dialogs.SettingsDialog;
 import com.sardox.timestamper.objects.Category;
+import com.sardox.timestamper.objects.QuickNote;
 import com.sardox.timestamper.objects.Timestamp;
 import com.sardox.timestamper.recyclerview.CategoryAdapter;
 import com.sardox.timestamper.recyclerview.TimestampsAdapter;
@@ -68,7 +69,7 @@ import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private HashMap<JetUUID, Timestamp> unfilteredTimestamps;
     private List<Category> categories;
     private List<TimestampIcon> icons;
@@ -148,11 +149,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setupDrawer();
         initApp();
         FloatingActionButton actionButton = (FloatingActionButton) findViewById(R.id.fab);
-        actionButton.setOnClickListener(this);
+        actionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                createNewTimestamp();
+            }
+        });
     }
 
-    @Override
-    public void onClick(View view) {
+    private void createNewTimestamp() {
         Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.NEW_TIMESTAMP);
         final Timestamp newTimestamp = new Timestamp(
                 JetTimestamp.now(),
@@ -178,8 +183,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
         scrollViewTop();
-        Snackbar.make(view, getString(R.string.new_timestamp_created) + " in " + lastSelectedCategory.getName(), Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show();
+        if (!appSettings.shouldShowNoteAddDialog()) {
+            Snackbar.make(recyclerViewTimestamps, getString(R.string.new_timestamp_created) + " in " + lastSelectedCategory.getName(), Snackbar.LENGTH_LONG).show();
+        }
     }
 
     private void applyUserSettings() {
@@ -401,6 +407,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         switch (item.getItemId()) {
             case R.id.showSettings: {
                 Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.SHOW_SETTINGS);
+                dataManager.writeUserSettings(appSettings);
                 new SettingsDialog(this, new Consumer<Boolean>() {
                     @Override
                     public void accept(Boolean var1) {
@@ -438,7 +445,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void pickTime(final Timestamp timestampToUpdate) {
         Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.EDIT_TIME);
-        new MyTimePickerDialog(this, timestampToUpdate, new Consumer<JetTimestamp>() {
+        new MyTimePickerDialog(this,
+                timestampToUpdate, new Consumer<JetTimestamp>() {
             @Override
             public void accept(JetTimestamp updatedDate) {
                 unfilteredTimestamps.get(timestampToUpdate.getIdentifier()).setTimestamp(updatedDate);
@@ -449,18 +457,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void editNote(final Timestamp timestamp) {
         Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.EDIT_NOTE);
-        new EditNoteDialog(this, timestamp, new Consumer<String>() {
-            @Override
-            public void accept(String newNote) {
-                unfilteredTimestamps.get(timestamp.getIdentifier()).setNote(newNote);
-                timestampsAdapter.updateTimestamp(timestamp);
-            }
-        });
+        new EditNoteDialog(this,
+                timestamp,
+                appSettings,
+                new Consumer<String>() {
+                    @Override
+                    public void accept(String newNote) {
+                        unfilteredTimestamps.get(timestamp.getIdentifier()).setNote(newNote);
+                        timestampsAdapter.updateTimestamp(timestamp);
+                        QuickNote quickNote = new QuickNote(JetTimestamp.now(), newNote);
+                        appSettings.addQuickNote(quickNote);
+                    }
+                });
     }
 
     private void changeCategory(final Timestamp timestamp) {
         Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.EDIT_CATEGORY);
-        new ChangeCategoryDialog(this, categories, new Consumer<JetUUID>() {
+        new ChangeCategoryDialog(this,
+                categories, new Consumer<JetUUID>() {
             @Override
             public void accept(JetUUID newCategoryId) {
                 unfilteredTimestamps.get(timestamp.getIdentifier()).setCategory_identifier(newCategoryId);
