@@ -13,7 +13,12 @@ public class Constants {
 
         public class Events {
             public static final String ACTION = "Action";
+            public static final String SHOW_SETTINGS = "Show settings";
             public static final String NEW_TIMESTAMP = "New timestamp";
+            public static final String SWIPE_TO_CHANGE_CATEGORY = "Swipe to change category";
+            public static final String REMOVE_GROUP = "Remove group";
+            public static final String REMOVE_GROUP_UNDO = "Remove group undo";
+            public static final String EDIT_NOTE = "Edit note";
             public static final String APP_LAUNCH = "App launch";
             public static final String TIMESTAMP_REMOVE = "Timestamp removed";
             public static final String OPEN_MAP = "Open Map";
@@ -38,9 +43,11 @@ public class Constants {
         public static final String SHARED_PREFS_SHOW_MILLIS = "SHOW_MILLIS";
         public static final String SHARED_PREFS_AUTONOTE = "AUTO_NOTE";
         public static final String SHARED_PREFS_TIMESTAMPS = "TIMESTAMPS";
+        public static final String SHARED_PREFS_QUICK_NOTES = "NOTES";
         public static final String SHARED_PREFS_WIDGET_TIMESTAMPS = "TIMESTAMPS_WIDGET";
         public static final String SHARED_PREFS_USE24HR = "USE_24HR";
         public static final String SHARED_PREFS_USEDARK = "USE_DARK";
+        public static final String SHARED_PREFS_SHOW_KEYBOARD = "SHOW_KEYBOARD_IN_NOTES";
         public static final String SHARED_PREFS_CATEGORIES = "CATEGORIES";
         public static final String SHARED_PREFS_USE_GPS = "USE_GPS";
         public static final String SHARED_PREFS_WIDGET_DEFAULT_TIMESTAMP = "WIDGET_CATEGORY";

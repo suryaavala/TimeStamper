@@ -10,6 +10,7 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.sardox.timestamper.objects.Category;
+import com.sardox.timestamper.objects.QuickNoteList;
 import com.sardox.timestamper.objects.Timestamp;
 import com.sardox.timestamper.types.JetUUID;
 import com.sardox.timestamper.utils.AppSettings;
@@ -56,6 +57,12 @@ public class DataManager {
         if (mPrefs.contains(Constants.Settings.SHARED_PREFS_USEDARK)) {
             appSettings.setUseDark(mPrefs.getBoolean(Constants.Settings.SHARED_PREFS_USEDARK, true));
         }
+        if (mPrefs.contains(Constants.Settings.SHARED_PREFS_SHOW_KEYBOARD)) {
+            appSettings.setShouldShowKeyboardInAddNote(mPrefs.getBoolean(Constants.Settings.SHARED_PREFS_SHOW_KEYBOARD, false));
+        }
+        if (mPrefs.contains(Constants.Settings.SHARED_PREFS_QUICK_NOTES)) {
+            appSettings.setQuickNotes(readQuickNotes());
+        }
         return appSettings;
     }
 
@@ -65,6 +72,27 @@ public class DataManager {
         mPrefs.edit().putBoolean(Constants.Settings.SHARED_PREFS_AUTONOTE, appSettings.shouldShowNoteAddDialog()).commit();
         mPrefs.edit().putBoolean(Constants.Settings.SHARED_PREFS_USEDARK, appSettings.shouldUseDarkTheme()).commit();
         mPrefs.edit().putBoolean(Constants.Settings.SHARED_PREFS_USE_GPS, appSettings.shouldUseGps()).commit();
+        mPrefs.edit().putBoolean(Constants.Settings.SHARED_PREFS_SHOW_KEYBOARD, appSettings.shouldShowKeyboardInAddNote()).commit();
+        writeQuickNotes(appSettings.getQuickNotes());
+    }
+
+    public void writeQuickNotes(QuickNoteList quickNoteList) {
+        Gson gson = new Gson();
+        String json = gson.toJson(quickNoteList);
+        mPrefs.edit().putString(Constants.Settings.SHARED_PREFS_QUICK_NOTES, json).commit();
+    }
+
+    public QuickNoteList readQuickNotes() {
+        Gson gson = new Gson();
+        String json = mPrefs.getString(Constants.Settings.SHARED_PREFS_QUICK_NOTES, "");
+        Type type = new TypeToken<QuickNoteList>() {
+        }.getType();
+        QuickNoteList quickNoteList = gson.fromJson(json, type);
+        if (quickNoteList != null && !quickNoteList.isEmpty()) {
+            return quickNoteList;
+        } else {
+            return new QuickNoteList();
+        }
     }
 
     public List<Category> readCategories() {

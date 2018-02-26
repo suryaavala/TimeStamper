@@ -7,7 +7,7 @@
     <string name="action_show_24">Use 24hr format</string>
     <string name="action_show_24_hint">Check if you prefer 24-hour time system to AM/PM format</string>
     <string name="add_note_to_new_stamps">Always enter notes</string>
-    <string name="add_note_to_new_stamps_hint">If enabled, you will be asked to enter a note for every timestamp you have created.</string>
+    <string name="add_note_to_new_stamps_hint">If enabled, you will be asked to enter a note for every timestamp you have created in-app (Does not apply to widget) </string>
     <string name="use_gps">Record my location</string>
     <string name="use_gps_hint">App will try to fetch and save your location and store it locally in timestamp. Experimental feature</string>
     <string name="action_export">Export to CSV</string>
@@ -61,4 +61,6 @@
     <string name="add_new_category">Add New Category</string>
     <string name="scroll_right_and_pick_an_icon">Scroll right and pick an icon</string>
     <string name="enter_category_name">Enter category name</string>
+    <string name="auto_keyboard_hint">Keyboard will be shown automatically every time you add or edit notes</string>
+    <string name="auto_keyboard">Auto show keyboard when adding a note</string>
 </resources>

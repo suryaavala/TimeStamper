@@ -33,7 +33,6 @@ public class SettingsDialog {
                         onSettingsClosed.accept(true);
                     }
                 });
-        AlertDialog dialog = builder.create();
-        builder.show();
+        builder.create().show();
     }
 }

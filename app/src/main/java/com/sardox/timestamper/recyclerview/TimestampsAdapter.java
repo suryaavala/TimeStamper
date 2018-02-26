@@ -2,22 +2,19 @@ package com.sardox.timestamper.recyclerview;
 
 
 import android.content.Context;
-
 import android.support.v4.content.ContextCompat;
 import android.support.v7.util.SortedList;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
-
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
-
 
 import com.sardox.timestamper.R;
 import com.sardox.timestamper.objects.Category;
@@ -29,12 +26,14 @@ import com.sardox.timestamper.utils.AppSettings;
 import com.sardox.timestamper.utils.Consumer;
 import com.sardox.timestamper.utils.TimestampIcon;
 import com.sardox.timestamper.utils.UserAction;
+import com.sardox.timestamper.utils.Utils;
 
 import org.joda.time.Period;
 import org.joda.time.format.PeriodFormat;
 import org.joda.time.format.PeriodFormatter;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Comparator;
@@ -46,6 +45,10 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
 
     private SortedList<Timestamp> sortedTimeStamps;
     private List<Category> categories;
+
+    private List<Timestamp> selectedTimestamps;
+    private boolean isSelecting = false;
+
     private DisplayMetrics displayMetrics;
     private AppSettings appSettings;
     private List<TimestampIcon> icons;
@@ -60,6 +63,7 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
         this.categories = categories;
         this.displayMetrics = displayMetrics;
         this.icons = icons;
+        this.selectedTimestamps = new ArrayList<>();
 
         sortedTimeStamps = new SortedList<>(Timestamp.class, new SortedList.Callback<Timestamp>() {
             @Override
@@ -70,7 +74,7 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
             @Override
             public void onChanged(int position, int count) {
                 notifyItemRangeChanged(position, count);
-                if (position>0) {
+                if (position > 0) {
                     // neighbor show be updated as well to update it's delta
                     notifyItemRangeChanged(position - 1, 1);
                 }
@@ -94,7 +98,7 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
             @Override
             public void onRemoved(int position, int count) {
                 notifyItemRangeRemoved(position, count);
-                if (position>0) {
+                if (position > 0) {
                     // neighbor show be updated as well to update it's delta
                     notifyItemRangeChanged(position - 1, 1);
                 }
@@ -107,7 +111,7 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
         });
     }
 
-    public void updateAppSettings(AppSettings appSettings){
+    public void updateAppSettings(AppSettings appSettings) {
         this.appSettings = appSettings;
     }
 
@@ -122,10 +126,17 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
 
     @Override
     public void onBindViewHolder(final TimestampsAdapter.MyViewHolder holder, int position) {
+
         final int w = displayMetrics.widthPixels;
         holder.left_container.setMinimumWidth(w);
 
         Timestamp timestamp = sortedTimeStamps.get(position);
+        if (selectedTimestamps.contains(timestamp)) {
+            holder.left_container.setBackgroundColor(ContextCompat.getColor(context, R.color.colorRecyclerViewItemSelected));
+        } else {
+            holder.left_container.setBackgroundColor(ContextCompat.getColor(context, R.color.colorRecyclerViewItem));
+        }
+
         Calendar calendar = Calendar.getInstance();
         TimeZone localTZ = calendar.getTimeZone();
         calendar.setTimeInMillis(timestamp.getTimestamp().toMilliseconds());
@@ -164,9 +175,9 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
                 break;
             }
         }
-        if (position<sortedTimeStamps.size()-1) {
-            Timestamp nexTimestamp = sortedTimeStamps.get(position+1);
-            Period period = new Period(nexTimestamp.getTimestamp().toMilliseconds(),timestamp.getTimestamp().toMilliseconds());
+        if (position < sortedTimeStamps.size() - 1) {
+            Timestamp nexTimestamp = sortedTimeStamps.get(position + 1);
+            Period period = new Period(nexTimestamp.getTimestamp().toMilliseconds(), timestamp.getTimestamp().toMilliseconds());
             holder.recycler_timestamp_delay.setText(periodFormatter.print(period));
         } else {
             holder.recycler_timestamp_delay.setText("");
@@ -215,6 +226,7 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
 
         private TextView recycler_timestamp_weekday, recycler_timestamp_day, recycler_timestamp_note, recycler_timestamp_time, recycler_timestamp_button_menu, recycler_timestamp_delay;
         private LinearLayout left_container;
+        private RelativeLayout recycler_view_card;
         private ImageView recycler_timestamp_category;
 
         MyViewHolder(View itemView) {
@@ -228,28 +240,95 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
             recycler_timestamp_button_menu = (TextView) itemView.findViewById(R.id.recycler_timestamp_button_menu);
             recycler_timestamp_delay = (TextView) itemView.findViewById(R.id.in_between);
             left_container = (LinearLayout) itemView.findViewById(R.id.left_container);
-
+            recycler_view_card = (RelativeLayout) itemView.findViewById(R.id.recycler_view_card);
+            recycler_view_card.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    if (!isSelecting) {
+                        isSelecting = true;
+                        Timestamp selectedTimestamp = sortedTimeStamps.get(getAdapterPosition());
+                        if (selectedTimestamps.contains(selectedTimestamp)) {
+                            selectedTimestamps.remove(selectedTimestamp);
+                        } else {
+                            selectedTimestamps.add(selectedTimestamp);
+                        }
+                        notifyItemChanged(getAdapterPosition());
+                        userActionCallback.accept(new UserAction(ActionType.SELECTED, null, selectedTimestamps.size()));
+                    }
+                    return true;
+                }
+            });
+            recycler_view_card.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (isSelecting) {
+                        Timestamp selectedTimestamp = sortedTimeStamps.get(getAdapterPosition());
+                        if (selectedTimestamps.contains(selectedTimestamp)) {
+                            selectedTimestamps.remove(selectedTimestamp);
+                            if (selectedTimestamps.isEmpty()) isSelecting = false;
+                        } else {
+                            selectedTimestamps.add(selectedTimestamp);
+                        }
+                        notifyItemChanged(getAdapterPosition());
+                        userActionCallback.accept(new UserAction(ActionType.SELECTED, null, selectedTimestamps.size()));
+                    }
+                }
+            });
             recycler_timestamp_button_menu.setOnClickListener(this);
         }
-
 
         @Override
         public void onClick(View v) {
             switch (v.getId()) {
                 case R.id.recycler_timestamp_button_menu: {
-                    showPopup(v, sortedTimeStamps.get(getAdapterPosition()));
+                    if (!isSelecting) {
+                        showPopup(v, sortedTimeStamps.get(getAdapterPosition()));
+                    }
                     break;
                 }
             }
         }
     }
 
+    public void removeSelectedTimestamps() {
+        for (Timestamp t : selectedTimestamps) {
+            sortedTimeStamps.remove(t);
+        }
+    }
+
+    public List<JetUUID> getSelectedTimestampsUUIDs() {
+        List<JetUUID> list = new ArrayList<>();
+        for (Timestamp t : selectedTimestamps) {
+            list.add(t.getIdentifier());
+        }
+        return list;
+    }
+
+    public List<Timestamp> getDeepCopyOfSelectedTimestamps() {
+        return Utils.getDeepCopyOfTimestampList(selectedTimestamps);
+    }
+
+    public boolean hasSelectedTimestamps() {
+        return !selectedTimestamps.isEmpty();
+    }
+
+    public void clearSelection() {
+        userActionCallback.accept(new UserAction(ActionType.SELECTED, null, 0));
+        selectedTimestamps.clear();
+        isSelecting = false;
+    }
+
+    public void clearSelectionAndUpdateView() {
+        clearSelection();
+        notifyDataSetChanged();
+    }
+
     private void showPopup(View v, final Timestamp timestamp) {
         PopupMenu popup = new PopupMenu(v.getContext(), v);
         popup.inflate(R.menu.options_menu);
         if (timestamp.getPhysicalLocation().equals(PhysicalLocation.Default)) {
-            MenuItem map_to_menu_item = popup.getMenu().findItem(R.id.recycler_menu_map_to);
-            if (map_to_menu_item != null) map_to_menu_item.setVisible(false);
+            MenuItem openMapMenuItem = popup.getMenu().findItem(R.id.recycler_menu_map_to);
+            if (openMapMenuItem != null) openMapMenuItem.setVisible(false);
         }
 
         popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -266,16 +345,16 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
                         userActionCallback.accept(new UserAction(ActionType.EDIT_NOTE, timestamp));
                         break;
                     case R.id.recycler_menu_map_to:
-                        userActionCallback.accept(new UserAction(ActionType.MAP_TO, timestamp));
+                        userActionCallback.accept(new UserAction(ActionType.SHOW_MAP, timestamp));
                         break;
                     case R.id.recycler_menu_move:
                         userActionCallback.accept(new UserAction(ActionType.CHANGE_CATEGORY, timestamp));
                         break;
                     case R.id.recycler_menu_remove:
-                        userActionCallback.accept(new UserAction(ActionType.REMOVE, timestamp));
+                        userActionCallback.accept(new UserAction(ActionType.REMOVE_TIMESTAMP, timestamp));
                         break;
                     case R.id.recycler_menu_share:
-                        userActionCallback.accept(new UserAction(ActionType.SHARE, timestamp));
+                        userActionCallback.accept(new UserAction(ActionType.SHARE_TIMESTAMP, timestamp));
                         break;
                 }
                 return false;

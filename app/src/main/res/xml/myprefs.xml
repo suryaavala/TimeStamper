@@ -1,27 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <Preference
-        android:title="@string/settings">
-    </Preference>
+    <Preference android:title="@string/settings"></Preference>
     <CheckBoxPreference
+        android:defaultValue="false"
         android:key="SHOW_MILLIS"
-        android:title="@string/action_show_milliseconds"
         android:summary="@string/action_show_milliseconds_hint"
-        android:defaultValue="false" />
+        android:title="@string/action_show_milliseconds" />
     <CheckBoxPreference
+        android:defaultValue="false"
         android:key="USE_24HR"
-        android:title="@string/action_show_24"
         android:summary="@string/action_show_24_hint"
-        android:defaultValue="false" />
+        android:title="@string/action_show_24" />
     <CheckBoxPreference
+        android:defaultValue="false"
         android:key="AUTO_NOTE"
-        android:title="@string/add_note_to_new_stamps"
         android:summary="@string/add_note_to_new_stamps_hint"
-        android:defaultValue="false" />
+        android:title="@string/add_note_to_new_stamps" />
     <CheckBoxPreference
+        android:defaultValue="false"
         android:key="USE_GPS"
-        android:title="@string/use_gps"
         android:summary="@string/use_gps_hint"
-        android:defaultValue="false" />
+        android:title="@string/use_gps" />
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="SHOW_KEYBOARD_IN_NOTES"
+        android:summary="@string/auto_keyboard_hint"
+        android:title="@string/auto_keyboard" />
 
 </PreferenceScreen>

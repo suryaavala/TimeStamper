@@ -2,11 +2,12 @@ package com.sardox.timestamper.utils;
 
 
 public enum ActionType {
-    REMOVE,
+    REMOVE_TIMESTAMP,
     EDIT_NOTE,
     EDIT_TIME,
     EDIT_DATE,
-    SHARE,
+    SHARE_TIMESTAMP,
     CHANGE_CATEGORY,
-    MAP_TO,
+    SHOW_MAP,
+    SELECTED,
 }

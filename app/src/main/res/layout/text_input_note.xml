@@ -5,6 +5,7 @@
     android:orientation="vertical"
     android:padding="10dp">
 
+
     <TextView
         android:id="@+id/textView2"
         android:layout_width="match_parent"
@@ -14,21 +15,49 @@
         android:text="Add a note"
         android:textAlignment="center"
         android:textColor="@color/textColorPrimary"
-        android:textSize="20sp" />
+        android:textSize="18sp" />
 
-    <android.support.design.widget.TextInputLayout
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="14dp"
+            android:layout_weight="1">
+
+            <AutoCompleteTextView
+                android:id="@+id/input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Type here"
+                android:imeOptions="actionDone"
+                android:inputType="text"
+                android:textSize="14sp" />
+        </android.support.design.widget.TextInputLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_marginTop="14dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="14dp">
+        android:orientation="vertical">
 
-        <AutoCompleteTextView
-            android:id="@+id/input"
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/textView4"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:hint="Type here"
-            android:imeOptions="actionDone"
-            android:inputType="text"
-            android:textSize="14sp" />
+            android:text="Last notes"/>
 
-    </android.support.design.widget.TextInputLayout>
+        <ListView
+            android:id="@+id/quick_notes_listview"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:visibility="visible"/>
+    </LinearLayout>
 </LinearLayout>
