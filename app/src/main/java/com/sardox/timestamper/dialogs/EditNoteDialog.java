@@ -1,5 +1,6 @@
 package com.sardox.timestamper.dialogs;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.support.v7.app.AlertDialog;
@@ -29,9 +30,9 @@ public class EditNoteDialog {
     public EditNoteDialog(final Context context, final Timestamp timestamp, final AppSettings appSettings, final Consumer<String> onNoteEdited) {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        View view = LayoutInflater.from(context).inflate(R.layout.text_input_note, null, false);
-        final ListView listView = (ListView) view.findViewById(R.id.quick_notes_listview);
-        final EditText input = (EditText) view.findViewById(R.id.input);
+        @SuppressLint("InflateParams") View view = LayoutInflater.from(context).inflate(R.layout.text_input_note, null, false);
+        final ListView listView = view.findViewById(R.id.quick_notes_listview);
+        final EditText input = view.findViewById(R.id.input);
         input.setText(timestamp.getNote());
 
         builder.setView(view);

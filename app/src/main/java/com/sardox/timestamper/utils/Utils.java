@@ -1,8 +1,11 @@
 package com.sardox.timestamper.utils;
 
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.support.v4.content.FileProvider;
 
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
@@ -63,7 +66,7 @@ public class Utils {
 
     public static void emailCSV(Context context, File file) {
         if (file != null) {
-            Uri u1 = Uri.fromFile(file);
+            Uri u1 = FileProvider.getUriForFile(context, context.getApplicationContext().getPackageName() + ".provider", file);
             Intent sendIntent = new Intent(Intent.ACTION_SEND);
             sendIntent.putExtra(Intent.EXTRA_SUBJECT, Constants.EXPORT_NAME);
             sendIntent.putExtra(Intent.EXTRA_STREAM, u1);
@@ -73,10 +76,12 @@ public class Utils {
     }
 
     public static void sendEventToAnalytics(Tracker mTracker, String actionName) {
-        mTracker.send(new HitBuilders.EventBuilder()
-                .setCategory(Constants.Analytics.Events.ACTION)
-                .setAction(actionName)
-                .build());
+        if (mTracker != null) {
+            mTracker.send(new HitBuilders.EventBuilder()
+                    .setCategory(Constants.Analytics.Events.ACTION)
+                    .setAction(actionName)
+                    .build());
+        }
     }
 
     public static List<TimestampIcon> getStockIcons() {
@@ -163,4 +168,10 @@ public class Utils {
         return new ArrayList<>(copy);
     }
 
+    public static void updateGridWidget(Context applicationContext) {
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(applicationContext);
+        ComponentName thisWidget = new ComponentName(applicationContext, GridWidget.class);
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
+        appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.gridview);
+    }
 }

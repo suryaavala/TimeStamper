@@ -1,5 +1,6 @@
 package com.sardox.timestamper.dialogs;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.support.v7.app.AlertDialog;
@@ -13,7 +14,7 @@ public class SettingsDialog {
 
     public SettingsDialog(Context context, final Consumer<Boolean> onSettingsClosed) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.AppTheme);
-        View view = LayoutInflater.from(context).inflate(R.layout.setting_dialog, null, false);
+        @SuppressLint("InflateParams") View view = LayoutInflater.from(context).inflate(R.layout.setting_dialog, null, false);
         builder.setView(view)
                 .setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override

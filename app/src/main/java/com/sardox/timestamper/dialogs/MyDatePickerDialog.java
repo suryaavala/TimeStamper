@@ -13,7 +13,7 @@ import java.util.Calendar;
 
 public class MyDatePickerDialog {
 
-    public MyDatePickerDialog(Context context, final Timestamp timestamp, final Consumer<JetTimestamp> onDateSelected, boolean shouldUse24hrFormat) {
+    public MyDatePickerDialog(Context context, final Timestamp timestamp, final Consumer<JetTimestamp> onDateSelected) {
         final int oldYear = timestamp.format(TimestampFormat.Year);
         final int oldMonth = timestamp.format(TimestampFormat.Month);
         final int oldDay = timestamp.format(TimestampFormat.Day);

@@ -21,7 +21,6 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.MyView
 
     private List<Category> categories;
     private Consumer<Category> category_changed_callback;
-    //   private Context context;
     private final int category_color_selected;
     private final int category_color_deselected;
 
@@ -33,7 +32,6 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.MyView
 
 
     public CategoryAdapter(List<Category> categories, Consumer<Category> category_changed_callback, Context context) {
-        //   this.context = context;
         this.category_changed_callback = category_changed_callback;
         this.categories = categories;
 
@@ -73,8 +71,8 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.MyView
 
         MyViewHolderCategory(View itemView) {
             super(itemView);
-            mCategoryTextView = (TextView) itemView.findViewById(R.id.CategoryTextView);
-            category_underline = (LinearLayout) itemView.findViewById(R.id.recycler_category_underline);
+            mCategoryTextView = itemView.findViewById(R.id.CategoryTextView);
+            category_underline = itemView.findViewById(R.id.recycler_category_underline);
             mCategoryTextView.setOnClickListener(this);
         }
 

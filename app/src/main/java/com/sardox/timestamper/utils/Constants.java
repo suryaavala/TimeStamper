@@ -31,7 +31,9 @@ public class Constants {
             public static final String EDIT_TIME = "Edit time";
             public static final String EDIT_CATEGORY = "Edit category";
             public static final String WIDGET_CLICK = "Widget click";
+            public static final String GRID_WIDGET_CLICK = "Grid widget click";
             public static final String ICON_PICKED = "Icon picked";
+            public static final String SECURITY_EXCEPTION = "SecurityExceptionInApp";
         }
 
         public class Screens {

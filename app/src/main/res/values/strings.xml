@@ -56,7 +56,7 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="cant_be_removed">This category can\'t be removed</string>
-    <string name="widget_hint">HINT: Try using widget for even quicker timestamps</string>
+    <string name="widget_hint">HINT: Try using NEW widget for even quicker timestamps</string>
     <string name="save">SAVE</string>
     <string name="add_new_category">Add New Category</string>
     <string name="scroll_right_and_pick_an_icon">Scroll right and pick an icon</string>

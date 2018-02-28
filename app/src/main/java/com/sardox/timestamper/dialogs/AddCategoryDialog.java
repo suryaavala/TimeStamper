@@ -1,5 +1,6 @@
 package com.sardox.timestamper.dialogs;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.support.v7.app.AlertDialog;
@@ -22,8 +23,8 @@ public class AddCategoryDialog {
 
     public AddCategoryDialog(Context context, List<TimestampIcon> icons, final Consumer<Category> onCategoryCreated) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        View viewInflated = LayoutInflater.from(context).inflate(R.layout.new_category, null, false);
-        final EditText input = (EditText) viewInflated.findViewById(R.id.input_cat);
+        @SuppressLint("InflateParams") View viewInflated = LayoutInflater.from(context).inflate(R.layout.new_category, null, false);
+        final EditText input = viewInflated.findViewById(R.id.input_cat);
         final IconAdapter iconPicker = new IconAdapter(icons, new Consumer<TimestampIcon>() {
             @Override
             public void accept(TimestampIcon icon) {
@@ -31,7 +32,7 @@ public class AddCategoryDialog {
             }
         }, context);
 
-        RecyclerView iconRecycler = (RecyclerView) viewInflated.findViewById(R.id.recyclerView_icon);
+        RecyclerView iconRecycler = viewInflated.findViewById(R.id.recyclerView_icon);
         iconRecycler.setAdapter(iconPicker);
         iconRecycler.setHasFixedSize(true);
 

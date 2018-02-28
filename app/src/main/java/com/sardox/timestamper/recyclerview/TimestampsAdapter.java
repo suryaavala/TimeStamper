@@ -232,15 +232,15 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
         MyViewHolder(View itemView) {
             super(itemView);
 
-            recycler_timestamp_category = (ImageView) itemView.findViewById(R.id.recycler_timestamp_category);
-            recycler_timestamp_day = (TextView) itemView.findViewById(R.id.recycler_timestamp_day);
-            recycler_timestamp_note = (TextView) itemView.findViewById(R.id.recycler_timestamp_note);
-            recycler_timestamp_time = (TextView) itemView.findViewById(R.id.recycler_timestamp_time);
-            recycler_timestamp_weekday = (TextView) itemView.findViewById(R.id.recycler_timestamp_weekday);
-            recycler_timestamp_button_menu = (TextView) itemView.findViewById(R.id.recycler_timestamp_button_menu);
-            recycler_timestamp_delay = (TextView) itemView.findViewById(R.id.in_between);
-            left_container = (LinearLayout) itemView.findViewById(R.id.left_container);
-            recycler_view_card = (RelativeLayout) itemView.findViewById(R.id.recycler_view_card);
+            recycler_timestamp_category = itemView.findViewById(R.id.recycler_timestamp_category);
+            recycler_timestamp_day = itemView.findViewById(R.id.recycler_timestamp_day);
+            recycler_timestamp_note = itemView.findViewById(R.id.recycler_timestamp_note);
+            recycler_timestamp_time = itemView.findViewById(R.id.recycler_timestamp_time);
+            recycler_timestamp_weekday = itemView.findViewById(R.id.recycler_timestamp_weekday);
+            recycler_timestamp_button_menu = itemView.findViewById(R.id.recycler_timestamp_button_menu);
+            recycler_timestamp_delay = itemView.findViewById(R.id.in_between);
+            left_container = itemView.findViewById(R.id.left_container);
+            recycler_view_card = itemView.findViewById(R.id.recycler_view_card);
             recycler_view_card.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
