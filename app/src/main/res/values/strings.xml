@@ -65,4 +65,6 @@
     <string name="auto_keyboard">Auto show keyboard when adding a note</string>
     <string name="quick_notes">Show 5 last used notes</string>
     <string name="quick_notes_hint">You will be able to select from previously entered notes</string>
+    <string name="notes_settings_hint">Quick notes, keyboard, auto notes…</string>
+    <string name="notes_settings">New notes settings</string>
 </resources>
