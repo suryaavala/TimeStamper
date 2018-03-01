@@ -63,4 +63,6 @@
     <string name="enter_category_name">Enter category name</string>
     <string name="auto_keyboard_hint">Keyboard will be shown automatically every time you add or edit notes</string>
     <string name="auto_keyboard">Auto show keyboard when adding a note</string>
+    <string name="quick_notes">Show 5 last used notes</string>
+    <string name="quick_notes_hint">You will be able to select from previously entered notes</string>
 </resources>

@@ -69,5 +69,7 @@
     <string name="enter_category_name">Введите имя категории</string>
     <string name="auto_keyboard_hint">Системная клавиатура будет автоматически показана для более быстрого ввода</string>
     <string name="auto_keyboard">Показывать клавиатуру при добавлении заметок</string>
+    <string name="quick_notes">Показывать последние 5 заметок</string>
+    <string name="quick_notes_hine">Вы сможете выбрать из пяти последних введенных заметок</string>
 
 </resources>

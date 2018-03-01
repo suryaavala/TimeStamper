@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         saveCategories();
     }
 
-    private void saveCategories(){
+    private void saveCategories() {
         dataManager.writeCategories(categories);
     }
 
@@ -517,28 +517,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         new AddCategoryDialog(this, icons, new Consumer<Category>() {
             @Override
             public void accept(Category newCategory) {
-                categories.add(newCategory);
+                if (newCategory.getName().isEmpty()) {
+                    Snackbar.make(recyclerViewTimestamps, "Category name can't be empty", Snackbar.LENGTH_SHORT).show();
+                } else {
+                    categories.add(newCategory);
 
-                mTracker.send(new HitBuilders.EventBuilder()
-                        .setCategory(Constants.Analytics.Events.ACTION)
-                        .setAction(Constants.Analytics.Events.NEW_CATEGORY)
-                        .setLabel(newCategory.getName().toLowerCase())
-                        .build());
+                    mTracker.send(new HitBuilders.EventBuilder()
+                            .setCategory(Constants.Analytics.Events.ACTION)
+                            .setAction(Constants.Analytics.Events.NEW_CATEGORY)
+                            .setLabel(newCategory.getName().toLowerCase())
+                            .build());
 
-                mTracker.send(new HitBuilders.EventBuilder()
-                        .setCategory(Constants.Analytics.Events.ACTION)
-                        .setAction(Constants.Analytics.Events.ICON_PICKED)
-                        .setLabel(icons.get(newCategory.getIcon_id()).getDescription().toLowerCase())
-                        .build());
+                    mTracker.send(new HitBuilders.EventBuilder()
+                            .setCategory(Constants.Analytics.Events.ACTION)
+                            .setAction(Constants.Analytics.Events.ICON_PICKED)
+                            .setLabel(icons.get(newCategory.getIcon_id()).getDescription().toLowerCase())
+                            .build());
 
-                lastSelectedCategory = newCategory;
-                adapterCategory.setSelectedCategory(newCategory);
-                adapterCategory.notifyDataSetChanged();
+                    lastSelectedCategory = newCategory;
+                    adapterCategory.setSelectedCategory(newCategory);
+                    adapterCategory.notifyDataSetChanged();
 
-                recyclerViewCategory.smoothScrollToPosition(adapterCategory.getItemCount()); //scrolling to new category
-                filterTimestampsByCategory(newCategory);
-                saveCategories();
-                Utils.updateGridWidget(getApplicationContext());
+                    recyclerViewCategory.smoothScrollToPosition(adapterCategory.getItemCount()); //scrolling to new category
+                    filterTimestampsByCategory(newCategory);
+                    saveCategories();
+                    Utils.updateGridWidget(getApplicationContext());
+                }
             }
         });
     }

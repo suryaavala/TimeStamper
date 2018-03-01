@@ -26,5 +26,9 @@
         android:key="SHOW_KEYBOARD_IN_NOTES"
         android:summary="@string/auto_keyboard_hint"
         android:title="@string/auto_keyboard" />
-
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="USE_QUICK_NOTES"
+        android:summary="@string/quick_notes_hint"
+        android:title="@string/quick_notes" />
 </PreferenceScreen>

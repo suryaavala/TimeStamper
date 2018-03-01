@@ -12,6 +12,7 @@ public class AppSettings {
     private boolean useDark = true;
     private boolean showNoteAddDialog = false;
     private boolean shouldUseGps = false;
+    private boolean shouldUseQuickNotes = true;
     private boolean shouldShowMillis = false;
     private boolean shouldShowKeyboardInAddNote = false;
     private QuickNoteList quickNotes;
@@ -70,6 +71,14 @@ public class AppSettings {
 
     public void setShouldUseGps(boolean flag) {
         this.shouldUseGps = flag;
+    }
+
+    public boolean shouldUseQuickNotes() {
+        return shouldUseQuickNotes;
+    }
+
+    public void setShouldUseQuickNotes(boolean flag) {
+        this.shouldUseQuickNotes = flag;
     }
 
     public boolean shouldShowKeyboardInAddNote() {
