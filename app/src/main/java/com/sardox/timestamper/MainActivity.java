@@ -35,12 +35,11 @@ import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.sardox.timestamper.Managers.DataManager;
 import com.sardox.timestamper.dialogs.AddCategoryDialog;
-import com.sardox.timestamper.dialogs.ChangeCategoryDialog;
 import com.sardox.timestamper.dialogs.ConfirmRemoveCategoryDialog;
 import com.sardox.timestamper.dialogs.EditNoteDialog;
 import com.sardox.timestamper.dialogs.MyDatePickerDialog;
 import com.sardox.timestamper.dialogs.MyTimePickerDialog;
-import com.sardox.timestamper.dialogs.PickToRemoveCategoryDialog;
+import com.sardox.timestamper.dialogs.CategoryListBottomSheet;
 import com.sardox.timestamper.dialogs.SettingsDialog;
 import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.objects.QuickNote;
@@ -278,7 +277,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void initRecyclerView() {
-        Consumer<Category> onCategorySelected = new Consumer<Category>() {
+        Consumer<Category> onCategorySelectedCallback = new Consumer<Category>() {
             @Override
             public void accept(Category selectedCategory) {
                 Log.d("srdx", "selected_category: " + selectedCategory.getName() + " #" + selectedCategory.getCategoryID());
@@ -287,8 +286,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 filterTimestampsByCategory(lastSelectedCategory);
             }
         };
+        Consumer<Void> onCategoryAddSelected = new Consumer<Void>() {
+            @Override
+            public void accept(Void var1) {
+                 showAddNewCategoryDialog();
+            }
+        };
 
-        adapterCategory = new CategoryAdapter(categories, onCategorySelected, this);
+        adapterCategory = new CategoryAdapter(categories, onCategorySelectedCallback, onCategoryAddSelected, this);
 
         recyclerViewCategory = findViewById(R.id.recyclerViewCat);
         recyclerViewCategory.setAdapter(adapterCategory);
@@ -369,13 +374,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_category_add: {
-                showAddNewCategoryDialog();
-                break;
-            }
             case R.id.action_category_delete: {
                 if (categories.size() == 1) {
-                    Snackbar.make(recyclerViewTimestamps, "No categories left..", Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(recyclerViewTimestamps, "Default category can not be deleted..  \uD83D\uDE44", Snackbar.LENGTH_SHORT).show();
                 } else {
                     if (timestampsAdapter.hasSelectedTimestamps()) {
                         removeGroupOfTimestamps();
@@ -481,12 +482,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void changeCategory(final Timestamp timestamp) {
         Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.EDIT_CATEGORY);
-        new ChangeCategoryDialog(this,
-                categories, new Consumer<JetUUID>() {
+        new CategoryListBottomSheet(this, "Move to", categories, icons, new Consumer<Category>() {
             @Override
-            public void accept(JetUUID newCategoryId) {
-                unfilteredTimestamps.get(timestamp.getIdentifier()).setCategory_identifier(newCategoryId);
-                if (lastSelectedCategory.getCategoryID().equals(newCategoryId) || lastSelectedCategory.equals(Category.Default))
+            public void accept(Category newCategory) {
+                unfilteredTimestamps.get(timestamp.getIdentifier()).setCategory_identifier(newCategory.getCategoryID());
+                if (lastSelectedCategory.getCategoryID().equals(newCategory.getCategoryID()) || lastSelectedCategory.equals(Category.Default))
                     timestampsAdapter.updateTimestamp(timestamp);
                 else timestampsAdapter.remove(timestamp);
             }
@@ -518,7 +518,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void accept(Category newCategory) {
                 if (newCategory.getName().isEmpty()) {
-                    Snackbar.make(recyclerViewTimestamps, "Category name can't be empty", Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(recyclerViewTimestamps, "Category name can't be empty \uD83E\uDD14", Snackbar.LENGTH_SHORT).show();
                 } else {
                     categories.add(newCategory);
 
@@ -548,7 +548,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void showRemoveCategoryDialog() {
-        new PickToRemoveCategoryDialog(this, categories, new Consumer<Category>() {
+        new CategoryListBottomSheet(this, getString(R.string.select_cat_to_remove), categories, icons, new Consumer<Category>() {
             @Override
             public void accept(Category categoryToRemove) {
                 if (categoryToRemove.equals(Category.Default)) {
@@ -618,7 +618,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onProviderDisabled(String s) {
-                Snackbar.make(recyclerViewTimestamps, "Looks like your GPS if Off", Snackbar.LENGTH_LONG).show();
+                Snackbar.make(recyclerViewTimestamps, "Looks like your GPS if Off \uD83E\uDD14", Snackbar.LENGTH_LONG).show();
                 mlocManager.removeUpdates(this);
 
             }
@@ -644,7 +644,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if (location != null) {
                     consumer.accept(new PhysicalLocation(location.getLatitude(), location.getLongitude()));
                 } else {
-                    Snackbar.make(recyclerViewTimestamps, "Unable to get your location", Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(recyclerViewTimestamps, "Unable to get your location \uD83D\uDE1E", Snackbar.LENGTH_LONG).show();
                 }
             }
         }, Constants.GPS_REQUEST_TIMEOUT);

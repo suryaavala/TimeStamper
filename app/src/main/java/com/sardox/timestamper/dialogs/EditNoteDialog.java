@@ -36,7 +36,13 @@ public class EditNoteDialog {
         final ListView listView = view.findViewById(R.id.quick_notes_listview);
         final LinearLayout quickNotesView = view.findViewById(R.id.quick_notes_view);
         final EditText input = view.findViewById(R.id.input);
-        input.setText(timestamp.getNote());
+        final String timestampNote = timestamp.getNote();
+        input.setText(timestampNote);
+        input.setSelection(timestampNote.length());
+        String defaultString = context.getString(R.string.add_from_widget);
+        if (timestampNote.equalsIgnoreCase(defaultString)){
+            input.selectAll();
+        }
         builder.setView(view);
 
         if (appSettings.shouldUseQuickNotes()) {
