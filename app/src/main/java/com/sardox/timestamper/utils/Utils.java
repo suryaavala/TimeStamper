@@ -1,8 +1,11 @@
 package com.sardox.timestamper.utils;
 
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.support.v4.content.FileProvider;
 
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
@@ -21,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 
 public class Utils {
@@ -63,7 +67,7 @@ public class Utils {
 
     public static void emailCSV(Context context, File file) {
         if (file != null) {
-            Uri u1 = Uri.fromFile(file);
+            Uri u1 = FileProvider.getUriForFile(context, context.getApplicationContext().getPackageName() + ".provider", file);
             Intent sendIntent = new Intent(Intent.ACTION_SEND);
             sendIntent.putExtra(Intent.EXTRA_SUBJECT, Constants.EXPORT_NAME);
             sendIntent.putExtra(Intent.EXTRA_STREAM, u1);
@@ -73,10 +77,12 @@ public class Utils {
     }
 
     public static void sendEventToAnalytics(Tracker mTracker, String actionName) {
-        mTracker.send(new HitBuilders.EventBuilder()
-                .setCategory(Constants.Analytics.Events.ACTION)
-                .setAction(actionName)
-                .build());
+        if (mTracker != null) {
+            mTracker.send(new HitBuilders.EventBuilder()
+                    .setCategory(Constants.Analytics.Events.ACTION)
+                    .setAction(actionName)
+                    .build());
+        }
     }
 
     public static List<TimestampIcon> getStockIcons() {
@@ -112,8 +118,8 @@ public class Utils {
         List<JetUUID> sampleCategoriesIds = getSampleCategoriesIds();
         List<Category> sampleCategories = new ArrayList<>();
         sampleCategories.add(Category.Default);
-        sampleCategories.add(new Category("BABY", sampleCategoriesIds.get(1), 1));
-        sampleCategories.add(new Category("SPORT", sampleCategoriesIds.get(2), 2));
+        sampleCategories.add(new Category("SLEEP", sampleCategoriesIds.get(1), 14));
+        sampleCategories.add(new Category("PILLS", sampleCategoriesIds.get(2), 5));
         return sampleCategories;
     }
 
@@ -122,11 +128,15 @@ public class Utils {
         HashMap<JetUUID, Timestamp> sample = new HashMap<>();
         JetTimestamp now = JetTimestamp.now();
         Timestamp timestamp1 = new Timestamp(JetTimestamp.now(), PhysicalLocation.Default, sampleCategoriesIds.get(0), "Example: App was installed", JetUUID.randomUUID());
-        Timestamp timestamp2 = new Timestamp(JetTimestamp.fromMilliseconds(now.toMilliseconds() - 1000 * 60 * 4), PhysicalLocation.Default, sampleCategoriesIds.get(1), "Example: Changed diapers", JetUUID.randomUUID());
-        Timestamp timestamp3 = new Timestamp(JetTimestamp.now().subtract(JetDuration.fromDays(5)), PhysicalLocation.Default, sampleCategoriesIds.get(2), "Example: came to gym", JetUUID.randomUUID());
+        Timestamp timestamp2 = new Timestamp(JetTimestamp.fromMilliseconds(now.toMilliseconds() - TimeUnit.HOURS.toMillis(9)), PhysicalLocation.Default, sampleCategoriesIds.get(1), "Example: fall asleep", JetUUID.randomUUID());
+        Timestamp timestamp3 = new Timestamp(JetTimestamp.fromMilliseconds(now.toMilliseconds() - TimeUnit.HOURS.toMillis(2)), PhysicalLocation.Default, sampleCategoriesIds.get(1), "Example: woke up", JetUUID.randomUUID());
+        Timestamp timestamp4 = new Timestamp(JetTimestamp.now().subtract(JetDuration.fromDays(3)), PhysicalLocation.Default, sampleCategoriesIds.get(2), "Example: minor headache. took 2 pills", JetUUID.randomUUID());
+        Timestamp timestamp5 = new Timestamp(JetTimestamp.now().subtract(JetDuration.fromDays(4)), PhysicalLocation.Default, sampleCategoriesIds.get(2), "Example: took vitamins", JetUUID.randomUUID());
         sample.put(timestamp1.getIdentifier(), timestamp1);
         sample.put(timestamp2.getIdentifier(), timestamp2);
         sample.put(timestamp3.getIdentifier(), timestamp3);
+        sample.put(timestamp4.getIdentifier(), timestamp4);
+        sample.put(timestamp5.getIdentifier(), timestamp5);
         return sample;
     }
 
@@ -163,4 +173,10 @@ public class Utils {
         return new ArrayList<>(copy);
     }
 
+    public static void updateGridWidget(Context applicationContext) {
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(applicationContext);
+        ComponentName thisWidget = new ComponentName(applicationContext, GridWidget.class);
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
+        appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.gridview);
+    }
 }

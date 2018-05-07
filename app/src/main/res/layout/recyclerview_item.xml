@@ -104,7 +104,7 @@
         android:paddingStart="10dp"
         android:text="10:14:05"
         android:textAlignment="viewEnd"
-        android:textColor="#50FFFFFF"
+        android:textColor="#80FFFFFF"
         android:textSize="10sp"
         android:visibility="visible" />
 

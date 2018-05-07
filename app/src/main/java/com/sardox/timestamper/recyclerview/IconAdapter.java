@@ -60,7 +60,7 @@ public class IconAdapter extends RecyclerView.Adapter<IconAdapter.MyViewHolderCa
 
         MyViewHolderCategory(View itemView) {
             super(itemView);
-            imageButton = (ImageButton) itemView.findViewById(R.id.icon_item_button);
+            imageButton = itemView.findViewById(R.id.icon_item_button);
             imageButton.setOnClickListener(this);
         }
 

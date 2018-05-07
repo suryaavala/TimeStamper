@@ -9,80 +9,122 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.R;
+import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.utils.Consumer;
-
 
 import java.util.List;
 
+public class CategoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.MyViewHolderCategory> {
+    private final int CATEGORY_ITEM = 0;
+    private final int ADD_BUTTON_ITEM = 1;
+    private final int categoryColorSelected;
+    private final int categoryColorDeselected;
 
+    private Category selectedCategory = Category.Default;
+    private Consumer<Category> categoryChangedCallback;
+    private Consumer<Void> categoryAddCallback;
     private List<Category> categories;
-    private Consumer<Category> category_changed_callback;
-    //   private Context context;
-    private final int category_color_selected;
-    private final int category_color_deselected;
 
-    public void setSelectedCategory(Category selected_category) {
-        this.selected_category = selected_category;
-    }
-
-    private Category selected_category = Category.Default;
-
-
-    public CategoryAdapter(List<Category> categories, Consumer<Category> category_changed_callback, Context context) {
-        //   this.context = context;
-        this.category_changed_callback = category_changed_callback;
+    public CategoryAdapter(List<Category> categories, Consumer<Category> categoryChangedCallback, Consumer<Void> categoryAddCallback, Context context) {
+        this.categoryAddCallback = categoryAddCallback;
+        this.categoryChangedCallback = categoryChangedCallback;
         this.categories = categories;
 
-        category_color_selected = ContextCompat.getColor(context, R.color.category_selected);
-        category_color_deselected = ContextCompat.getColor(context, R.color.colorPrimary);
-
+        categoryColorSelected = ContextCompat.getColor(context, R.color.category_selected);
+        categoryColorDeselected = ContextCompat.getColor(context, R.color.colorPrimary);
     }
 
     @Override
-    public CategoryAdapter.MyViewHolderCategory onCreateViewHolder(ViewGroup viewGroup, int i) {
-        View view = LayoutInflater.from(viewGroup.getContext())
-                .inflate(R.layout.recyclerview_category, viewGroup,
-                        false);
-        return new MyViewHolderCategory(view);
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
+        switch (viewType) {
+            case CATEGORY_ITEM: {
+                View view = LayoutInflater.from(viewGroup.getContext())
+                        .inflate(R.layout.recyclerview_category, viewGroup,
+                                false);
+                return new CategoryViewHolder(view);
+            }
+            case ADD_BUTTON_ITEM: {
+                View view = LayoutInflater.from(viewGroup.getContext())
+                        .inflate(R.layout.recyclerview_category_add_button, viewGroup,
+                                false);
+                return new AddCategoryButtonViewHolder(view);
+            }
+        }
+        return null;
     }
 
     @Override
-    public void onBindViewHolder(CategoryAdapter.MyViewHolderCategory holder, int position) {
-        Category category = categories.get(position);
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
 
-        holder.mCategoryTextView.setText(category.getName());
-        if (selected_category.getCategoryID().equals(category.getCategoryID()))
-            holder.category_underline.setBackgroundColor(category_color_selected);
-        else holder.category_underline.setBackgroundColor(category_color_deselected);
+        switch (holder.getItemViewType()) {
+            case CATEGORY_ITEM:
+                Category category = categories.get(position);
+                CategoryViewHolder categoryViewHolder = (CategoryViewHolder) holder;
+                categoryViewHolder.mCategoryTextView.setText(category.getName());
+                if (selectedCategory.getCategoryID().equals(category.getCategoryID())){
+                    categoryViewHolder.category_underline.setBackgroundColor(categoryColorSelected);
+                } else {
+                    categoryViewHolder.category_underline.setBackgroundColor(categoryColorDeselected);
+                }
+                break;
+            case ADD_BUTTON_ITEM:
+                break;
+        }
+    }
+
+
+    @Override
+    public int getItemViewType(int position) {
+        if (categories.size() == position) {
+            return ADD_BUTTON_ITEM;
+        } else {
+            return CATEGORY_ITEM;
+        }
+    }
+
+    public void setSelectedCategory(Category selected_category) {
+        this.selectedCategory = selected_category;
     }
 
     @Override
     public int getItemCount() {
-        return categories.size();
+        return categories.size()+1;
     }
 
 
-    class MyViewHolderCategory extends RecyclerView.ViewHolder implements View.OnClickListener {
-
+    class CategoryViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         private TextView mCategoryTextView;
         private LinearLayout category_underline;
 
-        MyViewHolderCategory(View itemView) {
+        CategoryViewHolder(View itemView) {
             super(itemView);
-            mCategoryTextView = (TextView) itemView.findViewById(R.id.CategoryTextView);
-            category_underline = (LinearLayout) itemView.findViewById(R.id.recycler_category_underline);
+            mCategoryTextView = itemView.findViewById(R.id.CategoryTextView);
+            category_underline = itemView.findViewById(R.id.recycler_category_underline);
             mCategoryTextView.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
-            selected_category = categories.get(getAdapterPosition());
-            category_changed_callback.accept(selected_category);
+            selectedCategory = categories.get(getAdapterPosition());
+            categoryChangedCallback.accept(selectedCategory);
             notifyDataSetChanged();
+        }
+    }
+
+    class AddCategoryButtonViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        private TextView mCategoryAdd;
+
+        AddCategoryButtonViewHolder(View itemView) {
+            super(itemView);
+            mCategoryAdd = itemView.findViewById(R.id.category_item_button);
+            mCategoryAdd.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View v) {
+            categoryAddCallback.accept(null);
         }
     }
 }

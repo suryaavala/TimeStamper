@@ -56,11 +56,15 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="cant_be_removed">This category can\'t be removed</string>
-    <string name="widget_hint">HINT: Try using widget for even quicker timestamps</string>
+    <string name="widget_hint">HINT: Try using NEW widget for even quicker timestamps</string>
     <string name="save">SAVE</string>
     <string name="add_new_category">Add New Category</string>
     <string name="scroll_right_and_pick_an_icon">Scroll right and pick an icon</string>
     <string name="enter_category_name">Enter category name</string>
     <string name="auto_keyboard_hint">Keyboard will be shown automatically every time you add or edit notes</string>
     <string name="auto_keyboard">Auto show keyboard when adding a note</string>
+    <string name="quick_notes">Show 5 last used notes</string>
+    <string name="quick_notes_hint">You will be able to select from previously entered notes</string>
+    <string name="notes_settings_hint">Quick notes, keyboard, auto notes…</string>
+    <string name="notes_settings">New notes settings</string>
 </resources>

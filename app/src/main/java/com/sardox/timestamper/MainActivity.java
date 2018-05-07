@@ -1,7 +1,6 @@
 package com.sardox.timestamper;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
@@ -36,12 +35,11 @@ import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.sardox.timestamper.Managers.DataManager;
 import com.sardox.timestamper.dialogs.AddCategoryDialog;
-import com.sardox.timestamper.dialogs.ChangeCategoryDialog;
 import com.sardox.timestamper.dialogs.ConfirmRemoveCategoryDialog;
 import com.sardox.timestamper.dialogs.EditNoteDialog;
 import com.sardox.timestamper.dialogs.MyDatePickerDialog;
 import com.sardox.timestamper.dialogs.MyTimePickerDialog;
-import com.sardox.timestamper.dialogs.PickToRemoveCategoryDialog;
+import com.sardox.timestamper.dialogs.CategoryListBottomSheet;
 import com.sardox.timestamper.dialogs.SettingsDialog;
 import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.objects.QuickNote;
@@ -65,7 +63,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
 
@@ -104,8 +101,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Log.d("srdx", "saving data...");
         dataManager.writeUserSettings(appSettings);
         dataManager.writeTimestamps(unfilteredTimestamps);
-        dataManager.writeCategories(categories);
         dataManager.clearWidgetTimestamps();
+        saveCategories();
+    }
+
+    private void saveCategories() {
+        dataManager.writeCategories(categories);
     }
 
     @Override
@@ -141,14 +142,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.APP_LAUNCH);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(R.string.app_name);
         setSupportActionBar(toolbar);
         dataManager = new DataManager(this);
         loadUserSettings();
         setupDrawer();
         initApp();
-        FloatingActionButton actionButton = (FloatingActionButton) findViewById(R.id.fab);
+        FloatingActionButton actionButton = findViewById(R.id.fab);
         actionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -194,7 +195,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         timestampsAdapter.notifyDataSetChanged();
     }
 
-    @AfterPermissionGranted(RC_READWRITE)
     private void initApp() {
         initIcons();
         loadTimestamps();
@@ -226,14 +226,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void setupDrawer() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView navigationView = findViewById(R.id.nav_view);
         View header = navigationView.getHeaderView(0);
-        TextView phraseOfTheDay = (TextView) header.findViewById(R.id.phraseOfTheDay);
+        TextView phraseOfTheDay = header.findViewById(R.id.phraseOfTheDay);
         phraseOfTheDay.setText(Utils.getPhraseOfTheDay(this));
         navigationView.setNavigationItemSelectedListener(this);
     }
@@ -276,9 +276,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         };
     }
 
-    @SuppressLint("ClickableViewAccessibility")
     private void initRecyclerView() {
-        Consumer<Category> onCategorySelected = new Consumer<Category>() {
+        Consumer<Category> onCategorySelectedCallback = new Consumer<Category>() {
             @Override
             public void accept(Category selectedCategory) {
                 Log.d("srdx", "selected_category: " + selectedCategory.getName() + " #" + selectedCategory.getCategoryID());
@@ -287,10 +286,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 filterTimestampsByCategory(lastSelectedCategory);
             }
         };
+        Consumer<Void> onCategoryAddSelected = new Consumer<Void>() {
+            @Override
+            public void accept(Void var1) {
+                 showAddNewCategoryDialog();
+            }
+        };
 
-        adapterCategory = new CategoryAdapter(categories, onCategorySelected, this);
+        adapterCategory = new CategoryAdapter(categories, onCategorySelectedCallback, onCategoryAddSelected, this);
 
-        recyclerViewCategory = (RecyclerView) findViewById(R.id.recyclerViewCat);
+        recyclerViewCategory = findViewById(R.id.recyclerViewCat);
         recyclerViewCategory.setAdapter(adapterCategory);
         recyclerViewCategory.setHasFixedSize(true);
 
@@ -304,7 +309,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
-        recyclerViewTimestamps = (RecyclerView) findViewById(R.id.recyclerView);
+        recyclerViewTimestamps = findViewById(R.id.recyclerView);
         timestampsAdapter = new TimestampsAdapter(categories, metrics, icons, this, userActionCallback, appSettings);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setReverseLayout(false);
@@ -317,30 +322,38 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         recyclerViewTimestamps.setOnTouchListener(new OnSwipeTouchListener(this) {
             public void onSwipeRight() {
-                int current_index = categories.indexOf(lastSelectedCategory);
-                if (current_index > 0) {
-                    Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.SWIPE_TO_CHANGE_CATEGORY);
-                    lastSelectedCategory = categories.get(current_index - 1);
-                    adapterCategory.setSelectedCategory(lastSelectedCategory);
-                    adapterCategory.notifyDataSetChanged();
-                    filterTimestampsByCategory(categories.get(current_index - 1));
-                }
+                selectNextCategory();
             }
 
             public void onSwipeLeft() {
-                int current_index = categories.indexOf(lastSelectedCategory);
-                if (current_index < categories.size()) {
-                    Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.SWIPE_TO_CHANGE_CATEGORY);
-                    lastSelectedCategory = categories.get(current_index + 1);
-                    adapterCategory.setSelectedCategory(lastSelectedCategory);
-                    adapterCategory.notifyDataSetChanged();
-                    filterTimestampsByCategory(categories.get(current_index + 1));
-                }
-
+                selectPreviousCategory();
             }
         });
         filterTimestampsByCategory(Category.Default);
     }
+
+    private void selectPreviousCategory() {
+        int current_index = categories.indexOf(lastSelectedCategory);
+        if (current_index < categories.size()) {
+            Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.SWIPE_TO_CHANGE_CATEGORY);
+            lastSelectedCategory = categories.get(current_index + 1);
+            adapterCategory.setSelectedCategory(lastSelectedCategory);
+            adapterCategory.notifyDataSetChanged();
+            filterTimestampsByCategory(categories.get(current_index + 1));
+        }
+    }
+
+    private void selectNextCategory() {
+        int current_index = categories.indexOf(lastSelectedCategory);
+        if (current_index > 0) {
+            Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.SWIPE_TO_CHANGE_CATEGORY);
+            lastSelectedCategory = categories.get(current_index - 1);
+            adapterCategory.setSelectedCategory(lastSelectedCategory);
+            adapterCategory.notifyDataSetChanged();
+            filterTimestampsByCategory(categories.get(current_index - 1));
+        }
+    }
+
 
     private void initIcons() {
         icons = Utils.getStockIcons();
@@ -361,13 +374,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_category_add: {
-                showAddNewCategoryDialog();
-                break;
-            }
             case R.id.action_category_delete: {
                 if (categories.size() == 1) {
-                    Snackbar.make(recyclerViewTimestamps, "No categories left..", Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(recyclerViewTimestamps, "Default category can not be deleted..  \uD83D\uDE44", Snackbar.LENGTH_SHORT).show();
                 } else {
                     if (timestampsAdapter.hasSelectedTimestamps()) {
                         removeGroupOfTimestamps();
@@ -421,7 +430,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
             }
         }
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
@@ -440,7 +449,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 unfilteredTimestamps.get(timestampToUpdate.getIdentifier()).setTimestamp(updatedDate);
                 timestampsAdapter.updateTimestamp(timestampToUpdate);
             }
-        }, appSettings.shouldUse24hrFormat());
+        });
     }
 
     private void pickTime(final Timestamp timestampToUpdate) {
@@ -473,12 +482,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void changeCategory(final Timestamp timestamp) {
         Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.EDIT_CATEGORY);
-        new ChangeCategoryDialog(this,
-                categories, new Consumer<JetUUID>() {
+        new CategoryListBottomSheet(this, "Move to", categories, icons, new Consumer<Category>() {
             @Override
-            public void accept(JetUUID newCategoryId) {
-                unfilteredTimestamps.get(timestamp.getIdentifier()).setCategory_identifier(newCategoryId);
-                if (lastSelectedCategory.getCategoryID().equals(newCategoryId) || lastSelectedCategory.equals(Category.Default))
+            public void accept(Category newCategory) {
+                unfilteredTimestamps.get(timestamp.getIdentifier()).setCategory_identifier(newCategory.getCategoryID());
+                if (lastSelectedCategory.getCategoryID().equals(newCategory.getCategoryID()) || lastSelectedCategory.equals(Category.Default))
                     timestampsAdapter.updateTimestamp(timestamp);
                 else timestampsAdapter.remove(timestamp);
             }
@@ -509,32 +517,38 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         new AddCategoryDialog(this, icons, new Consumer<Category>() {
             @Override
             public void accept(Category newCategory) {
-                categories.add(newCategory);
+                if (newCategory.getName().isEmpty()) {
+                    Snackbar.make(recyclerViewTimestamps, "Category name can't be empty \uD83E\uDD14", Snackbar.LENGTH_SHORT).show();
+                } else {
+                    categories.add(newCategory);
 
-                mTracker.send(new HitBuilders.EventBuilder()
-                        .setCategory(Constants.Analytics.Events.ACTION)
-                        .setAction(Constants.Analytics.Events.NEW_CATEGORY)
-                        .setLabel(newCategory.getName().toLowerCase())
-                        .build());
+                    mTracker.send(new HitBuilders.EventBuilder()
+                            .setCategory(Constants.Analytics.Events.ACTION)
+                            .setAction(Constants.Analytics.Events.NEW_CATEGORY)
+                            .setLabel(newCategory.getName().toLowerCase())
+                            .build());
 
-                mTracker.send(new HitBuilders.EventBuilder()
-                        .setCategory(Constants.Analytics.Events.ACTION)
-                        .setAction(Constants.Analytics.Events.ICON_PICKED)
-                        .setLabel(icons.get(newCategory.getIcon_id()).getDescription().toLowerCase())
-                        .build());
+                    mTracker.send(new HitBuilders.EventBuilder()
+                            .setCategory(Constants.Analytics.Events.ACTION)
+                            .setAction(Constants.Analytics.Events.ICON_PICKED)
+                            .setLabel(icons.get(newCategory.getIcon_id()).getDescription().toLowerCase())
+                            .build());
 
-                lastSelectedCategory = newCategory;
-                adapterCategory.setSelectedCategory(newCategory);
-                adapterCategory.notifyDataSetChanged();
+                    lastSelectedCategory = newCategory;
+                    adapterCategory.setSelectedCategory(newCategory);
+                    adapterCategory.notifyDataSetChanged();
 
-                recyclerViewCategory.smoothScrollToPosition(adapterCategory.getItemCount()); //scrolling to new category
-                filterTimestampsByCategory(newCategory);
+                    recyclerViewCategory.smoothScrollToPosition(adapterCategory.getItemCount()); //scrolling to new category
+                    filterTimestampsByCategory(newCategory);
+                    saveCategories();
+                    Utils.updateGridWidget(getApplicationContext());
+                }
             }
         });
     }
 
     private void showRemoveCategoryDialog() {
-        new PickToRemoveCategoryDialog(this, categories, new Consumer<Category>() {
+        new CategoryListBottomSheet(this, getString(R.string.select_cat_to_remove), categories, icons, new Consumer<Category>() {
             @Override
             public void accept(Category categoryToRemove) {
                 if (categoryToRemove.equals(Category.Default)) {
@@ -556,6 +570,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Utils.removeTimestampsByCategory(unfilteredTimestamps, categoryToRemove);
                     categories.remove(categoryToRemove);
                     resetView();
+                    saveCategories();
+                    Utils.updateGridWidget(getApplicationContext());
                 }
             }
         });
@@ -602,20 +618,33 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onProviderDisabled(String s) {
-                Snackbar.make(recyclerViewTimestamps, "Looks like your GPS if Off", Snackbar.LENGTH_LONG).show();
+                Snackbar.make(recyclerViewTimestamps, "Looks like your GPS if Off \uD83E\uDD14", Snackbar.LENGTH_LONG).show();
                 mlocManager.removeUpdates(this);
 
             }
         };
-        mlocManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, locationListener, myLooper);
+        try {
+            mlocManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, locationListener, myLooper);
+        } catch (SecurityException e) {
+            Log.e("SecurityException", "SecurityException during requestSingleUpdate");
+            Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.SECURITY_EXCEPTION);
+        }
+
         myHandler.postDelayed(new Runnable() {
             public void run() {
                 mlocManager.removeUpdates(locationListener);
-                Location location = mlocManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                Location location = null;
+                try {
+                    location = mlocManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                } catch (SecurityException e) {
+                    Log.e("SecurityException", "SecurityException during getLastKnownLocation");
+                    Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.SECURITY_EXCEPTION);
+                }
+
                 if (location != null) {
                     consumer.accept(new PhysicalLocation(location.getLatitude(), location.getLongitude()));
                 } else {
-                    Snackbar.make(recyclerViewTimestamps, "Unable to get your location", Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(recyclerViewTimestamps, "Unable to get your location \uD83D\uDE1E", Snackbar.LENGTH_LONG).show();
                 }
             }
         }, Constants.GPS_REQUEST_TIMEOUT);
@@ -627,7 +656,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (EasyPermissions.hasPermissions(this, perms)) {
             return true;
         } else {
-            Log.d("srdx", " EasyPermissions not granted. Requesting Permissions...");
+            Log.d("srdx", "ACCESS_FINE_LOCATION permission not granted. Requesting Permissions...");
             EasyPermissions.requestPermissions(this, "To save your location, Timestamper needs the access to Location services",
                     RC_LOCATION, perms);
             return false;
@@ -640,7 +669,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             emailCSV(dataManager.exportToCSV(lastSelectedCategory, new ArrayList<>(unfilteredTimestamps.values()), categories));
         } else {
             Log.d("srdx", " EasyPermissions not granted. Requesting Permissions...");
-            EasyPermissions.requestPermissions(this, "App needs to write to storage",
+            EasyPermissions.requestPermissions(this, "App requires your permission to save and export CSV file",
                     RC_READWRITE, Constants.STORAGE_PERMS);
         }
     }

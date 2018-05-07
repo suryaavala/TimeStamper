@@ -9,6 +9,8 @@
     <color name="colorRecyclerViewItem">#10ffffff</color>
     <color name="colorRecyclerViewItemSelected">#30ffffff</color>
 
+    <color name="colorWidgetBackground">#50000000</color>
+
     <color name="category_background">#303032</color>
     <color name="category_selected">#e63e3e</color>
     <color name="category_deselected">#424242</color>

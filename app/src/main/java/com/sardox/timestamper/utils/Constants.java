@@ -31,7 +31,9 @@ public class Constants {
             public static final String EDIT_TIME = "Edit time";
             public static final String EDIT_CATEGORY = "Edit category";
             public static final String WIDGET_CLICK = "Widget click";
+            public static final String GRID_WIDGET_CLICK = "Grid widget click";
             public static final String ICON_PICKED = "Icon picked";
+            public static final String SECURITY_EXCEPTION = "SecurityExceptionInApp";
         }
 
         public class Screens {
@@ -46,6 +48,7 @@ public class Constants {
         public static final String SHARED_PREFS_QUICK_NOTES = "NOTES";
         public static final String SHARED_PREFS_WIDGET_TIMESTAMPS = "TIMESTAMPS_WIDGET";
         public static final String SHARED_PREFS_USE24HR = "USE_24HR";
+        public static final String SHARED_PREFS_USE_QUICK_NOTES = "USE_QUICK_NOTES";
         public static final String SHARED_PREFS_USEDARK = "USE_DARK";
         public static final String SHARED_PREFS_SHOW_KEYBOARD = "SHOW_KEYBOARD_IN_NOTES";
         public static final String SHARED_PREFS_CATEGORIES = "CATEGORIES";

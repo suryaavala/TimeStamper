@@ -54,6 +54,9 @@ public class DataManager {
         if (mPrefs.contains(Constants.Settings.SHARED_PREFS_USE_GPS)) {
             appSettings.setShouldUseGps(mPrefs.getBoolean(Constants.Settings.SHARED_PREFS_USE_GPS, false));
         }
+        if (mPrefs.contains(Constants.Settings.SHARED_PREFS_USE_QUICK_NOTES)) {
+            appSettings.setShouldUseQuickNotes(mPrefs.getBoolean(Constants.Settings.SHARED_PREFS_USE_QUICK_NOTES, true));
+        }
         if (mPrefs.contains(Constants.Settings.SHARED_PREFS_USEDARK)) {
             appSettings.setUseDark(mPrefs.getBoolean(Constants.Settings.SHARED_PREFS_USEDARK, true));
         }
@@ -73,6 +76,7 @@ public class DataManager {
         mPrefs.edit().putBoolean(Constants.Settings.SHARED_PREFS_USEDARK, appSettings.shouldUseDarkTheme()).commit();
         mPrefs.edit().putBoolean(Constants.Settings.SHARED_PREFS_USE_GPS, appSettings.shouldUseGps()).commit();
         mPrefs.edit().putBoolean(Constants.Settings.SHARED_PREFS_SHOW_KEYBOARD, appSettings.shouldShowKeyboardInAddNote()).commit();
+        mPrefs.edit().putBoolean(Constants.Settings.SHARED_PREFS_USE_QUICK_NOTES, appSettings.shouldUseQuickNotes()).commit();
         writeQuickNotes(appSettings.getQuickNotes());
     }
 
