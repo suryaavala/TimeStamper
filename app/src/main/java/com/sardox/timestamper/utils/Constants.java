@@ -14,6 +14,7 @@ public class Constants {
         public class Events {
             public static final String ACTION = "Action";
             public static final String SHOW_SETTINGS = "Show settings";
+            public static final String SETTINGS_LOADED = "Settings loaded";
             public static final String NEW_TIMESTAMP = "New timestamp";
             public static final String SWIPE_TO_CHANGE_CATEGORY = "Swipe to change category";
             public static final String REMOVE_GROUP = "Remove group";
@@ -24,6 +25,8 @@ public class Constants {
             public static final String OPEN_MAP = "Open Map";
             public static final String ADD_NEW_CATEGORY = "Add new category";
             public static final String NEW_CATEGORY = "New category";
+            public static final String TOTAL_CATEGORIES = "Categories loaded";
+            public static final String TOTAL_TIMESTAMPS = "Timestamps loaded";
             public static final String REMOVE_CATEGORY = "Remove category";
             public static final String EXPORT_TIMESTAMPS = "Export timestamps";
             public static final String LOCATION_RECORDED = "Location was recorded";

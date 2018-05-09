@@ -208,14 +208,48 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
      **/
     private void loadUserSettings() {
         appSettings = dataManager.loadUserSettings();
+        sendSettingsToAnalytics();
+    }
+
+    private void sendSettingsToAnalytics() {
+        StringBuilder sb = new StringBuilder();
+        if (appSettings.shouldUseQuickNotes()) sb.append("quickNotesON,"); else sb.append("quickNotesOFF,");
+        if (appSettings.shouldShowKeyboardInAddNote()) sb.append("showKbON,"); else sb.append("showKbOFF,");
+        if (appSettings.shouldShowMillis()) sb.append("showMillisON,"); else sb.append("showMillisOFF,");
+        if (appSettings.shouldShowNoteAddDialog()) sb.append("showAddNoteON,"); else sb.append("showAddNoteOFF,");
+        if (appSettings.shouldUse24hrFormat()) sb.append("use24formatON,"); else sb.append("use24formatOFF,");
+        if (appSettings.shouldUseGps()) sb.append("useGpsON"); else sb.append("useGpsOFF");
+        mTracker.send(new HitBuilders.EventBuilder()
+                .setCategory(Constants.Analytics.Events.ACTION)
+                .setAction(Constants.Analytics.Events.SETTINGS_LOADED)
+                .setLabel(sb.toString())
+                .build());
     }
 
     private void loadCategories() {
         categories = dataManager.readCategories();
+        sendCategoriesCountToAnalytics();
+    }
+
+    private void sendCategoriesCountToAnalytics() {
+        mTracker.send(new HitBuilders.EventBuilder()
+                .setCategory(Constants.Analytics.Events.ACTION)
+                .setAction(Constants.Analytics.Events.TOTAL_CATEGORIES)
+                .setLabel("categoriesTotal_" + categories.size())
+                .build());
     }
 
     private void loadTimestamps() {
         unfilteredTimestamps = dataManager.readTimestamps();
+        sendTimestampsCountToAnalytics();
+    }
+
+    private void sendTimestampsCountToAnalytics() {
+        mTracker.send(new HitBuilders.EventBuilder()
+                .setCategory(Constants.Analytics.Events.ACTION)
+                .setAction(Constants.Analytics.Events.TOTAL_TIMESTAMPS)
+                .setLabel("timestampsTotal_" + unfilteredTimestamps.size())
+                .build());
     }
 
     @Override
