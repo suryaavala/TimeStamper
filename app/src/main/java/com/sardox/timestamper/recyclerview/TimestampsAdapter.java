@@ -23,9 +23,9 @@ import com.sardox.timestamper.types.JetUUID;
 import com.sardox.timestamper.types.PhysicalLocation;
 import com.sardox.timestamper.utils.ActionType;
 import com.sardox.timestamper.utils.AppSettings;
-import com.sardox.timestamper.utils.Consumer;
 import com.sardox.timestamper.utils.TimestampIcon;
 import com.sardox.timestamper.utils.UserAction;
+import com.sardox.timestamper.utils.UserActionInterface;
 import com.sardox.timestamper.utils.Utils;
 
 import org.joda.time.Period;
@@ -53,10 +53,10 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
     private AppSettings appSettings;
     private List<TimestampIcon> icons;
     private Context context;
-    private Consumer<UserAction> userActionCallback;
+    private UserActionInterface userActionCallback;
     private PeriodFormatter periodFormatter = PeriodFormat.getDefault();
 
-    public TimestampsAdapter(List<Category> categories, DisplayMetrics displayMetrics, List<TimestampIcon> icons, Context context, Consumer<UserAction> userActionCallback, AppSettings appSettings) {
+    public TimestampsAdapter(List<Category> categories, DisplayMetrics displayMetrics, List<TimestampIcon> icons, Context context, UserActionInterface userActionCallback, AppSettings appSettings) {
         this.userActionCallback = userActionCallback;
         this.context = context;
         this.appSettings = appSettings;
@@ -253,7 +253,7 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
                             selectedTimestamps.add(selectedTimestamp);
                         }
                         notifyItemChanged(getAdapterPosition());
-                        userActionCallback.accept(new UserAction(ActionType.SELECTED, null, selectedTimestamps.size()));
+                        userActionCallback.onUserAction(new UserAction(ActionType.SELECTED, null, selectedTimestamps.size()));
                     }
                     return true;
                 }
@@ -270,7 +270,7 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
                             selectedTimestamps.add(selectedTimestamp);
                         }
                         notifyItemChanged(getAdapterPosition());
-                        userActionCallback.accept(new UserAction(ActionType.SELECTED, null, selectedTimestamps.size()));
+                        userActionCallback.onUserAction(new UserAction(ActionType.SELECTED, null, selectedTimestamps.size()));
                     }
                 }
             });
@@ -313,7 +313,7 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
     }
 
     public void clearSelection() {
-        userActionCallback.accept(new UserAction(ActionType.SELECTED, null, 0));
+        userActionCallback.onUserAction(new UserAction(ActionType.SELECTED, null, 0));
         selectedTimestamps.clear();
         isSelecting = false;
     }
@@ -336,25 +336,25 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.recycler_menu_edit_date:
-                        userActionCallback.accept(new UserAction(ActionType.EDIT_DATE, timestamp));
+                        userActionCallback.onUserAction(new UserAction(ActionType.EDIT_DATE, timestamp));
                         break;
                     case R.id.recycler_menu_edit_time:
-                        userActionCallback.accept(new UserAction(ActionType.EDIT_TIME, timestamp));
+                        userActionCallback.onUserAction(new UserAction(ActionType.EDIT_TIME, timestamp));
                         break;
                     case R.id.recycler_menu_edit_note:
-                        userActionCallback.accept(new UserAction(ActionType.EDIT_NOTE, timestamp));
+                        userActionCallback.onUserAction(new UserAction(ActionType.EDIT_NOTE, timestamp));
                         break;
                     case R.id.recycler_menu_map_to:
-                        userActionCallback.accept(new UserAction(ActionType.SHOW_MAP, timestamp));
+                        userActionCallback.onUserAction(new UserAction(ActionType.SHOW_MAP, timestamp));
                         break;
                     case R.id.recycler_menu_move:
-                        userActionCallback.accept(new UserAction(ActionType.CHANGE_CATEGORY, timestamp));
+                        userActionCallback.onUserAction(new UserAction(ActionType.CHANGE_CATEGORY, timestamp));
                         break;
                     case R.id.recycler_menu_remove:
-                        userActionCallback.accept(new UserAction(ActionType.REMOVE_TIMESTAMP, timestamp));
+                        userActionCallback.onUserAction(new UserAction(ActionType.REMOVE_TIMESTAMP, timestamp));
                         break;
                     case R.id.recycler_menu_share:
-                        userActionCallback.accept(new UserAction(ActionType.SHARE_TIMESTAMP, timestamp));
+                        userActionCallback.onUserAction(new UserAction(ActionType.SHARE_TIMESTAMP, timestamp));
                         break;
                 }
                 return false;

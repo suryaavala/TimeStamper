@@ -9,7 +9,6 @@ class AppInstance : Application() {
     companion object {
         lateinit var firebaseAnalytics: FirebaseAnalytics
         //var sharedPrefs: SharedPrefs? = null
-
     }
 
     override fun onCreate() {

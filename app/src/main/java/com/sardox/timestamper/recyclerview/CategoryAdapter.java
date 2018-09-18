@@ -1,6 +1,7 @@
 package com.sardox.timestamper.recyclerview;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -11,7 +12,7 @@ import android.widget.TextView;
 
 import com.sardox.timestamper.R;
 import com.sardox.timestamper.objects.Category;
-import com.sardox.timestamper.utils.Consumer;
+import com.sardox.timestamper.utils.CategoryUpdatesInterface;
 
 import java.util.List;
 
@@ -23,12 +24,10 @@ public class CategoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     private final int categoryColorDeselected;
 
     private Category selectedCategory = Category.Default;
-    private Consumer<Category> categoryChangedCallback;
-    private Consumer<Void> categoryAddCallback;
+    private CategoryUpdatesInterface categoryChangedCallback;
     private List<Category> categories;
 
-    public CategoryAdapter(List<Category> categories, Consumer<Category> categoryChangedCallback, Consumer<Void> categoryAddCallback, Context context) {
-        this.categoryAddCallback = categoryAddCallback;
+    public CategoryAdapter(List<Category> categories, CategoryUpdatesInterface categoryChangedCallback, Context context) {
         this.categoryChangedCallback = categoryChangedCallback;
         this.categories = categories;
 
@@ -36,8 +35,9 @@ public class CategoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         categoryColorDeselected = ContextCompat.getColor(context, R.color.colorPrimary);
     }
 
+    @NonNull
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
         switch (viewType) {
             case CATEGORY_ITEM: {
                 View view = LayoutInflater.from(viewGroup.getContext())
@@ -56,14 +56,14 @@ public class CategoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
 
         switch (holder.getItemViewType()) {
             case CATEGORY_ITEM:
                 Category category = categories.get(position);
                 CategoryViewHolder categoryViewHolder = (CategoryViewHolder) holder;
                 categoryViewHolder.mCategoryTextView.setText(category.getName());
-                if (selectedCategory.getCategoryID().equals(category.getCategoryID())){
+                if (selectedCategory.getCategoryID().equals(category.getCategoryID())) {
                     categoryViewHolder.category_underline.setBackgroundColor(categoryColorSelected);
                 } else {
                     categoryViewHolder.category_underline.setBackgroundColor(categoryColorDeselected);
@@ -90,7 +90,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     @Override
     public int getItemCount() {
-        return categories.size()+1;
+        return categories.size() + 1;
     }
 
 
@@ -108,7 +108,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         @Override
         public void onClick(View v) {
             selectedCategory = categories.get(getAdapterPosition());
-            categoryChangedCallback.accept(selectedCategory);
+            categoryChangedCallback.onCategoryChanges(selectedCategory);
             notifyDataSetChanged();
         }
     }
@@ -124,7 +124,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
         @Override
         public void onClick(View v) {
-            categoryAddCallback.accept(null);
+            categoryChangedCallback.onCategoryAdded();
         }
     }
 }
