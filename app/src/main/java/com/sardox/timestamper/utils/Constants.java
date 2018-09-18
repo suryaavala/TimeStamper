@@ -16,7 +16,6 @@ public class Constants {
             public static final String SHOW_SETTINGS = "Show settings";
             public static final String SETTINGS_LOADED = "Settings loaded";
             public static final String NEW_TIMESTAMP = "New timestamp";
-            public static final String SWIPE_TO_CHANGE_CATEGORY = "Swipe to change category";
             public static final String REMOVE_GROUP = "Remove group";
             public static final String REMOVE_GROUP_UNDO = "Remove group undo";
             public static final String EDIT_NOTE = "Edit note";
@@ -35,7 +34,12 @@ public class Constants {
             public static final String EDIT_CATEGORY = "Edit category";
             public static final String WIDGET_CLICK = "Widget click";
             public static final String GRID_WIDGET_CLICK = "Grid widget click";
-            public static final String ICON_PICKED = "Icon picked";
+            public static final String GRID_WIDGET_GPS_ATTEMPT = "Grid widget timestamp GPS ";
+            public static final String GRID_WIDGET_NO_GPS_SUCCESS = "Grid widget timestamp NO GPS Success ";
+            public static final String GRID_WIDGET_GPS_SUCCESS = "Grid widget timestamp GPS Success ";
+            public static final String GRID_WIDGET_GPS_FAILED = "Grid widget timestamp GPS Failed ";
+
+            //public static final String ICON_PICKED = "Icon picked";
             public static final String SECURITY_EXCEPTION = "SecurityExceptionInApp";
         }
 

@@ -2,15 +2,10 @@ package com.sardox.timestamper;
 
 import android.Manifest;
 import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -30,16 +25,19 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.google.android.gms.analytics.HitBuilders;
-import com.google.android.gms.analytics.Tracker;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.sardox.timestamper.Managers.DataManager;
 import com.sardox.timestamper.dialogs.AddCategoryDialog;
+import com.sardox.timestamper.dialogs.CategoryListBottomSheet;
 import com.sardox.timestamper.dialogs.ConfirmRemoveCategoryDialog;
 import com.sardox.timestamper.dialogs.EditNoteDialog;
 import com.sardox.timestamper.dialogs.MyDatePickerDialog;
 import com.sardox.timestamper.dialogs.MyTimePickerDialog;
-import com.sardox.timestamper.dialogs.CategoryListBottomSheet;
 import com.sardox.timestamper.dialogs.SettingsDialog;
 import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.objects.QuickNote;
@@ -70,6 +68,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private HashMap<JetUUID, Timestamp> unfilteredTimestamps;
     private List<Category> categories;
     private List<TimestampIcon> icons;
+    private FusedLocationProviderClient mFusedLocationClient;
 
     private Consumer<UserAction> userActionCallback;
     final int RC_READWRITE = 9863;
@@ -83,7 +82,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public RecyclerView recyclerViewTimestamps;
     private Toolbar toolbar;
     private Category lastSelectedCategory = Category.Default;
-    private Tracker mTracker;
 
     @Override
     protected void onPause() {
@@ -136,10 +134,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d("srdx", "-----------NEW RUN--------------");
-        mTracker = ((Application) getApplication()).getDefaultTracker();
-        mTracker.setScreenName(Constants.Analytics.Screens.MainScreen);
-        mTracker.enableExceptionReporting(!BuildConfig.DEBUG);
-        Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.APP_LAUNCH);
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         toolbar = findViewById(R.id.toolbar);
@@ -159,7 +154,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void createNewTimestamp() {
-        Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.NEW_TIMESTAMP);
+        logEvent(Constants.Analytics.Events.NEW_TIMESTAMP);
         final Timestamp newTimestamp = new Timestamp(
                 JetTimestamp.now(),
                 PhysicalLocation.Default,
@@ -169,18 +164,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         unfilteredTimestamps.put(newTimestamp.getIdentifier(), newTimestamp);
         timestampsAdapter.add(newTimestamp);
         if (appSettings.shouldShowNoteAddDialog()) editNote(newTimestamp);
-        if (appSettings.shouldUseGps()) {
-            if (hasGPSpermission()) {
-                getGPSCoordinates(new Consumer<PhysicalLocation>() {
+        if (appSettings.shouldUseGps() && hasGPSpermission()) {
+            try {
+                mFusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
                     @Override
-                    public void accept(PhysicalLocation physicalLocation) {
-                        Log.d("srdx", "setPhysicalLocation");
-                        if (physicalLocation == null) {
-                            physicalLocation = PhysicalLocation.Default;
+                    public void onSuccess(Location lastKnownLocation) {
+                        if (lastKnownLocation == null) {
+                            Toast.makeText(MainActivity.this, getString(R.string.null_location), Toast.LENGTH_SHORT).show();
+                        } else {
+                            PhysicalLocation physicalLocation = new PhysicalLocation(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
+                            newTimestamp.setPhysicalLocation(physicalLocation);
                         }
-                        newTimestamp.setPhysicalLocation(physicalLocation);
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(MainActivity.this, getString(R.string.null_location), Toast.LENGTH_SHORT).show();
                     }
                 });
+            } catch (SecurityException e) {
+                Log.e("SecurityException", "SecurityException during getLastLocation");
+                logEvent(Constants.Analytics.Events.SECURITY_EXCEPTION);
             }
         }
         scrollViewTop();
@@ -212,18 +216,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void sendSettingsToAnalytics() {
-        StringBuilder sb = new StringBuilder();
-        if (appSettings.shouldUseQuickNotes()) sb.append("quickNotesON,"); else sb.append("quickNotesOFF,");
-        if (appSettings.shouldShowKeyboardInAddNote()) sb.append("showKbON,"); else sb.append("showKbOFF,");
-        if (appSettings.shouldShowMillis()) sb.append("showMillisON,"); else sb.append("showMillisOFF,");
-        if (appSettings.shouldShowNoteAddDialog()) sb.append("showAddNoteON,"); else sb.append("showAddNoteOFF,");
-        if (appSettings.shouldUse24hrFormat()) sb.append("use24formatON,"); else sb.append("use24formatOFF,");
-        if (appSettings.shouldUseGps()) sb.append("useGpsON"); else sb.append("useGpsOFF");
-        mTracker.send(new HitBuilders.EventBuilder()
-                .setCategory(Constants.Analytics.Events.ACTION)
-                .setAction(Constants.Analytics.Events.SETTINGS_LOADED)
-                .setLabel(sb.toString())
-                .build());
+        Bundle bundle = new Bundle();
+        bundle.putBoolean("quickNotesEnabled", appSettings.shouldUseQuickNotes());
+        bundle.putBoolean("autoKeyboardEnabled", appSettings.shouldShowKeyboardInAddNote());
+        bundle.putBoolean("millisecondsEnabled", appSettings.shouldShowMillis());
+        bundle.putBoolean("noteAddDialogEnabled", appSettings.shouldShowNoteAddDialog());
+        bundle.putBoolean("24hrFormatEnabled", appSettings.shouldUse24hrFormat());
+        bundle.putBoolean("gpsEnabled", appSettings.shouldUseGps());
+        logEvent(Constants.Analytics.Events.SETTINGS_LOADED, bundle);
     }
 
     private void loadCategories() {
@@ -232,11 +232,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void sendCategoriesCountToAnalytics() {
-        mTracker.send(new HitBuilders.EventBuilder()
-                .setCategory(Constants.Analytics.Events.ACTION)
-                .setAction(Constants.Analytics.Events.TOTAL_CATEGORIES)
-                .setLabel("categoriesTotal_" + categories.size())
-                .build());
+        Bundle bundle = new Bundle();
+        bundle.putInt("categoriesTotal", categories.size());
+        logEvent(Constants.Analytics.Events.TOTAL_CATEGORIES, bundle);
     }
 
     private void loadTimestamps() {
@@ -245,11 +243,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void sendTimestampsCountToAnalytics() {
-        mTracker.send(new HitBuilders.EventBuilder()
-                .setCategory(Constants.Analytics.Events.ACTION)
-                .setAction(Constants.Analytics.Events.TOTAL_TIMESTAMPS)
-                .setLabel("timestampsTotal_" + unfilteredTimestamps.size())
-                .build());
+        Bundle bundle = new Bundle();
+        bundle.putInt("timestampsTotal", unfilteredTimestamps.size());
+        logEvent(Constants.Analytics.Events.TOTAL_TIMESTAMPS, bundle);
     }
 
     @Override
@@ -323,7 +319,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Consumer<Void> onCategoryAddSelected = new Consumer<Void>() {
             @Override
             public void accept(Void var1) {
-                 showAddNewCategoryDialog();
+                showAddNewCategoryDialog();
             }
         };
 
@@ -369,7 +365,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void selectPreviousCategory() {
         int current_index = categories.indexOf(lastSelectedCategory);
         if (current_index < categories.size()) {
-            Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.SWIPE_TO_CHANGE_CATEGORY);
             lastSelectedCategory = categories.get(current_index + 1);
             adapterCategory.setSelectedCategory(lastSelectedCategory);
             adapterCategory.notifyDataSetChanged();
@@ -380,7 +375,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void selectNextCategory() {
         int current_index = categories.indexOf(lastSelectedCategory);
         if (current_index > 0) {
-            Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.SWIPE_TO_CHANGE_CATEGORY);
             lastSelectedCategory = categories.get(current_index - 1);
             adapterCategory.setSelectedCategory(lastSelectedCategory);
             adapterCategory.notifyDataSetChanged();
@@ -425,7 +419,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void removeGroupOfTimestamps() {
-        Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.REMOVE_GROUP);
+        logEvent(Constants.Analytics.Events.REMOVE_GROUP);
         final List<Timestamp> copyOfRemovedItems = timestampsAdapter.getDeepCopyOfSelectedTimestamps();
         final int size = copyOfRemovedItems.size();
         unfilteredTimestamps.keySet().removeAll(timestampsAdapter.getSelectedTimestampsUUIDs());
@@ -435,7 +429,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .setAction("UNDO", new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.REMOVE_GROUP_UNDO);
+                        logEvent(Constants.Analytics.Events.REMOVE_GROUP_UNDO);
                         timestampsAdapter.add(copyOfRemovedItems);
                         unfilteredTimestamps.putAll(Utils.listToHashMap(copyOfRemovedItems));
                         timestampsAdapter.notifyDataSetChanged();
@@ -449,7 +443,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.showSettings: {
-                Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.SHOW_SETTINGS);
+                logEvent(Constants.Analytics.Events.SHOW_SETTINGS);
                 dataManager.writeUserSettings(appSettings);
                 new SettingsDialog(this, new Consumer<Boolean>() {
                     @Override
@@ -476,7 +470,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void pickDate(final Timestamp timestampToUpdate) {
-        Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.EDIT_DATE);
+        logEvent(Constants.Analytics.Events.EDIT_DATE);
         new MyDatePickerDialog(this, timestampToUpdate, new Consumer<JetTimestamp>() {
             @Override
             public void accept(JetTimestamp updatedDate) {
@@ -487,7 +481,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void pickTime(final Timestamp timestampToUpdate) {
-        Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.EDIT_TIME);
+        logEvent(Constants.Analytics.Events.EDIT_TIME);
         new MyTimePickerDialog(this,
                 timestampToUpdate, new Consumer<JetTimestamp>() {
             @Override
@@ -499,7 +493,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void editNote(final Timestamp timestamp) {
-        Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.EDIT_NOTE);
+        logEvent(Constants.Analytics.Events.EDIT_NOTE);
         new EditNoteDialog(this,
                 timestamp,
                 appSettings,
@@ -515,7 +509,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void changeCategory(final Timestamp timestamp) {
-        Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.EDIT_CATEGORY);
+        logEvent(Constants.Analytics.Events.EDIT_CATEGORY);
         new CategoryListBottomSheet(this, "Move to", categories, icons, new Consumer<Category>() {
             @Override
             public void accept(Category newCategory) {
@@ -528,13 +522,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void removeTimestamp(Timestamp timestampToRemove) {
-        Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.TIMESTAMP_REMOVE);
+        logEvent(Constants.Analytics.Events.TIMESTAMP_REMOVE);
         timestampsAdapter.remove(timestampToRemove);
         unfilteredTimestamps.remove(timestampToRemove.getIdentifier());
     }
 
     private void showTimestampOnMap(Timestamp timestamp) {
-        Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.OPEN_MAP);
+        logEvent(Constants.Analytics.Events.OPEN_MAP);
         if (timestamp.getPhysicalLocation() != null) {
             final String uri = String.format("geo:0,0?q=%s(%s)", timestamp.getPhysicalLocation().toSimpleCommaString(), timestamp.getNote());
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
@@ -547,7 +541,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void showAddNewCategoryDialog() {
-        Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.ADD_NEW_CATEGORY);
+        logEvent(Constants.Analytics.Events.ADD_NEW_CATEGORY);
         new AddCategoryDialog(this, icons, new Consumer<Category>() {
             @Override
             public void accept(Category newCategory) {
@@ -555,18 +549,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Snackbar.make(recyclerViewTimestamps, "Category name can't be empty \uD83E\uDD14", Snackbar.LENGTH_SHORT).show();
                 } else {
                     categories.add(newCategory);
-
-                    mTracker.send(new HitBuilders.EventBuilder()
-                            .setCategory(Constants.Analytics.Events.ACTION)
-                            .setAction(Constants.Analytics.Events.NEW_CATEGORY)
-                            .setLabel(newCategory.getName().toLowerCase())
-                            .build());
-
-                    mTracker.send(new HitBuilders.EventBuilder()
-                            .setCategory(Constants.Analytics.Events.ACTION)
-                            .setAction(Constants.Analytics.Events.ICON_PICKED)
-                            .setLabel(icons.get(newCategory.getIcon_id()).getDescription().toLowerCase())
-                            .build());
+                    logEvent(Constants.Analytics.Events.NEW_CATEGORY);
 
                     lastSelectedCategory = newCategory;
                     adapterCategory.setSelectedCategory(newCategory);
@@ -595,7 +578,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void showDeleteConfirmDialog(final Category categoryToRemove) {
-        Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.REMOVE_CATEGORY);
+        logEvent(Constants.Analytics.Events.REMOVE_CATEGORY);
         new ConfirmRemoveCategoryDialog(this, new Consumer<Boolean>() {
             @Override
             public void accept(Boolean isConfirmed) {
@@ -626,64 +609,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    private void getGPSCoordinates(final Consumer<PhysicalLocation> consumer) {
-        Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.LOCATION_RECORDED);
-        final Looper myLooper = Looper.myLooper();
-        final LocationManager mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (mlocManager == null) return;
-        final Handler myHandler = new Handler(myLooper);
-        final LocationListener locationListener = new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
-                Log.d("srdx", "onLocationChanged: " + location.getLatitude());
-                mlocManager.removeUpdates(this);
-                PhysicalLocation physicalLocation = new PhysicalLocation(location.getLatitude(), location.getLongitude());
-                consumer.accept(physicalLocation);
-                myHandler.removeCallbacksAndMessages(null);
-            }
-
-            @Override
-            public void onStatusChanged(String s, int i, Bundle bundle) {
-            }
-
-            @Override
-            public void onProviderEnabled(String s) {
-            }
-
-            @Override
-            public void onProviderDisabled(String s) {
-                Snackbar.make(recyclerViewTimestamps, "Looks like your GPS if Off \uD83E\uDD14", Snackbar.LENGTH_LONG).show();
-                mlocManager.removeUpdates(this);
-
-            }
-        };
-        try {
-            mlocManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, locationListener, myLooper);
-        } catch (SecurityException e) {
-            Log.e("SecurityException", "SecurityException during requestSingleUpdate");
-            Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.SECURITY_EXCEPTION);
-        }
-
-        myHandler.postDelayed(new Runnable() {
-            public void run() {
-                mlocManager.removeUpdates(locationListener);
-                Location location = null;
-                try {
-                    location = mlocManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                } catch (SecurityException e) {
-                    Log.e("SecurityException", "SecurityException during getLastKnownLocation");
-                    Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.SECURITY_EXCEPTION);
-                }
-
-                if (location != null) {
-                    consumer.accept(new PhysicalLocation(location.getLatitude(), location.getLongitude()));
-                } else {
-                    Snackbar.make(recyclerViewTimestamps, "Unable to get your location \uD83D\uDE1E", Snackbar.LENGTH_LONG).show();
-                }
-            }
-        }, Constants.GPS_REQUEST_TIMEOUT);
-    }
-
     private boolean hasGPSpermission() {
         final int RC_LOCATION = 9863;
         final String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION};
@@ -698,7 +623,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void exportTimestampsToCsv() {
-        Utils.sendEventToAnalytics(mTracker, Constants.Analytics.Events.EXPORT_TIMESTAMPS);
+        logEvent(Constants.Analytics.Events.EXPORT_TIMESTAMPS);
         if (EasyPermissions.hasPermissions(this, Constants.STORAGE_PERMS)) {
             emailCSV(dataManager.exportToCSV(lastSelectedCategory, new ArrayList<>(unfilteredTimestamps.values()), categories));
         } else {
@@ -710,5 +635,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void emailCSV(File file) {
         Utils.emailCSV(this, file);
+    }
+
+    private void logEvent(String event) {
+        AppInstance.firebaseAnalytics.logEvent(event, new Bundle());
+    }
+
+    private void logEvent(String event, Bundle bundle) {
+        AppInstance.firebaseAnalytics.logEvent(event, bundle);
     }
 }

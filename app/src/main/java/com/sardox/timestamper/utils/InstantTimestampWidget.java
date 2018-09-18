@@ -9,14 +9,13 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
-import com.google.android.gms.analytics.HitBuilders;
-import com.google.android.gms.analytics.Tracker;
-import com.sardox.timestamper.Application;
+import com.sardox.timestamper.AppInstance;
 import com.sardox.timestamper.DialogActivity;
 import com.sardox.timestamper.Managers.DataManager;
 import com.sardox.timestamper.R;
@@ -91,11 +90,7 @@ public class InstantTimestampWidget extends AppWidgetProvider {
     }
 
     public void saveNewStamp(Context context, JetUUID defaultCategoryForWidget) {
-        Tracker mTracker = ((Application) context.getApplicationContext()).getDefaultTracker();
-        mTracker.send(new HitBuilders.EventBuilder()
-                .setCategory(Constants.Analytics.Events.ACTION)
-                .setAction(Constants.Analytics.Events.WIDGET_CLICK)
-                .build());
+        logEvent(Constants.Analytics.Events.WIDGET_CLICK);
 
         DataManager dataManager = new DataManager(context);
         AppSettings appSettings = dataManager.loadUserSettings();
@@ -132,5 +127,9 @@ public class InstantTimestampWidget extends AppWidgetProvider {
     private boolean hasGPSpermission(Context context) {
         return ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void logEvent(String event) {
+        AppInstance.firebaseAnalytics.logEvent(event, new Bundle());
     }
 }

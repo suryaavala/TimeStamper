@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.support.v4.content.FileProvider;
 
-import com.google.android.gms.analytics.HitBuilders;
-import com.google.android.gms.analytics.Tracker;
 import com.sardox.timestamper.R;
 import com.sardox.timestamper.objects.Category;
 import com.sardox.timestamper.objects.Timestamp;
@@ -73,15 +71,6 @@ public class Utils {
             sendIntent.putExtra(Intent.EXTRA_STREAM, u1);
             sendIntent.setType(Constants.EXPORT_FILE_TYPE);
             context.startActivity(sendIntent);
-        }
-    }
-
-    public static void sendEventToAnalytics(Tracker mTracker, String actionName) {
-        if (mTracker != null) {
-            mTracker.send(new HitBuilders.EventBuilder()
-                    .setCategory(Constants.Analytics.Events.ACTION)
-                    .setAction(actionName)
-                    .build());
         }
     }
 
