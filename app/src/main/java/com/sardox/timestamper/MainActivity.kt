@@ -8,16 +8,19 @@ import android.net.Uri
 import android.os.Bundle
 import android.support.design.widget.NavigationView
 import android.support.design.widget.Snackbar
+import android.support.v4.content.ContextCompat
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DefaultItemAnimator
+import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -39,7 +42,7 @@ import pub.devrel.easypermissions.EasyPermissions
 import java.io.File
 import java.util.*
 
-class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, UserActionInterface, CategoryUpdatesInterface {
+class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, UserActionInterface, CategoryUpdatesInterface, TimestampsCountListenerInterface {
 
     companion object {
         private const val RC_READWRITE = 9863
@@ -53,10 +56,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private val dataManager: DataManager  by lazy { DataManager(this) }
     private val icons: List<TimestampIcon> by lazy { Utils.getStockIcons() }
     private val appSettings: AppSettings by lazy { dataManager.loadUserSettings() }
-    private val adapterCategory: CategoryAdapter by lazy { CategoryAdapter(categories, this, this) }
+    private val adapterCategory: CategoryAdapter by lazy { CategoryAdapter(categories, this, icons) }
     private val mFusedLocationClient: FusedLocationProviderClient by lazy { LocationServices.getFusedLocationProviderClient(this) }
 
-    private val timestampsAdapter: TimestampsAdapter  by lazy { TimestampsAdapter(categories, metrics, icons, this, this, appSettings) }
+    private val timestampsAdapter: TimestampsAdapter  by lazy { TimestampsAdapter(categories, metrics, icons, this, this, this, appSettings) }
 
     private var lastSelectedCategory: Category = Category.Default
 
@@ -121,7 +124,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 ActionType.SELECTED -> if (action.count == 0) {
                     toolbar_top.setTitle(R.string.app_name)
                 } else {
-                    toolbar_top.title = action.count.toString()
+                    toolbar_top.title = "${action.count.toString()} selected"
                 }
                 ActionType.SHARE_TIMESTAMP, null -> {
                 }
@@ -129,11 +132,28 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    override fun onCategoryChanges(selectedCategory: Category) {
+    override fun onCategoryRemove(selectedCategory: Category) {
+        if (categories.size == 1) {
+            Snackbar.make(recyclerView_timestamps, "Default category can not be deleted..  \uD83D\uDE44", Snackbar.LENGTH_SHORT).show()
+        } else {
+            onCategoryRemoved(selectedCategory)
+        }
+    }
+
+    override fun onCategoryChanged(selectedCategory: Category) {
         Log.d("srdx", "selected_category: " + selectedCategory.name + " #" + selectedCategory.categoryID)
         lastSelectedCategory = selectedCategory
         timestampsAdapter.clearSelection()
         filterTimestampsByCategory(lastSelectedCategory)
+        toolbar_top.title = selectedCategory.name
+        toggleBackdrop()
+    }
+
+    override fun onCountChanged(count: Int) {
+        when (count) {
+            0 -> empty_list.visibility = View.VISIBLE
+            else -> empty_list.visibility = View.GONE
+        }
     }
 
     override fun onCategoryAdded() {
@@ -144,15 +164,16 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         with(recyclerView_categories) {
             setHasFixedSize(true)
             adapter = adapterCategory
-            layoutManager = LinearLayoutManager(this@MainActivity).apply { orientation = LinearLayoutManager.HORIZONTAL }
+            layoutManager = LinearLayoutManager(this@MainActivity).apply { orientation = LinearLayoutManager.VERTICAL }
             itemAnimator = DefaultItemAnimator()
+            addItemDecoration(VerticalSpaceItemDecoration(10))
         }
 
         with(recyclerView_timestamps) {
             adapter = timestampsAdapter
             layoutManager = LinearLayoutManager(this@MainActivity).apply { orientation = LinearLayoutManager.VERTICAL; reverseLayout = false }
             itemAnimator = DefaultItemAnimator()
-            addItemDecoration(VerticalSpaceItemDecoration(10))
+            addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL).apply { setDrawable(ContextCompat.getDrawable(context, R.drawable.timestamps_divider)!!) })
 
             setOnTouchListener(object : OnSwipeTouchListener(this@MainActivity) {
                 override fun onSwipeRight() {
@@ -175,6 +196,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             adapterCategory.setSelectedCategory(lastSelectedCategory)
             adapterCategory.notifyDataSetChanged()
             filterTimestampsByCategory(categories[currentIndex + 1])
+            toolbar_top.title = lastSelectedCategory.name
         }
     }
 
@@ -185,6 +207,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             adapterCategory.setSelectedCategory(lastSelectedCategory)
             adapterCategory.notifyDataSetChanged()
             filterTimestampsByCategory(categories[currentIndex - 1])
+            toolbar_top.title = lastSelectedCategory.name
         }
     }
 
@@ -197,18 +220,47 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         recyclerView_timestamps.smoothScrollToPosition(0)
     }
 
+    private var isCollapsed: Boolean = true
+
+    private fun toggleBackdrop() {
+        if (isCollapsed) {
+            recyclerView_timestamps_container.animate().translationY(recyclerView_categories.height.toFloat())
+            toolbar_top.title = "Categories"
+            recyclerView_categories.scrollToPosition(adapterCategory.selectedCategoryPosition())
+        } else {
+            toolbar_top.title = lastSelectedCategory.name
+            recyclerView_timestamps_container.animate().translationY(0f)
+        }
+        isCollapsed = !isCollapsed
+        invalidateOptionsMenu()
+    }
+
+
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        if (isCollapsed) {
+            menu?.findItem(R.id.action_category_toggle_backdrop)?.let { it.icon = ContextCompat.getDrawable(this, R.drawable.ic_list_white) }
+        } else {
+            menu?.findItem(R.id.action_category_toggle_backdrop)?.let { it.icon = ContextCompat.getDrawable(this, R.drawable.ic_close_white) }
+        }
+        return super.onPrepareOptionsMenu(menu)
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.action_category_delete -> {
-                if (categories.size == 1) {
-                    Snackbar.make(recyclerView_timestamps, "Default category can not be deleted..  \uD83D\uDE44", Snackbar.LENGTH_SHORT).show()
-                } else {
-                    if (timestampsAdapter.hasSelectedTimestamps()) {
-                        removeGroupOfTimestamps()
-                    } else {
-                        showRemoveCategoryDialog()
-                    }
-                }
+            R.id.action_category_toggle_backdrop -> {
+
+                toggleBackdrop()
+
+
+//                if (categories.size == 1) {
+//                    Snackbar.make(recyclerView_timestamps, "Default category can not be deleted..  \uD83D\uDE44", Snackbar.LENGTH_SHORT).show()
+//                } else {
+//                    if (timestampsAdapter.hasSelectedTimestamps()) {
+//                        removeGroupOfTimestamps()
+//                    } else {
+//                        showRemoveCategoryDialog()
+//                    }
+//                }
             }
         }
         return true
@@ -320,6 +372,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             Snackbar.make(recyclerView_timestamps, "Category name can't be empty \uD83E\uDD14", Snackbar.LENGTH_SHORT).show()
         } else {
             categories.add(newCategory)
+            sortCategories()
             logEvent(Constants.Analytics.Events.NEW_CATEGORY)
 
             lastSelectedCategory = newCategory
@@ -331,10 +384,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             saveCategories()
             Utils.updateGridWidget(applicationContext)
         }
-    }
-
-    private fun showRemoveCategoryDialog() {
-        CategoryListBottomSheet(this, getString(R.string.select_cat_to_remove), categories, icons) { onCategoryRemoved(it) }
+        toggleBackdrop()
     }
 
     private fun onCategoryRemoved(categoryToRemove: Category) {
@@ -354,6 +404,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 resetView()
                 saveCategories()
                 Utils.updateGridWidget(applicationContext)
+                toggleBackdrop()
             }
         })
     }
@@ -413,6 +464,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         timestampsAdapter.notifyDataSetChanged()
     }
 
+    private fun sortCategories() {
+        val newList = categories
+        newList.remove(Category.Default)
+        newList.sortBy { it.name }
+        newList.add(0, Category.Default)
+        categories = newList
+    }
+
     private fun initApp() {
         loadTimestamps()
         loadCategories()
@@ -440,6 +499,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private fun loadCategories() {
         categories = dataManager.readCategories()
+        sortCategories()
         sendCategoriesCountToAnalytics()
     }
 

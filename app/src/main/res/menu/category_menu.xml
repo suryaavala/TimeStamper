@@ -2,8 +2,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
         <group>
         <item
-            android:id="@+id/action_category_delete"
-            android:icon="@drawable/ic_delete_white_24dp"
+            android:id="@+id/action_category_toggle_backdrop"
+            android:icon="@drawable/ic_menu_black_24dp"
             android:title="@string/action_category_delete"
             app:showAsAction="always" />
         </group>

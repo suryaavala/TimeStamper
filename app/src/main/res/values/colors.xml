@@ -1,23 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#303032</color>
-    <color name="colorPrimaryDark">#303032</color>
+    <color name="colorPrimary">@color/toolbarAndCategories</color>
+    <color name="colorPrimaryDark">@color/systemBar</color>
     <color name="colorAccent">#e63e3e</color>
 
-    <color name="colorBackground">#212123</color>
-    <color name="colorItemBackground">#303032</color>
-    <color name="colorRecyclerViewItem">#10ffffff</color>
-    <color name="colorRecyclerViewItemSelected">#30ffffff</color>
+    <color name="colorBackground">@color/timestamps</color>
+    <color name="colorItemBackground">@color/toolbarAndCategories</color>
+    <color name="colorRecyclerViewItem">#00000000</color>
+    <color name="colorRecyclerViewItemSelected">#30409099</color>
 
     <color name="colorWidgetBackground">#50000000</color>
 
-    <color name="category_background">#303032</color>
+    <color name="category_background">#D32F2F</color>
     <color name="category_selected">#e63e3e</color>
-    <color name="category_deselected">#424242</color>
+    <color name="category_deselected">#1DE9B6</color>
 
     <color name="selectedIcon">#E0E0E0</color>
 
-    <color name="textColorPrimary">#ffffff</color>
-    <color name="textColorSecondary">#ffffff</color>
+    <color name="textColorPrimary">#000000</color>
+    <color name="textColorSecondary">#000000</color>
+
+    <color name="systemBar">#409099</color>
+    <color name="categorySelectedBackground">#90409099</color>
+    <color name="toolbarAndCategories">#50b0bb</color>
+    <color name="timestamps">#ffffff</color>
+
+    <color name="timestampTextColor">#bb000000</color>
+    <color name="timestampBetweenTextColor">#bb000000</color>
+
+    <color name="categoryTextColor">#ffffff</color>
+
 
 </resources>

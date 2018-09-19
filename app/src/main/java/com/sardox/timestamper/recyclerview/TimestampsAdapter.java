@@ -24,6 +24,7 @@ import com.sardox.timestamper.types.PhysicalLocation;
 import com.sardox.timestamper.utils.ActionType;
 import com.sardox.timestamper.utils.AppSettings;
 import com.sardox.timestamper.utils.TimestampIcon;
+import com.sardox.timestamper.utils.TimestampsCountListenerInterface;
 import com.sardox.timestamper.utils.UserAction;
 import com.sardox.timestamper.utils.UserActionInterface;
 import com.sardox.timestamper.utils.Utils;
@@ -54,13 +55,15 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
     private List<TimestampIcon> icons;
     private Context context;
     private UserActionInterface userActionCallback;
+    private TimestampsCountListenerInterface timestampsCountListenerInterface;
     private PeriodFormatter periodFormatter = PeriodFormat.getDefault();
 
-    public TimestampsAdapter(List<Category> categories, DisplayMetrics displayMetrics, List<TimestampIcon> icons, Context context, UserActionInterface userActionCallback, AppSettings appSettings) {
+    public TimestampsAdapter(List<Category> categories, DisplayMetrics displayMetrics, List<TimestampIcon> icons, Context context, UserActionInterface userActionCallback, final TimestampsCountListenerInterface timestampsCountListenerInterface, AppSettings appSettings) {
         this.userActionCallback = userActionCallback;
         this.context = context;
         this.appSettings = appSettings;
         this.categories = categories;
+        this.timestampsCountListenerInterface = timestampsCountListenerInterface;
         this.displayMetrics = displayMetrics;
         this.icons = icons;
         this.selectedTimestamps = new ArrayList<>();
@@ -78,6 +81,7 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
                     // neighbor show be updated as well to update it's delta
                     notifyItemRangeChanged(position - 1, 1);
                 }
+                timestampsCountListenerInterface.onCountChanged(sortedTimeStamps.size());
             }
 
             @Override
@@ -93,6 +97,7 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
             @Override
             public void onInserted(int position, int count) {
                 notifyItemRangeInserted(position, count);
+                timestampsCountListenerInterface.onCountChanged(sortedTimeStamps.size());
             }
 
             @Override
@@ -102,6 +107,7 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
                     // neighbor show be updated as well to update it's delta
                     notifyItemRangeChanged(position - 1, 1);
                 }
+                timestampsCountListenerInterface.onCountChanged(sortedTimeStamps.size());
             }
 
             @Override
