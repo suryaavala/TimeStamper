@@ -18,6 +18,9 @@
     <string name="import_export">Импорт / Экспорт</string>
     <string name="settings">Настройки</string>
 
+    <string name="action_category_toggle">Показать категории</string>
+    <string name="action_timestamps_delete">Удалить таймстемп</string>
+
     <string name="add_note_to_new_stamps">Автоввод заметки</string>
     <string name="add_note_to_new_stamps_hint">Окно для ввода заметок будет появляться при создании каждого нового таймстемпа</string>
     <string name="new_timestamp_created_with_location">>Новая запись была добавлена. Месторасположение сохранено</string>
