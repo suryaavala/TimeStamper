@@ -2,6 +2,7 @@ package com.sardox.timestamper.recyclerview;
 
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.util.SortedList;
 import android.support.v7.widget.PopupMenu;
@@ -55,7 +56,6 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
     private List<TimestampIcon> icons;
     private Context context;
     private UserActionInterface userActionCallback;
-    private TimestampsCountListenerInterface timestampsCountListenerInterface;
     private PeriodFormatter periodFormatter = PeriodFormat.getDefault();
 
     public TimestampsAdapter(List<Category> categories, DisplayMetrics displayMetrics, List<TimestampIcon> icons, Context context, UserActionInterface userActionCallback, final TimestampsCountListenerInterface timestampsCountListenerInterface, AppSettings appSettings) {
@@ -63,7 +63,6 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
         this.context = context;
         this.appSettings = appSettings;
         this.categories = categories;
-        this.timestampsCountListenerInterface = timestampsCountListenerInterface;
         this.displayMetrics = displayMetrics;
         this.icons = icons;
         this.selectedTimestamps = new ArrayList<>();
@@ -121,17 +120,20 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
         this.appSettings = appSettings;
     }
 
+    @NonNull
     @Override
-    public TimestampsAdapter.MyViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+    public TimestampsAdapter.MyViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
         View view = LayoutInflater.from(viewGroup.getContext())
-                .inflate(R.layout.recyclerview_item, viewGroup,
+                // .inflate(R.layout.recyclerview_item, viewGroup,
+                // .inflate(R.layout.recyclerview_item_icon_left, viewGroup,
+                .inflate(R.layout.recyclerview_item_icon_left, viewGroup,
                         false);
         return new MyViewHolder(view);
     }
 
 
     @Override
-    public void onBindViewHolder(final TimestampsAdapter.MyViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull final TimestampsAdapter.MyViewHolder holder, int position) {
 
         final int w = displayMetrics.widthPixels;
         holder.left_container.setMinimumWidth(w);
@@ -140,7 +142,7 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
         if (selectedTimestamps.contains(timestamp)) {
             holder.left_container.setBackgroundColor(ContextCompat.getColor(context, R.color.colorRecyclerViewItemSelected));
         } else {
-            holder.left_container.setBackgroundColor(ContextCompat.getColor(context, R.color.colorRecyclerViewItem));
+            holder.left_container.setBackgroundColor(ContextCompat.getColor(context, R.color.colorBackground));
         }
 
         Calendar calendar = Calendar.getInstance();
@@ -149,12 +151,12 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
 
         String format;
 
-        if (appSettings.shouldUse24hrFormat()) {
-            if (appSettings.shouldShowMillis()) {
+        if (appSettings.getUse24hrFormat()) {
+            if (appSettings.getShouldShowMillis()) {
                 format = "HH:mm:ss.SSS";
             } else format = "HH:mm:ss";
         } else {
-            if (appSettings.shouldShowMillis()) {
+            if (appSettings.getShouldShowMillis()) {
                 format = "hh:mm:ss.SSS a";
             } else format = "hh:mm:ss a";
         }
@@ -254,9 +256,9 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
                         isSelecting = true;
                         Timestamp selectedTimestamp = sortedTimeStamps.get(getAdapterPosition());
                         if (selectedTimestamps.contains(selectedTimestamp)) {
-                            selectedTimestamps.remove(selectedTimestamp);
+                            markAsNotSelected(selectedTimestamp);
                         } else {
-                            selectedTimestamps.add(selectedTimestamp);
+                            markAsSelected(selectedTimestamp);
                         }
                         notifyItemChanged(getAdapterPosition());
                         userActionCallback.onUserAction(new UserAction(ActionType.SELECTED, null, selectedTimestamps.size()));
@@ -270,10 +272,10 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
                     if (isSelecting) {
                         Timestamp selectedTimestamp = sortedTimeStamps.get(getAdapterPosition());
                         if (selectedTimestamps.contains(selectedTimestamp)) {
-                            selectedTimestamps.remove(selectedTimestamp);
+                            markAsNotSelected(selectedTimestamp);
                             if (selectedTimestamps.isEmpty()) isSelecting = false;
                         } else {
-                            selectedTimestamps.add(selectedTimestamp);
+                            markAsSelected(selectedTimestamp);
                         }
                         notifyItemChanged(getAdapterPosition());
                         userActionCallback.onUserAction(new UserAction(ActionType.SELECTED, null, selectedTimestamps.size()));
@@ -281,6 +283,14 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
                 }
             });
             recycler_timestamp_button_menu.setOnClickListener(this);
+        }
+
+        private void markAsSelected(Timestamp selectedTimestamp){
+            selectedTimestamps.add(selectedTimestamp);
+        }
+
+        private void markAsNotSelected(Timestamp selectedTimestamp){
+            selectedTimestamps.remove(selectedTimestamp);
         }
 
         @Override

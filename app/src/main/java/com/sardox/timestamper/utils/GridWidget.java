@@ -78,7 +78,7 @@ public class GridWidget extends AppWidgetProvider {
         AppSettings appSettings = dataManager.loadUserSettings();
         final Timestamp timestamp = new Timestamp(instantTimestamp, PhysicalLocation.Default, JetUUID.fromString(categoryForWidget), "added from widget", JetUUID.randomUUID());
 
-        if (appSettings.shouldUseGps() && hasGPSpermission(context)) {
+        if (appSettings.getShouldUseGps() && hasGPSpermission(context)) {
             logEvent(Constants.Analytics.Events.GRID_WIDGET_GPS_ATTEMPT);
             try {
                 FusedLocationProviderClient mFusedLocationClient = LocationServices.getFusedLocationProviderClient(context);

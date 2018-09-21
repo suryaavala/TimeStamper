@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:padding="10dp">
 
@@ -42,7 +43,7 @@
     </LinearLayout>
 
     <LinearLayout
-        android:layout_marginTop="14dp"
+        android:layout_marginTop="18dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/quick_notes_view"
@@ -54,11 +55,15 @@
             android:layout_height="wrap_content"
             android:text="Last notes"/>
 
-        <ListView
-            android:id="@+id/quick_notes_listview"
+        <android.support.design.chip.ChipGroup
+            android:layout_marginTop="8dp"
+            android:id="@+id/chipGroup"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:visibility="visible"/>
+            android:layout_gravity="center"
+            app:singleSelection="true"
+            android:layout_height="wrap_content">
+            <!-- Chips can be declared here, or added dynamically. -->
+
+        </android.support.design.chip.ChipGroup>
     </LinearLayout>
 </LinearLayout>

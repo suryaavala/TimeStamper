@@ -13,7 +13,8 @@
     <string name="action_export">Export to CSV</string>
     <string name="action_save">Save</string>
     <string name="action_open">Open</string>
-    <string name="action_category_delete">Delete category</string>
+    <string name="action_category_toggle">Show categories</string>
+    <string name="action_timestamps_delete">Delete timestamps</string>
     <string name="action_use_dark_theme">Use dark theme</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
@@ -57,7 +58,7 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="cant_be_removed">This category can\'t be removed</string>
-    <string name="widget_hint">HINT: Try using NEW widget for even quicker timestamps</string>
+    <string name="widget_hint">HINT: Try NEW widget for instant timestamps</string>
     <string name="save">SAVE</string>
     <string name="add_new_category">Add New Category</string>
     <string name="scroll_right_and_pick_an_icon">Scroll right and pick an icon</string>

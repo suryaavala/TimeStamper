@@ -1,42 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <Preference android:title="@string/settings"></Preference>
-    <PreferenceScreen
-        android:persistent="false"
-        android:summary="@string/notes_settings_hint"
+<android.support.v7.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <android.support.v7.preference.PreferenceCategory
+        android:title="@string/settings">
+
+        <android.support.v7.preference.SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="SHOW_MILLIS"
+            android:summary="@string/action_show_milliseconds_hint"
+            android:title="@string/action_show_milliseconds" />
+        <android.support.v7.preference.SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="USE_24HR"
+            android:summary="@string/action_show_24_hint"
+            android:title="@string/action_show_24" />
+        <android.support.v7.preference.SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="USE_GPS"
+            android:summary="@string/use_gps_hint"
+            android:title="@string/use_gps" />
+    </android.support.v7.preference.PreferenceCategory>
+
+    <android.support.v7.preference.PreferenceCategory
         android:title="@string/notes_settings">
-        <Preference android:title="@string/notes_settings"></Preference>
-        <CheckBoxPreference
+
+        <android.support.v7.preference.SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="AUTO_NOTE"
             android:summary="@string/add_note_to_new_stamps_hint"
             android:title="@string/add_note_to_new_stamps" />
-        <CheckBoxPreference
+        <android.support.v7.preference.SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="SHOW_KEYBOARD_IN_NOTES"
             android:summary="@string/auto_keyboard_hint"
             android:title="@string/auto_keyboard" />
-        <CheckBoxPreference
+        <android.support.v7.preference.SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="USE_QUICK_NOTES"
             android:summary="@string/quick_notes_hint"
             android:title="@string/quick_notes" />
-    </PreferenceScreen>
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="SHOW_MILLIS"
-        android:summary="@string/action_show_milliseconds_hint"
-        android:title="@string/action_show_milliseconds" />
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="USE_24HR"
-        android:summary="@string/action_show_24_hint"
-        android:title="@string/action_show_24" />
+    </android.support.v7.preference.PreferenceCategory>
 
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="USE_GPS"
-        android:summary="@string/use_gps_hint"
-        android:title="@string/use_gps" />
-
-</PreferenceScreen>
+</android.support.v7.preference.PreferenceScreen>

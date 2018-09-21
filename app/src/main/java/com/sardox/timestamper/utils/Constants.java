@@ -56,7 +56,6 @@ public class Constants {
         public static final String SHARED_PREFS_WIDGET_TIMESTAMPS = "TIMESTAMPS_WIDGET";
         public static final String SHARED_PREFS_USE24HR = "USE_24HR";
         public static final String SHARED_PREFS_USE_QUICK_NOTES = "USE_QUICK_NOTES";
-        public static final String SHARED_PREFS_USEDARK = "USE_DARK";
         public static final String SHARED_PREFS_SHOW_KEYBOARD = "SHOW_KEYBOARD_IN_NOTES";
         public static final String SHARED_PREFS_CATEGORIES = "CATEGORIES";
         public static final String SHARED_PREFS_USE_GPS = "USE_GPS";

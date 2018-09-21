@@ -26,9 +26,6 @@ import com.sardox.timestamper.types.PhysicalLocation;
 
 import java.util.HashMap;
 
-import static com.sardox.timestamper.utils.AppSettings.NO_DEFAULT_CATEGORY;
-
-
 public class InstantTimestampWidget extends AppWidgetProvider {
 
     private static final String ADD_TIMESTAMP = "AddNewTimestamp";
@@ -59,7 +56,7 @@ public class InstantTimestampWidget extends AppWidgetProvider {
         if (ADD_TIMESTAMP.equals(intent.getAction())) {
             DataManager dataManager = new DataManager(context);
             JetUUID defaultCategoryForWidget = dataManager.readDefaultCategoryForWidget();
-            if (defaultCategoryForWidget.equals(NO_DEFAULT_CATEGORY)) {
+            if (defaultCategoryForWidget.equals(AppSettings.Companion.getNO_DEFAULT_CATEGORY())) {
                 showSetupDialog(context);
             } else {
                 saveNewStamp(context, defaultCategoryForWidget);
@@ -86,7 +83,7 @@ public class InstantTimestampWidget extends AppWidgetProvider {
         super.onDeleted(context, appWidgetIds);
         Log.d("srdx", "Last widget was deleted");
         DataManager dataManager = new DataManager(context);
-        dataManager.saveDefaultCategoryForWidget(AppSettings.NO_DEFAULT_CATEGORY);
+        dataManager.saveDefaultCategoryForWidget(AppSettings.Companion.getNO_DEFAULT_CATEGORY());
     }
 
     public void saveNewStamp(Context context, JetUUID defaultCategoryForWidget) {
@@ -97,7 +94,7 @@ public class InstantTimestampWidget extends AppWidgetProvider {
 
         PhysicalLocation physicalLocation = PhysicalLocation.Default;
 
-        if (appSettings.shouldUseGps() && hasGPSpermission(context)) {
+        if (appSettings.getShouldUseGps() && hasGPSpermission(context)) {
             final LocationManager mlocManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
             Location lastKnownLocation = null;

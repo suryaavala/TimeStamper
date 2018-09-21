@@ -3,7 +3,7 @@
 
     <item
         android:id="@+id/showSettings"
-        android:icon="@drawable/ic_settings_white_24dp"
+        android:icon="@drawable/ic_settings_black"
         android:title="@string/settings"/>
 
     <item
@@ -12,7 +12,7 @@
         <menu>
             <item
                 android:id="@+id/action_export"
-                android:icon="@drawable/ic_import_export_white_24dp"
+                android:icon="@drawable/ic_save_black"
                 android:title="@string/action_export"/>
         </menu>
     </item>

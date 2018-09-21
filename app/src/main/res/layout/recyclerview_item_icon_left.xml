@@ -21,18 +21,18 @@
                 android:id="@+id/recycler_timestamp_day"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
+                android:layout_marginStart="8dp"
                 android:minEms="3"
                 android:text="12 Aug"
                 android:textColor="@color/timestampTextColor"
                 android:textSize="16sp"
-                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/recycler_timestamp_category"
                 app:layout_constraintTop_toTopOf="@+id/recycler_timestamp_time" />
 
 
             <TextView
                 android:id="@+id/recycler_timestamp_weekday"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
                 android:text="Mon"
@@ -48,13 +48,11 @@
                 android:id="@+id/recycler_timestamp_time"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="4dp"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
                 android:text="10:41:59"
                 android:textColor="@color/timestampTextColor"
                 android:textSize="16sp"
-                app:layout_constraintEnd_toStartOf="@+id/recycler_timestamp_category"
                 app:layout_constraintStart_toEndOf="@+id/recycler_timestamp_day"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -62,14 +60,14 @@
                 android:id="@+id/recycler_timestamp_note"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="4dp"
+                android:layout_marginEnd="8dp"
                 android:layout_marginTop="2dp"
                 android:ellipsize="end"
                 android:minLines="1"
                 android:paddingBottom="4dp"
-                android:text="sample text in here can be very long text"
+                android:text="some text"
                 android:textColor="@color/timestampTextColor"
-                app:layout_constraintEnd_toStartOf="@+id/recycler_timestamp_category"
+                app:layout_constraintEnd_toStartOf="@+id/recycler_timestamp_button_menu"
                 app:layout_constraintStart_toStartOf="@+id/recycler_timestamp_time"
                 app:layout_constraintTop_toBottomOf="@+id/recycler_timestamp_time" />
 
@@ -81,13 +79,13 @@
                 android:layout_alignEnd="@+id/recycler_timestamp_button_menu"
                 android:layout_centerVertical="true"
                 android:layout_marginBottom="8dp"
-                android:layout_marginEnd="8dp"
+                android:layout_marginStart="12dp"
                 android:layout_marginTop="8dp"
                 android:adjustViewBounds="true"
                 android:gravity="center"
                 android:src="@drawable/category_weather"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/recycler_timestamp_button_menu"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
 

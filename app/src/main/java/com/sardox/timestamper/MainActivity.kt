@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private val dataManager: DataManager  by lazy { DataManager(this) }
     private val icons: List<TimestampIcon> by lazy { Utils.getStockIcons() }
-    private val appSettings: AppSettings by lazy { dataManager.loadUserSettings() }
+    private var appSettings: AppSettings = AppSettings()
     private val adapterCategory: CategoryAdapter by lazy { CategoryAdapter(categories, this, icons) }
     private val mFusedLocationClient: FusedLocationProviderClient by lazy { LocationServices.getFusedLocationProviderClient(this) }
 
@@ -87,8 +87,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         unfilteredTimestamps[newTimestamp.identifier] = newTimestamp
         timestampsAdapter.add(newTimestamp)
-        if (appSettings.shouldShowNoteAddDialog()) editNote(newTimestamp)
-        if (appSettings.shouldUseGps() && hasGPSpermission()) {
+        if (appSettings.showNoteAddDialog) editNote(newTimestamp)
+        if (appSettings.shouldUseGps && hasGPSpermission()) {
             try {
                 mFusedLocationClient.lastLocation.addOnSuccessListener { lastKnownLocation ->
                     if (lastKnownLocation == null) {
@@ -105,7 +105,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         }
         scrollViewTop()
-        if (!appSettings.shouldShowNoteAddDialog()) {
+        if (!appSettings.showNoteAddDialog) {
             Snackbar.make(recyclerView_timestamps, getString(R.string.new_timestamp_created) + " in " + lastSelectedCategory.name, Snackbar.LENGTH_LONG).show()
         }
     }
@@ -121,10 +121,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                 ActionType.CHANGE_CATEGORY -> changeCategory(this)
                 ActionType.SHOW_MAP -> showTimestampOnMap(this)
-                ActionType.SELECTED -> if (action.count == 0) {
-                    toolbar_top.setTitle(R.string.app_name)
-                } else {
-                    toolbar_top.title = "${action.count.toString()} selected"
+                ActionType.SELECTED -> {
+                    invalidateOptionsMenu()
+                    if (action.count == 0) {
+                        toolbar_top.title = lastSelectedCategory.name
+                    } else {
+                        toolbar_top.title = "${action.count} selected"
+                    }
                 }
                 ActionType.SHARE_TIMESTAMP, null -> {
                 }
@@ -238,7 +241,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
         if (isCollapsed) {
-            menu?.findItem(R.id.action_category_toggle_backdrop)?.let { it.icon = ContextCompat.getDrawable(this, R.drawable.ic_list_white) }
+            menu?.findItem(R.id.action_category_toggle_backdrop)?.icon = ContextCompat.getDrawable(this, R.drawable.ic_list_white)
+            menu?.findItem(R.id.action_timestamps_delete)?.isVisible = timestampsAdapter.hasSelectedTimestamps()
         } else {
             menu?.findItem(R.id.action_category_toggle_backdrop)?.let { it.icon = ContextCompat.getDrawable(this, R.drawable.ic_close_white) }
         }
@@ -247,26 +251,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.action_category_toggle_backdrop -> {
-
-                toggleBackdrop()
-
-
-//                if (categories.size == 1) {
-//                    Snackbar.make(recyclerView_timestamps, "Default category can not be deleted..  \uD83D\uDE44", Snackbar.LENGTH_SHORT).show()
-//                } else {
-//                    if (timestampsAdapter.hasSelectedTimestamps()) {
-//                        removeGroupOfTimestamps()
-//                    } else {
-//                        showRemoveCategoryDialog()
-//                    }
-//                }
+            R.id.action_category_toggle_backdrop -> toggleBackdrop()
+            R.id.action_timestamps_delete -> {
+                if (timestampsAdapter.hasSelectedTimestamps()) {
+                    removeGroupOfTimestamps()
+                }
             }
         }
         return true
     }
 
-    private fun removeGroupOfTimestamps() {
+    private fun removeGroupOfTimestamps() { //TODO!!!!
         logEvent(Constants.Analytics.Events.REMOVE_GROUP)
         val copyOfRemovedItems = timestampsAdapter.deepCopyOfSelectedTimestamps
         unfilteredTimestamps.keys.removeAll(timestampsAdapter.selectedTimestampsUUIDs)
@@ -286,7 +281,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         when (item.itemId) {
             R.id.showSettings -> {
                 logEvent(Constants.Analytics.Events.SHOW_SETTINGS)
-                dataManager.writeUserSettings(appSettings)
                 SettingsDialog(this) { applyUserSettings() }
             }
             R.id.action_export -> {
@@ -310,7 +304,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private fun pickTime(timestampToUpdate: Timestamp) {
         logEvent(Constants.Analytics.Events.EDIT_TIME)
-        MyTimePickerDialog(this, timestampToUpdate, { onTimeChanged(timestampToUpdate, it) }, appSettings.shouldUse24hrFormat())
+        MyTimePickerDialog(this, timestampToUpdate, { onTimeChanged(timestampToUpdate, it) }, appSettings.use24hrFormat)
     }
 
     private fun onTimeChanged(timestampToUpdate: Timestamp, updatedDate: JetTimestamp) {
@@ -326,8 +320,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private fun onNoteEdited(timestamp: Timestamp, newNote: String) {
         unfilteredTimestamps[timestamp.identifier]!!.note = newNote
         timestampsAdapter.updateTimestamp(timestamp)
-        val quickNote = QuickNote(JetTimestamp.now(), newNote)
-        appSettings.addQuickNote(quickNote)
+        appSettings.quickNotes.addNote(QuickNote(JetTimestamp.now(), newNote))
+        dataManager.writeUserNotes(appSettings)
     }
 
     private fun changeCategory(timestamp: Timestamp) {
@@ -482,18 +476,18 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
      * Must be called before setupDrawer()
      */
     private fun loadUserSettings() {
-        dataManager.loadUserSettings()
+        appSettings = dataManager.loadUserSettings()
         sendSettingsToAnalytics()
     }
 
     private fun sendSettingsToAnalytics() {
         val bundle = Bundle()
-        bundle.putBoolean("quickNotesEnabled", appSettings.shouldUseQuickNotes())
-        bundle.putBoolean("autoKeyboardEnabled", appSettings.shouldShowKeyboardInAddNote())
-        bundle.putBoolean("millisecondsEnabled", appSettings.shouldShowMillis())
-        bundle.putBoolean("noteAddDialogEnabled", appSettings.shouldShowNoteAddDialog())
-        bundle.putBoolean("24hrFormatEnabled", appSettings.shouldUse24hrFormat())
-        bundle.putBoolean("gpsEnabled", appSettings.shouldUseGps())
+        bundle.putBoolean("quickNotesEnabled", appSettings.shouldUseQuickNotes)
+        bundle.putBoolean("autoKeyboardEnabled", appSettings.shouldShowKeyboardInAddNote)
+        bundle.putBoolean("millisecondsEnabled", appSettings.shouldShowMillis)
+        bundle.putBoolean("noteAddDialogEnabled", appSettings.showNoteAddDialog)
+        bundle.putBoolean("24hrFormatEnabled", appSettings.use24hrFormat)
+        bundle.putBoolean("gpsEnabled", appSettings.shouldUseGps)
         logEvent(Constants.Analytics.Events.SETTINGS_LOADED, bundle)
     }
 
@@ -550,7 +544,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private fun saveData() {
         Log.d("srdx", "saving data...")
-        dataManager.writeUserSettings(appSettings)
         dataManager.writeTimestamps(unfilteredTimestamps)
         dataManager.clearWidgetTimestamps()
         saveCategories()
