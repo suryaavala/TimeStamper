@@ -36,6 +36,7 @@ import com.sardox.timestamper.types.JetTimestamp
 import com.sardox.timestamper.types.JetUUID
 import com.sardox.timestamper.types.PhysicalLocation
 import com.sardox.timestamper.utils.*
+import com.sardox.timestamper.utils.Constants.Analytics.Events.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import pub.devrel.easypermissions.EasyPermissions
@@ -75,6 +76,12 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         setupDrawer()
         initApp()
         fab.setOnClickListener { createNewTimestamp() }
+        logEvent(SHOW_MAIN_ON_CREATE)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        logEvent(SHOW_MAIN_ON_START)
     }
 
     private fun createNewTimestamp() {
@@ -486,7 +493,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         bundle.putBoolean("autoKeyboardEnabled", appSettings.shouldShowKeyboardInAddNote)
         bundle.putBoolean("millisecondsEnabled", appSettings.shouldShowMillis)
         bundle.putBoolean("noteAddDialogEnabled", appSettings.showNoteAddDialog)
-        bundle.putBoolean("24hrFormatEnabled", appSettings.use24hrFormat)
+        bundle.putBoolean("amPmFormatEnabled", appSettings.use24hrFormat)
         bundle.putBoolean("gpsEnabled", appSettings.shouldUseGps)
         logEvent(Constants.Analytics.Events.SETTINGS_LOADED, bundle)
     }
@@ -540,6 +547,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     override fun onResume() {
         super.onResume()
         loadData()
+        logEvent(SHOW_MAIN_ON_RESUME)
     }
 
     private fun saveData() {
