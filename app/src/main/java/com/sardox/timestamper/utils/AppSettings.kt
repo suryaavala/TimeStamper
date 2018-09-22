@@ -11,6 +11,7 @@ class AppSettings {
     var shouldUseQuickNotes = true
     var shouldShowMillis = false
     var shouldShowKeyboardInAddNote = false
+    var shouldUseDarkTheme = false
     var quickNotes: QuickNoteList = QuickNoteList()
 
     companion object {

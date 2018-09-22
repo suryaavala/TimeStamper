@@ -60,6 +60,9 @@ public class DataManager {
         if (mPrefs.contains(Constants.Settings.SHARED_PREFS_SHOW_KEYBOARD)) {
             appSettings.setShouldShowKeyboardInAddNote(mPrefs.getBoolean(Constants.Settings.SHARED_PREFS_SHOW_KEYBOARD, false));
         }
+        if (mPrefs.contains(Constants.Settings.SHARED_PREFS_USE_DARK_THEME)) {
+            appSettings.setShouldUseDarkTheme(mPrefs.getBoolean(Constants.Settings.SHARED_PREFS_USE_DARK_THEME, true));
+        }
         if (mPrefs.contains(Constants.Settings.SHARED_PREFS_QUICK_NOTES)) {
             appSettings.setQuickNotes(readQuickNotes());
         }

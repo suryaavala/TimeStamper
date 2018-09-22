@@ -56,6 +56,7 @@ class CategoryAdapter(private val categories: List<Category>, private val catego
                 if (selectedCategory.categoryID == category.categoryID) {
                     categoryViewHolder.categoryContainer.isSelected = true
                     categoryViewHolder.categoryRemove.visibility = View.VISIBLE
+                    categoryViewHolder.categoryRemove.drawable?.setTint(ContextCompat.getColor(categoryViewHolder.categoryRemove.context, R.color.colorAccentLightTheme))
                 } else {
                     categoryViewHolder.categoryContainer.isSelected = false
                     categoryViewHolder.categoryRemove.visibility = View.GONE

@@ -9,7 +9,7 @@ import com.sardox.timestamper.R
 class SettingsDialog(context: Context, onSettingsClosed: () -> Unit) {
 
     init {
-        val builder = AlertDialog.Builder(context, R.style.AppTheme)
+        val builder = AlertDialog.Builder(context, R.style.AppThemeLight)
         @SuppressLint("InflateParams") val view = LayoutInflater.from(context).inflate(R.layout.setting_dialog, null, false)
         builder.setView(view)
                 .setOnCancelListener { onSettingsClosed.invoke() }

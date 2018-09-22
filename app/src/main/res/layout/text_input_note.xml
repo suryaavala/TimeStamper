@@ -15,7 +15,7 @@
         android:layout_weight="1"
         android:text="Add a note"
         android:textAlignment="center"
-        android:textColor="@color/textColorPrimary"
+        android:textColor="?attr/timestampTextColorAttr"
         android:textSize="18sp" />
 
     <LinearLayout

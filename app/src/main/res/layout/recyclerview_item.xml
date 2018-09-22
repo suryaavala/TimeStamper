@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/recycler_view_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -24,7 +23,7 @@
                 android:layout_marginStart="20dp"
                 android:minEms="3"
                 android:text="12 Aug"
-                android:textColor="@color/timestampTextColor"
+                android:textColor="?attr/timestampTextColorAttr"
                 android:textSize="16sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/recycler_timestamp_time" />
@@ -36,7 +35,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
                 android:text="Mon"
-                android:textColor="@color/timestampTextColor"
+                android:textColor="?attr/timestampTextColorAttr"
                 android:textSize="16sp"
                 app:layout_constraintEnd_toEndOf="@+id/recycler_timestamp_day"
                 app:layout_constraintHorizontal_bias="0.5"
@@ -52,7 +51,7 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
                 android:text="10:41:59"
-                android:textColor="@color/timestampTextColor"
+                android:textColor="?attr/timestampTextColorAttr"
                 android:textSize="16sp"
                 app:layout_constraintEnd_toStartOf="@+id/recycler_timestamp_category"
                 app:layout_constraintStart_toEndOf="@+id/recycler_timestamp_day"
@@ -68,7 +67,7 @@
                 android:minLines="1"
                 android:paddingBottom="4dp"
                 android:text="sample text in here can be very long text"
-                android:textColor="@color/timestampTextColor"
+                android:textColor="?attr/timestampTextColorAttr"
                 app:layout_constraintEnd_toStartOf="@+id/recycler_timestamp_category"
                 app:layout_constraintStart_toStartOf="@+id/recycler_timestamp_time"
                 app:layout_constraintTop_toBottomOf="@+id/recycler_timestamp_time" />
@@ -102,7 +101,7 @@
                 android:paddingLeft="@dimen/activity_horizontal_margin"
                 android:text="&#8942;"
                 android:textAppearance="?android:textAppearanceLarge"
-                android:textColor="@color/timestampTextColor"
+                android:textColor="?attr/timestampTextColorAttr"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -125,7 +124,7 @@
         android:paddingStart="10dp"
         android:text="10:14:05"
         android:textAlignment="viewEnd"
-        android:textColor="@color/timestampBetweenTextColor"
+        android:textColor="?attr/timestampTimeDifferenceTextColorAttr"
         android:textSize="10sp"
         android:visibility="gone" />
 

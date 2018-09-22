@@ -6,6 +6,8 @@
     <string name="action_export">Экспорт в CSV</string>
     <string name="action_save">Сохранить</string>
     <string name="action_open">Открыть</string>
+
+    <string name="action_use_dark_theme_hint">Требуется перезагрузка </string>
     <string name="action_use_dark_theme">Использовать темный стиль</string>
     <string name="navigation_drawer_open">Открыть меню</string>
     <string name="navigation_drawer_close">Закрыть меню</string>

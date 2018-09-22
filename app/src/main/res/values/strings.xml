@@ -16,6 +16,7 @@
     <string name="action_category_toggle">Show categories</string>
     <string name="action_timestamps_delete">Delete timestamps</string>
     <string name="action_use_dark_theme">Use dark theme</string>
+    <string name="action_use_dark_theme_hint">Changes will be applied on next app launch</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="new_timestamp_created">New timestamp was created</string>

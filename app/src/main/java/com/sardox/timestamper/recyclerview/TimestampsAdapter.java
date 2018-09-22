@@ -2,12 +2,17 @@ package com.sardox.timestamper.recyclerview;
 
 
 import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Color;
+import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.util.SortedList;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -30,6 +35,7 @@ import com.sardox.timestamper.utils.UserAction;
 import com.sardox.timestamper.utils.UserActionInterface;
 import com.sardox.timestamper.utils.Utils;
 
+import org.jetbrains.annotations.NotNull;
 import org.joda.time.Period;
 import org.joda.time.format.PeriodFormat;
 import org.joda.time.format.PeriodFormatter;
@@ -57,10 +63,12 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
     private Context context;
     private UserActionInterface userActionCallback;
     private PeriodFormatter periodFormatter = PeriodFormat.getDefault();
+    private @ColorInt int colorSelected;
 
     public TimestampsAdapter(List<Category> categories, DisplayMetrics displayMetrics, List<TimestampIcon> icons, Context context, UserActionInterface userActionCallback, final TimestampsCountListenerInterface timestampsCountListenerInterface, AppSettings appSettings) {
         this.userActionCallback = userActionCallback;
         this.context = context;
+        initColor();
         this.appSettings = appSettings;
         this.categories = categories;
         this.displayMetrics = displayMetrics;
@@ -131,6 +139,11 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
         return new MyViewHolder(view);
     }
 
+    private void initColor(){
+        TypedValue typedValue = new TypedValue();
+        context.getTheme().resolveAttribute(R.attr.timestampSelectedColor, typedValue, true);
+        colorSelected = typedValue.data;
+    }
 
     @Override
     public void onBindViewHolder(@NonNull final TimestampsAdapter.MyViewHolder holder, int position) {
@@ -140,9 +153,9 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
 
         Timestamp timestamp = sortedTimeStamps.get(position);
         if (selectedTimestamps.contains(timestamp)) {
-            holder.left_container.setBackgroundColor(ContextCompat.getColor(context, R.color.colorRecyclerViewItemSelected));
+            holder.timestamp_container.setBackgroundColor(colorSelected);
         } else {
-            holder.left_container.setBackgroundColor(ContextCompat.getColor(context, R.color.colorBackground));
+            holder.timestamp_container.setBackground(null);
         }
 
         Calendar calendar = Calendar.getInstance();
@@ -230,10 +243,23 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
         }
     }
 
+    @NotNull
+    public String getTimeDifferenceBetweenTwoSelectedTimestamps() {
+        if (selectedTimestamps.size() != 2) return "";
+        long timestamp1 = selectedTimestamps.get(0).getTimestamp().toMilliseconds();
+        long timestamp2 = selectedTimestamps.get(1).getTimestamp().toMilliseconds();
+        if (timestamp1 < timestamp2) {
+            return periodFormatter.print(new Period(timestamp1, timestamp2));
+        } else {
+            return periodFormatter.print(new Period(timestamp2, timestamp1));
+        }
+    }
+
     class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         private TextView recycler_timestamp_weekday, recycler_timestamp_day, recycler_timestamp_note, recycler_timestamp_time, recycler_timestamp_button_menu, recycler_timestamp_delay;
         private LinearLayout left_container;
+        private ConstraintLayout timestamp_container;
         private RelativeLayout recycler_view_card;
         private ImageView recycler_timestamp_category;
 
@@ -243,6 +269,7 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
             recycler_timestamp_category = itemView.findViewById(R.id.recycler_timestamp_category);
             recycler_timestamp_day = itemView.findViewById(R.id.recycler_timestamp_day);
             recycler_timestamp_note = itemView.findViewById(R.id.recycler_timestamp_note);
+            timestamp_container = itemView.findViewById(R.id.timestamp_container);
             recycler_timestamp_time = itemView.findViewById(R.id.recycler_timestamp_time);
             recycler_timestamp_weekday = itemView.findViewById(R.id.recycler_timestamp_weekday);
             recycler_timestamp_button_menu = itemView.findViewById(R.id.recycler_timestamp_button_menu);
@@ -285,11 +312,11 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
             recycler_timestamp_button_menu.setOnClickListener(this);
         }
 
-        private void markAsSelected(Timestamp selectedTimestamp){
+        private void markAsSelected(Timestamp selectedTimestamp) {
             selectedTimestamps.add(selectedTimestamp);
         }
 
-        private void markAsNotSelected(Timestamp selectedTimestamp){
+        private void markAsNotSelected(Timestamp selectedTimestamp) {
             selectedTimestamps.remove(selectedTimestamp);
         }
 

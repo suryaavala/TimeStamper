@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/recycler_view_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -11,24 +10,25 @@
         android:id="@+id/left_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="vertical">
 
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
+            android:id="@+id/timestamp_container"
+            android:background="?attr/backgroundForTimestampsAttr"
             android:layout_height="wrap_content">
 
             <TextView
                 android:id="@+id/recycler_timestamp_day"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="10dp"
                 android:minEms="3"
                 android:text="12 Aug"
-                android:textColor="@color/timestampTextColor"
+                android:textColor="?attr/timestampTextColorAttr"
                 android:textSize="16sp"
                 app:layout_constraintStart_toEndOf="@+id/recycler_timestamp_category"
                 app:layout_constraintTop_toTopOf="@+id/recycler_timestamp_time" />
-
 
             <TextView
                 android:id="@+id/recycler_timestamp_weekday"
@@ -36,13 +36,12 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
                 android:text="Mon"
-                android:textColor="@color/timestampTextColor"
+                android:textColor="?attr/timestampTextColorAttr"
                 android:textSize="16sp"
                 app:layout_constraintEnd_toEndOf="@+id/recycler_timestamp_day"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="@+id/recycler_timestamp_day"
                 app:layout_constraintTop_toTopOf="@+id/recycler_timestamp_note" />
-
 
             <TextView
                 android:id="@+id/recycler_timestamp_time"
@@ -51,7 +50,7 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
                 android:text="10:41:59"
-                android:textColor="@color/timestampTextColor"
+                android:textColor="?attr/timestampTextColorAttr"
                 android:textSize="16sp"
                 app:layout_constraintStart_toEndOf="@+id/recycler_timestamp_day"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -64,13 +63,11 @@
                 android:layout_marginTop="2dp"
                 android:ellipsize="end"
                 android:minLines="1"
-                android:paddingBottom="4dp"
                 android:text="some text"
-                android:textColor="@color/timestampTextColor"
+                android:textColor="?attr/timestampTextColorAttr"
                 app:layout_constraintEnd_toStartOf="@+id/recycler_timestamp_button_menu"
                 app:layout_constraintStart_toStartOf="@+id/recycler_timestamp_time"
                 app:layout_constraintTop_toBottomOf="@+id/recycler_timestamp_time" />
-
 
             <ImageView
                 android:id="@+id/recycler_timestamp_category"
@@ -78,7 +75,6 @@
                 android:layout_height="50dp"
                 android:layout_alignEnd="@+id/recycler_timestamp_button_menu"
                 android:layout_centerVertical="true"
-                android:layout_marginBottom="8dp"
                 android:layout_marginStart="12dp"
                 android:layout_marginTop="8dp"
                 android:adjustViewBounds="true"
@@ -87,7 +83,6 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
-
 
             <TextView
                 android:id="@+id/recycler_timestamp_button_menu"
@@ -100,31 +95,54 @@
                 android:paddingLeft="@dimen/activity_horizontal_margin"
                 android:text="&#8942;"
                 android:textAppearance="?android:textAppearanceLarge"
-                android:textColor="@color/timestampTextColor"
+                android:textColor="?attr/timestampTextColorAttr"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
+        </android.support.constraint.ConstraintLayout>
 
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/backgroundForTimestampsAttr"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:id="@+id/divider_timestamp"
+                android:alpha="0.2"
+                android:background="@android:color/darker_gray"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="@+id/in_between"
+                app:layout_constraintEnd_toStartOf="@+id/in_between"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/in_between"/>
+
+            <TextView
+                android:id="@+id/in_between"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="2dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:maxLines="1"
+                android:paddingEnd="10dp"
+                android:text="1 hour 24 minutes 34 seconds"
+                android:textAlignment="viewEnd"
+                android:textColor="?attr/timestampTimeDifferenceTextColorAttr"
+                android:textSize="10sp"
+                android:visibility="visible"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
         </android.support.constraint.ConstraintLayout>
 
     </LinearLayout>
-
-    <TextView
-        android:id="@+id/in_between"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/left_container"
-        android:paddingEnd="10dp"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp"
-        android:paddingStart="10dp"
-        android:text="10:14:05"
-        android:textAlignment="viewEnd"
-        android:textColor="@color/timestampBetweenTextColor"
-        android:textSize="10sp"
-        android:visibility="gone" />
 
 </RelativeLayout>

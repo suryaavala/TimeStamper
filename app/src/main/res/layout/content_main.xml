@@ -2,7 +2,6 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorBackground"
     android:orientation="vertical">
 
     <android.support.v7.widget.RecyclerView
@@ -10,21 +9,24 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:background="@color/colorItemBackground"
+        android:background="?attr/colorPrimary"
         android:paddingBottom="40dp" />
 
     <RelativeLayout
         android:id="@+id/recyclerView_timestamps_container"
         android:layout_width="match_parent"
+        android:background="?attr/colorPrimary"
         android:layout_height="match_parent">
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/recyclerView_timestamps"
             android:layout_width="match_parent"
+            android:elevation="6dp"
+            android:layout_marginTop="4dp"
             android:layout_height="match_parent"
             android:layout_alignParentTop="true"
             android:background="@drawable/timestamps_background"
-            android:paddingTop="24dp"
+            android:paddingTop="20dp"
             android:scrollbars="vertical" />
 
         <LinearLayout
@@ -32,14 +34,16 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_alignParentTop="true"
+            android:elevation="6dp"
             android:gravity="center"
             android:orientation="vertical"
             android:visibility="gone">
 
             <ImageView
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:src="@drawable/icon_empty_list" />
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/icon_empty_list"
+                android:tint="?attr/timestampTextColorAttr" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -47,7 +51,7 @@
                 android:layout_marginTop="12dp"
                 android:gravity="center"
                 android:text="Ouhh..No timestamps!"
-                android:textColor="#bb000000"
+                android:textColor="?attr/timestampTextColorAttr"
                 android:textSize="18sp" />
 
             <TextView
@@ -56,7 +60,7 @@
                 android:layout_marginTop="16dp"
                 android:gravity="center"
                 android:text="Create your first timestamp"
-                android:textColor="#80000000"
+                android:textColor="?attr/timestampTimeDifferenceTextColorAttr"
                 android:textSize="14sp" />
         </LinearLayout>
     </RelativeLayout>

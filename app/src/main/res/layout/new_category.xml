@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/categoryTextColor"
+    android:background="#ffffff"
     android:layout_marginStart="4dp"
     android:orientation="vertical"
     android:padding="10dp">
@@ -14,7 +14,7 @@
         android:layout_marginTop="10dp"
         android:text="@string/add_new_category"
         android:textAlignment="textStart"
-        android:textColor="@color/timestampTextColor"
+        android:textColor="?attr/timestampTextColorAttr"
         android:textSize="18sp" />
 
     <TextView

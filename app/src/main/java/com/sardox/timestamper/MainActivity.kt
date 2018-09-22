@@ -4,6 +4,7 @@ package com.sardox.timestamper
 import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.support.design.widget.NavigationView
@@ -14,7 +15,6 @@ import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DefaultItemAnimator
-import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.util.DisplayMetrics
 import android.util.Log
@@ -68,11 +68,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d("srdx", "-----------NEW RUN--------------")
         super.onCreate(savedInstanceState)
+       // setTheme(R.style.AppThemeDark)
+        loadUserSettings()
+
+        if (appSettings.shouldUseDarkTheme){
+            setTheme(R.style.AppThemeDark)
+        }
+
         windowManager.defaultDisplay.getMetrics(metrics)        // !! TODO CONFIGURATION CHANGE!!!
         setContentView(R.layout.activity_main)
         toolbar_top.setTitle(R.string.app_name)
         setSupportActionBar(toolbar_top)
-        loadUserSettings()
         setupDrawer()
         initApp()
         fab.setOnClickListener { createNewTimestamp() }
@@ -134,6 +140,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         toolbar_top.title = lastSelectedCategory.name
                     } else {
                         toolbar_top.title = "${action.count} selected"
+                        if (action.count == 2) showToastWithTimeDifference()
                     }
                 }
                 ActionType.SHARE_TIMESTAMP, null -> {
@@ -166,6 +173,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
+    private fun showToastWithTimeDifference() {
+        Snackbar.make(recyclerView_timestamps, "Time difference: ${ timestampsAdapter.timeDifferenceBetweenTwoSelectedTimestamps}", Snackbar.LENGTH_LONG).show()
+    }
+
     override fun onCategoryAdded() {
         showAddNewCategoryDialog()
     }
@@ -183,7 +194,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             adapter = timestampsAdapter
             layoutManager = LinearLayoutManager(this@MainActivity).apply { orientation = LinearLayoutManager.VERTICAL; reverseLayout = false }
             itemAnimator = DefaultItemAnimator()
-            addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL).apply { setDrawable(ContextCompat.getDrawable(context, R.drawable.timestamps_divider)!!) })
+            //addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL).apply { setDrawable(ContextCompat.getDrawable(context, R.drawable.timestamps_divider)!!) })
 
             setOnTouchListener(object : OnSwipeTouchListener(this@MainActivity) {
                 override fun onSwipeRight() {
@@ -253,6 +264,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         } else {
             menu?.findItem(R.id.action_category_toggle_backdrop)?.let { it.icon = ContextCompat.getDrawable(this, R.drawable.ic_close_white) }
         }
+
+        if (appSettings.shouldUseDarkTheme){
+            menu?.findItem(R.id.action_category_toggle_backdrop)?.icon?.setTint(Color.WHITE)
+            menu?.findItem(R.id.action_timestamps_delete)?.icon?.setTint(Color.WHITE)
+        } else {
+            menu?.findItem(R.id.action_category_toggle_backdrop)?.icon?.setTint(ContextCompat.getColor(this, R.color.colorAccentLightTheme))
+            menu?.findItem(R.id.action_timestamps_delete)?.icon?.setTint(ContextCompat.getColor(this, R.color.colorAccentLightTheme))
+        }
+
         return super.onPrepareOptionsMenu(menu)
     }
 
@@ -495,6 +515,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         bundle.putBoolean("noteAddDialogEnabled", appSettings.showNoteAddDialog)
         bundle.putBoolean("amPmFormatEnabled", appSettings.use24hrFormat)
         bundle.putBoolean("gpsEnabled", appSettings.shouldUseGps)
+        bundle.putBoolean("useDarkTheme", appSettings.shouldUseDarkTheme)
         logEvent(Constants.Analytics.Events.SETTINGS_LOADED, bundle)
     }
 
