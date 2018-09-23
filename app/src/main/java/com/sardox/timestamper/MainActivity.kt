@@ -77,7 +77,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         windowManager.defaultDisplay.getMetrics(metrics)        // !! TODO CONFIGURATION CHANGE!!!
         setContentView(R.layout.activity_main)
-        toolbar_top.setTitle(R.string.app_name)
+        toolbar_text.setText(R.string.app_name)
         setSupportActionBar(toolbar_top)
         setupDrawer()
         initApp()
@@ -137,9 +137,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 ActionType.SELECTED -> {
                     invalidateOptionsMenu()
                     if (action.count == 0) {
-                        toolbar_top.title = lastSelectedCategory.name
+                        toolbar_text.text = lastSelectedCategory.name
                     } else {
-                        toolbar_top.title = "${action.count} selected"
+                        toolbar_text.text = "${action.count} selected"
                         if (action.count == 2) showToastWithTimeDifference()
                     }
                 }
@@ -162,7 +162,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         lastSelectedCategory = selectedCategory
         timestampsAdapter.clearSelection()
         filterTimestampsByCategory(lastSelectedCategory)
-        toolbar_top.title = selectedCategory.name
+        toolbar_text.text = selectedCategory.name
         toggleBackdrop()
     }
 
@@ -217,7 +217,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             adapterCategory.setSelectedCategory(lastSelectedCategory)
             adapterCategory.notifyDataSetChanged()
             filterTimestampsByCategory(categories[currentIndex + 1])
-            toolbar_top.title = lastSelectedCategory.name
+            toolbar_text.text = lastSelectedCategory.name
         }
     }
 
@@ -228,7 +228,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             adapterCategory.setSelectedCategory(lastSelectedCategory)
             adapterCategory.notifyDataSetChanged()
             filterTimestampsByCategory(categories[currentIndex - 1])
-            toolbar_top.title = lastSelectedCategory.name
+            toolbar_text.text = lastSelectedCategory.name
         }
     }
 
@@ -246,10 +246,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private fun toggleBackdrop() {
         if (isCollapsed) {
             recyclerView_timestamps_container.animate().translationY(recyclerView_categories.height.toFloat())
-            toolbar_top.title = "Categories"
+            toolbar_text.text = "Categories"
             recyclerView_categories.scrollToPosition(adapterCategory.selectedCategoryPosition())
         } else {
-            toolbar_top.title = lastSelectedCategory.name
+            toolbar_text.text = lastSelectedCategory.name
             recyclerView_timestamps_container.animate().translationY(0f)
         }
         isCollapsed = !isCollapsed

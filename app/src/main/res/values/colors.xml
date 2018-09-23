@@ -14,7 +14,7 @@
 
     <!--LIGHT THEME -->
     <color name="textColorPrimaryLightTheme">#bb000000</color>      <!--menu text color-->
-    <color name="timestampBetweenTextColorLightTheme">#bb000000</color>
+    <color name="timestampBetweenTextColorLightTheme">#000000</color>
     <color name="textColorSecondaryLightTheme">#bb000000</color>   <!--drawer menu text color-->
     <color name="timestampTextColorLightTheme">#000000</color>
 

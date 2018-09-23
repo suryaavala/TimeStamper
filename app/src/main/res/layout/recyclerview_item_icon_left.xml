@@ -13,45 +13,50 @@
         android:orientation="vertical">
 
         <android.support.constraint.ConstraintLayout
-            android:layout_width="match_parent"
             android:id="@+id/timestamp_container"
-            android:background="?attr/backgroundForTimestampsAttr"
-            android:layout_height="wrap_content">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/backgroundForTimestampsAttr">
 
             <TextView
                 android:id="@+id/recycler_timestamp_day"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
+                android:gravity="center_horizontal"
                 android:minEms="3"
                 android:text="12 Aug"
                 android:textColor="?attr/timestampTextColorAttr"
-                android:textSize="16sp"
+                android:textSize="15sp"
+                android:theme="@style/TimestampsTimeFontRegular"
+                app:layout_constraintBottom_toTopOf="@+id/recycler_timestamp_weekday"
                 app:layout_constraintStart_toEndOf="@+id/recycler_timestamp_category"
                 app:layout_constraintTop_toTopOf="@+id/recycler_timestamp_time" />
 
             <TextView
                 android:id="@+id/recycler_timestamp_weekday"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
                 android:text="Mon"
                 android:textColor="?attr/timestampTextColorAttr"
-                android:textSize="16sp"
+                android:textSize="15sp"
+                android:theme="@style/TimestampsTimeFontRegular"
                 app:layout_constraintEnd_toEndOf="@+id/recycler_timestamp_day"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="@+id/recycler_timestamp_day"
-                app:layout_constraintTop_toTopOf="@+id/recycler_timestamp_note" />
+                app:layout_constraintTop_toBottomOf="@+id/recycler_timestamp_day" />
 
             <TextView
                 android:id="@+id/recycler_timestamp_time"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
+                android:layout_marginStart="14sp"
                 android:layout_marginTop="8dp"
                 android:text="10:41:59"
                 android:textColor="?attr/timestampTextColorAttr"
-                android:textSize="16sp"
+                android:textSize="15sp"
+                android:theme="@style/TimestampsTimeFontRegular"
                 app:layout_constraintStart_toEndOf="@+id/recycler_timestamp_day"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -63,8 +68,10 @@
                 android:layout_marginTop="2dp"
                 android:ellipsize="end"
                 android:minLines="1"
-                android:text="some text"
+                android:text="not about what happend"
                 android:textColor="?attr/timestampTextColorAttr"
+                android:textSize="15sp"
+                android:theme="@style/TimestampsTimeFontRegular"
                 app:layout_constraintEnd_toStartOf="@+id/recycler_timestamp_button_menu"
                 app:layout_constraintStart_toStartOf="@+id/recycler_timestamp_time"
                 app:layout_constraintTop_toBottomOf="@+id/recycler_timestamp_time" />
@@ -76,7 +83,7 @@
                 android:layout_alignEnd="@+id/recycler_timestamp_button_menu"
                 android:layout_centerVertical="true"
                 android:layout_marginStart="12dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="4dp"
                 android:adjustViewBounds="true"
                 android:gravity="center"
                 android:src="@drawable/category_weather"
@@ -111,32 +118,31 @@
             android:orientation="horizontal">
 
             <LinearLayout
+                android:id="@+id/divider_timestamp"
                 android:layout_width="0dp"
                 android:layout_height="1dp"
                 android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
-                android:id="@+id/divider_timestamp"
                 android:alpha="0.2"
                 android:background="@android:color/darker_gray"
                 android:orientation="vertical"
                 app:layout_constraintBottom_toBottomOf="@+id/in_between"
                 app:layout_constraintEnd_toStartOf="@+id/in_between"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/in_between"/>
+                app:layout_constraintTop_toTopOf="@+id/in_between" />
 
             <TextView
                 android:id="@+id/in_between"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="2dp"
+                android:layout_marginBottom="4dp"
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:maxLines="1"
                 android:paddingEnd="10dp"
                 android:text="1 hour 24 minutes 34 seconds"
                 android:textAlignment="viewEnd"
-                android:textColor="?attr/timestampTimeDifferenceTextColorAttr"
-                android:textSize="10sp"
+                android:theme="@style/TimestampsDividerFont"
                 android:visibility="visible"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"

@@ -10,12 +10,16 @@
         <item name="android:textColorPrimary">@color/textColorPrimaryLightTheme</item>
         <item name="android:textColorSecondary">@color/textColorSecondaryLightTheme</item>
         <item name="backgroundForTimestampsAttr">@color/colorTimestampsBackgroundLightTheme</item>
-        <item name="timestampSelectedColor">@color/colorTimestampsSelectedBackgroundLightTheme</item>
+        <item name="timestampSelectedColor">@color/colorTimestampsSelectedBackgroundLightTheme
+        </item>
         <item name="android:background">@null</item>
         <item name="timestampTextColorAttr">@color/timestampTextColorLightTheme</item>
         <item name="categoryTextColorAttr">@color/categoryTextColorLightTheme</item>
-        <item name="categorySelectedBackgroundAttr">@color/categorySelectedBackgroundLightTheme</item>
-        <item name="timestampTimeDifferenceTextColorAttr">@color/timestampBetweenTextColorLightTheme</item>
+        <item name="categorySelectedBackgroundAttr">@color/categorySelectedBackgroundLightTheme
+        </item>
+        <item name="timestampTimeDifferenceTextColorAttr">
+            @color/timestampBetweenTextColorLightTheme
+        </item>
         <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
         <item name="toolbarTextColorAttr">@color/toolbarTextColorLightTheme</item>
     </style>
@@ -29,13 +33,63 @@
         <item name="android:textColorSecondary">@color/textColorSecondaryDarkTheme</item>
         <item name="backgroundForTimestampsAttr">@color/colorTimestampsBackgroundDarkTheme</item>
         <item name="timestampSelectedColor">@color/colorTimestampsSelectedBackgroundDarkTheme</item>
-        <item name="categorySelectedBackgroundAttr">@color/categorySelectedBackgroundDarkTheme</item>
+        <item name="categorySelectedBackgroundAttr">@color/categorySelectedBackgroundDarkTheme
+        </item>
         <item name="categoryTextColorAttr">@color/categoryTextColorDarkTheme</item>
         <item name="android:background">@null</item>
         <item name="timestampTextColorAttr">@color/timestampTextColorDarkTheme</item>
-        <item name="timestampTimeDifferenceTextColorAttr">@color/timestampBetweenTextColorDarkTheme</item>
+        <item name="timestampTimeDifferenceTextColorAttr">
+            @color/timestampBetweenTextColorDarkTheme
+        </item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
         <item name="toolbarTextColorAttr">@color/toolbarTextColorDarkTheme</item>
     </style>
+
+
+    <style name="CategoriesListFont">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">?attr/categoryTextColorAttr</item>
+    </style>
+
+    <style name="TimestampsTimeFont">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="TimestampsTimeFontRegular">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="TimestampsTimeFontMedium">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="TimestampsTimeFontCondensed">
+        <item name="android:fontFamily">sans-serif-condensed</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="TimestampsTimeFontLight">
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+
+    <style name="TimestampsDividerFont">
+        <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">?attr/timestampTimeDifferenceTextColorAttr</item>
+    </style>
+
 
     <attr name="toolbarTextColorAttr" format="reference" />
     <attr name="categoryTextColorAttr" format="reference" />

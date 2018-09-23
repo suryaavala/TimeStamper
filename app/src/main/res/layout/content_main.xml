@@ -42,8 +42,8 @@
             <ImageView
                 android:layout_width="64dp"
                 android:layout_height="64dp"
-                android:src="@drawable/icon_empty_list"
-                android:tint="?attr/timestampTextColorAttr" />
+                android:tint="?attr/timestampTextColorAttr"
+                android:src="@drawable/icon_empty_list" />
 
             <TextView
                 android:layout_width="match_parent"
