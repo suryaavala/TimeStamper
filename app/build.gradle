@@ -11,8 +11,8 @@ android {
         applicationId "com.sardox.timestamper"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 20
-        versionName "1.81"
+        versionCode 21
+        versionName "1.82"
     }
     buildTypes {
         release {
