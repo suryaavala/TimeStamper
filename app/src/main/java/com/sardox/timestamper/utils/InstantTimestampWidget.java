@@ -9,14 +9,13 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
-import com.google.android.gms.analytics.HitBuilders;
-import com.google.android.gms.analytics.Tracker;
-import com.sardox.timestamper.Application;
+import com.sardox.timestamper.AppInstance;
 import com.sardox.timestamper.DialogActivity;
 import com.sardox.timestamper.Managers.DataManager;
 import com.sardox.timestamper.R;
@@ -26,9 +25,6 @@ import com.sardox.timestamper.types.JetUUID;
 import com.sardox.timestamper.types.PhysicalLocation;
 
 import java.util.HashMap;
-
-import static com.sardox.timestamper.utils.AppSettings.NO_DEFAULT_CATEGORY;
-
 
 public class InstantTimestampWidget extends AppWidgetProvider {
 
@@ -60,7 +56,7 @@ public class InstantTimestampWidget extends AppWidgetProvider {
         if (ADD_TIMESTAMP.equals(intent.getAction())) {
             DataManager dataManager = new DataManager(context);
             JetUUID defaultCategoryForWidget = dataManager.readDefaultCategoryForWidget();
-            if (defaultCategoryForWidget.equals(NO_DEFAULT_CATEGORY)) {
+            if (defaultCategoryForWidget.equals(AppSettings.Companion.getNO_DEFAULT_CATEGORY())) {
                 showSetupDialog(context);
             } else {
                 saveNewStamp(context, defaultCategoryForWidget);
@@ -87,22 +83,18 @@ public class InstantTimestampWidget extends AppWidgetProvider {
         super.onDeleted(context, appWidgetIds);
         Log.d("srdx", "Last widget was deleted");
         DataManager dataManager = new DataManager(context);
-        dataManager.saveDefaultCategoryForWidget(AppSettings.NO_DEFAULT_CATEGORY);
+        dataManager.saveDefaultCategoryForWidget(AppSettings.Companion.getNO_DEFAULT_CATEGORY());
     }
 
     public void saveNewStamp(Context context, JetUUID defaultCategoryForWidget) {
-        Tracker mTracker = ((Application) context.getApplicationContext()).getDefaultTracker();
-        mTracker.send(new HitBuilders.EventBuilder()
-                .setCategory(Constants.Analytics.Events.ACTION)
-                .setAction(Constants.Analytics.Events.WIDGET_CLICK)
-                .build());
+        logEvent(Constants.Analytics.Events.WIDGET_CLICK);
 
         DataManager dataManager = new DataManager(context);
         AppSettings appSettings = dataManager.loadUserSettings();
 
         PhysicalLocation physicalLocation = PhysicalLocation.Default;
 
-        if (appSettings.shouldUseGps() && hasGPSpermission(context)) {
+        if (appSettings.getShouldUseGps() && hasGPSpermission(context)) {
             final LocationManager mlocManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
             Location lastKnownLocation = null;
@@ -132,5 +124,9 @@ public class InstantTimestampWidget extends AppWidgetProvider {
     private boolean hasGPSpermission(Context context) {
         return ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void logEvent(String event) {
+        AppInstance.firebaseAnalytics.logEvent(event, new Bundle());
     }
 }

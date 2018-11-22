@@ -1,23 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#303032</color>
-    <color name="colorPrimaryDark">#303032</color>
-    <color name="colorAccent">#e63e3e</color>
 
-    <color name="colorBackground">#212123</color>
-    <color name="colorItemBackground">#303032</color>
-    <color name="colorRecyclerViewItem">#10ffffff</color>
-    <color name="colorRecyclerViewItemSelected">#30ffffff</color>
+    <color name="categoryTextColorLightTheme">#bb000000</color>
+    <color name="categoryTextColorDarkTheme">#ffffff</color>
+    <color name="categorySelectedBackgroundLightTheme">#4000affe</color>
+    <color name="categorySelectedBackgroundDarkTheme">#30ffffff</color>
 
     <color name="colorWidgetBackground">#50000000</color>
-
-    <color name="category_background">#303032</color>
-    <color name="category_selected">#e63e3e</color>
-    <color name="category_deselected">#424242</color>
+    <color name="toolbarTextColorLightTheme">#bb000000</color>
+    <color name="toolbarTextColorDarkTheme">#ffffff</color>
 
     <color name="selectedIcon">#E0E0E0</color>
 
-    <color name="textColorPrimary">#ffffff</color>
-    <color name="textColorSecondary">#ffffff</color>
+    <!--LIGHT THEME -->
+    <color name="textColorPrimaryLightTheme">#bb000000</color>      <!--menu text color-->
+    <color name="timestampBetweenTextColorLightTheme">#000000</color>
+    <color name="textColorSecondaryLightTheme">#bb000000</color>   <!--drawer menu text color-->
+    <color name="timestampTextColorLightTheme">#000000</color>
+
+    <color name="colorSystemBarLightTheme">#ffffff</color>   <!--system bar color-->
+    <color name="colorToolbarAndCategoriesLightTheme">#ffffff</color>  <!--toolbar color-->
+    <color name="colorTimestampsBackgroundLightTheme">#ffffff</color>
+
+    <color name="colorAccentLightTheme">#00affe</color>
+    <color name="colorTimestampsSelectedBackgroundLightTheme">#500379ae</color>
+
+    <!--DARK THEME -->
+    <color name="textColorPrimaryDarkTheme">#bb000000</color>      <!--menu text color-->
+    <color name="timestampBetweenTextColorDarkTheme">#80ffffff</color>
+    <color name="textColorSecondaryDarkTheme">#bb000000</color>   <!--drawer menu text color-->
+    <color name="timestampTextColorDarkTheme">#c5c5c5</color>
+
+    <color name="colorAccentDarkTheme">#e63e3e</color>  <!--toolbar color-->
+    <color name="colorSystemBarDarkTheme">#343134</color>   <!--system bar color-->
+    <color name="colorToolbarAndCategoriesDarkTheme">#343134</color>  <!--toolbar color-->
+    <color name="colorTimestampsBackgroundDarkTheme">#222222</color>
+    <color name="colorTimestampsSelectedBackgroundDarkTheme">#50ffffff</color>
 
 </resources>

@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#ffffff"
     android:layout_marginStart="4dp"
     android:orientation="vertical"
     android:padding="10dp">
@@ -13,7 +14,7 @@
         android:layout_marginTop="10dp"
         android:text="@string/add_new_category"
         android:textAlignment="textStart"
-        android:textColor="@color/textColorPrimary"
+        android:textColor="?attr/timestampTextColorAttr"
         android:textSize="18sp" />
 
     <TextView
@@ -22,6 +23,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
         android:layout_marginTop="15dp"
+        android:textColor="#90000000"
         android:text="@string/scroll_right_and_pick_an_icon"
         android:textSize="12sp" />
 
@@ -42,7 +44,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/enter_category_name"
-            android:textColor="@color/textColorPrimary"
+            android:textColor="#90000000"
             android:textSize="14sp" />
     </android.support.design.widget.TextInputLayout>
 </LinearLayout>

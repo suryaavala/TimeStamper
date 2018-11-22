@@ -2,11 +2,17 @@ package com.sardox.timestamper.recyclerview;
 
 
 import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Color;
+import android.support.annotation.ColorInt;
+import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.util.SortedList;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,11 +29,13 @@ import com.sardox.timestamper.types.JetUUID;
 import com.sardox.timestamper.types.PhysicalLocation;
 import com.sardox.timestamper.utils.ActionType;
 import com.sardox.timestamper.utils.AppSettings;
-import com.sardox.timestamper.utils.Consumer;
 import com.sardox.timestamper.utils.TimestampIcon;
+import com.sardox.timestamper.utils.TimestampsCountListenerInterface;
 import com.sardox.timestamper.utils.UserAction;
+import com.sardox.timestamper.utils.UserActionInterface;
 import com.sardox.timestamper.utils.Utils;
 
+import org.jetbrains.annotations.NotNull;
 import org.joda.time.Period;
 import org.joda.time.format.PeriodFormat;
 import org.joda.time.format.PeriodFormatter;
@@ -53,12 +61,14 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
     private AppSettings appSettings;
     private List<TimestampIcon> icons;
     private Context context;
-    private Consumer<UserAction> userActionCallback;
+    private UserActionInterface userActionCallback;
     private PeriodFormatter periodFormatter = PeriodFormat.getDefault();
+    private @ColorInt int colorSelected;
 
-    public TimestampsAdapter(List<Category> categories, DisplayMetrics displayMetrics, List<TimestampIcon> icons, Context context, Consumer<UserAction> userActionCallback, AppSettings appSettings) {
+    public TimestampsAdapter(List<Category> categories, DisplayMetrics displayMetrics, List<TimestampIcon> icons, Context context, UserActionInterface userActionCallback, final TimestampsCountListenerInterface timestampsCountListenerInterface, AppSettings appSettings) {
         this.userActionCallback = userActionCallback;
         this.context = context;
+        initColor();
         this.appSettings = appSettings;
         this.categories = categories;
         this.displayMetrics = displayMetrics;
@@ -78,6 +88,7 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
                     // neighbor show be updated as well to update it's delta
                     notifyItemRangeChanged(position - 1, 1);
                 }
+                timestampsCountListenerInterface.onCountChanged(sortedTimeStamps.size());
             }
 
             @Override
@@ -93,6 +104,7 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
             @Override
             public void onInserted(int position, int count) {
                 notifyItemRangeInserted(position, count);
+                timestampsCountListenerInterface.onCountChanged(sortedTimeStamps.size());
             }
 
             @Override
@@ -102,6 +114,7 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
                     // neighbor show be updated as well to update it's delta
                     notifyItemRangeChanged(position - 1, 1);
                 }
+                timestampsCountListenerInterface.onCountChanged(sortedTimeStamps.size());
             }
 
             @Override
@@ -115,26 +128,34 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
         this.appSettings = appSettings;
     }
 
+    @NonNull
     @Override
-    public TimestampsAdapter.MyViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+    public TimestampsAdapter.MyViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
         View view = LayoutInflater.from(viewGroup.getContext())
-                .inflate(R.layout.recyclerview_item, viewGroup,
+                // .inflate(R.layout.recyclerview_item, viewGroup,
+                // .inflate(R.layout.recyclerview_item_icon_left, viewGroup,
+                .inflate(R.layout.recyclerview_item_icon_left, viewGroup,
                         false);
         return new MyViewHolder(view);
     }
 
+    private void initColor(){
+        TypedValue typedValue = new TypedValue();
+        context.getTheme().resolveAttribute(R.attr.timestampSelectedColor, typedValue, true);
+        colorSelected = typedValue.data;
+    }
 
     @Override
-    public void onBindViewHolder(final TimestampsAdapter.MyViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull final TimestampsAdapter.MyViewHolder holder, int position) {
 
         final int w = displayMetrics.widthPixels;
         holder.left_container.setMinimumWidth(w);
 
         Timestamp timestamp = sortedTimeStamps.get(position);
         if (selectedTimestamps.contains(timestamp)) {
-            holder.left_container.setBackgroundColor(ContextCompat.getColor(context, R.color.colorRecyclerViewItemSelected));
+            holder.timestamp_container.setBackgroundColor(colorSelected);
         } else {
-            holder.left_container.setBackgroundColor(ContextCompat.getColor(context, R.color.colorRecyclerViewItem));
+            holder.timestamp_container.setBackground(null);
         }
 
         Calendar calendar = Calendar.getInstance();
@@ -143,12 +164,12 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
 
         String format;
 
-        if (appSettings.shouldUse24hrFormat()) {
-            if (appSettings.shouldShowMillis()) {
+        if (appSettings.getUse24hrFormat()) {
+            if (appSettings.getShouldShowMillis()) {
                 format = "HH:mm:ss.SSS";
             } else format = "HH:mm:ss";
         } else {
-            if (appSettings.shouldShowMillis()) {
+            if (appSettings.getShouldShowMillis()) {
                 format = "hh:mm:ss.SSS a";
             } else format = "hh:mm:ss a";
         }
@@ -222,10 +243,23 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
         }
     }
 
+    @NotNull
+    public String getTimeDifferenceBetweenTwoSelectedTimestamps() {
+        if (selectedTimestamps.size() != 2) return "";
+        long timestamp1 = selectedTimestamps.get(0).getTimestamp().toMilliseconds();
+        long timestamp2 = selectedTimestamps.get(1).getTimestamp().toMilliseconds();
+        if (timestamp1 < timestamp2) {
+            return periodFormatter.print(new Period(timestamp1, timestamp2));
+        } else {
+            return periodFormatter.print(new Period(timestamp2, timestamp1));
+        }
+    }
+
     class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         private TextView recycler_timestamp_weekday, recycler_timestamp_day, recycler_timestamp_note, recycler_timestamp_time, recycler_timestamp_button_menu, recycler_timestamp_delay;
         private LinearLayout left_container;
+        private ConstraintLayout timestamp_container;
         private RelativeLayout recycler_view_card;
         private ImageView recycler_timestamp_category;
 
@@ -235,6 +269,7 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
             recycler_timestamp_category = itemView.findViewById(R.id.recycler_timestamp_category);
             recycler_timestamp_day = itemView.findViewById(R.id.recycler_timestamp_day);
             recycler_timestamp_note = itemView.findViewById(R.id.recycler_timestamp_note);
+            timestamp_container = itemView.findViewById(R.id.timestamp_container);
             recycler_timestamp_time = itemView.findViewById(R.id.recycler_timestamp_time);
             recycler_timestamp_weekday = itemView.findViewById(R.id.recycler_timestamp_weekday);
             recycler_timestamp_button_menu = itemView.findViewById(R.id.recycler_timestamp_button_menu);
@@ -248,12 +283,12 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
                         isSelecting = true;
                         Timestamp selectedTimestamp = sortedTimeStamps.get(getAdapterPosition());
                         if (selectedTimestamps.contains(selectedTimestamp)) {
-                            selectedTimestamps.remove(selectedTimestamp);
+                            markAsNotSelected(selectedTimestamp);
                         } else {
-                            selectedTimestamps.add(selectedTimestamp);
+                            markAsSelected(selectedTimestamp);
                         }
                         notifyItemChanged(getAdapterPosition());
-                        userActionCallback.accept(new UserAction(ActionType.SELECTED, null, selectedTimestamps.size()));
+                        userActionCallback.onUserAction(new UserAction(ActionType.SELECTED, null, selectedTimestamps.size()));
                     }
                     return true;
                 }
@@ -264,17 +299,25 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
                     if (isSelecting) {
                         Timestamp selectedTimestamp = sortedTimeStamps.get(getAdapterPosition());
                         if (selectedTimestamps.contains(selectedTimestamp)) {
-                            selectedTimestamps.remove(selectedTimestamp);
+                            markAsNotSelected(selectedTimestamp);
                             if (selectedTimestamps.isEmpty()) isSelecting = false;
                         } else {
-                            selectedTimestamps.add(selectedTimestamp);
+                            markAsSelected(selectedTimestamp);
                         }
                         notifyItemChanged(getAdapterPosition());
-                        userActionCallback.accept(new UserAction(ActionType.SELECTED, null, selectedTimestamps.size()));
+                        userActionCallback.onUserAction(new UserAction(ActionType.SELECTED, null, selectedTimestamps.size()));
                     }
                 }
             });
             recycler_timestamp_button_menu.setOnClickListener(this);
+        }
+
+        private void markAsSelected(Timestamp selectedTimestamp) {
+            selectedTimestamps.add(selectedTimestamp);
+        }
+
+        private void markAsNotSelected(Timestamp selectedTimestamp) {
+            selectedTimestamps.remove(selectedTimestamp);
         }
 
         @Override
@@ -313,7 +356,7 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
     }
 
     public void clearSelection() {
-        userActionCallback.accept(new UserAction(ActionType.SELECTED, null, 0));
+        userActionCallback.onUserAction(new UserAction(ActionType.SELECTED, null, 0));
         selectedTimestamps.clear();
         isSelecting = false;
     }
@@ -336,25 +379,25 @@ public class TimestampsAdapter extends RecyclerView.Adapter<TimestampsAdapter.My
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.recycler_menu_edit_date:
-                        userActionCallback.accept(new UserAction(ActionType.EDIT_DATE, timestamp));
+                        userActionCallback.onUserAction(new UserAction(ActionType.EDIT_DATE, timestamp));
                         break;
                     case R.id.recycler_menu_edit_time:
-                        userActionCallback.accept(new UserAction(ActionType.EDIT_TIME, timestamp));
+                        userActionCallback.onUserAction(new UserAction(ActionType.EDIT_TIME, timestamp));
                         break;
                     case R.id.recycler_menu_edit_note:
-                        userActionCallback.accept(new UserAction(ActionType.EDIT_NOTE, timestamp));
+                        userActionCallback.onUserAction(new UserAction(ActionType.EDIT_NOTE, timestamp));
                         break;
                     case R.id.recycler_menu_map_to:
-                        userActionCallback.accept(new UserAction(ActionType.SHOW_MAP, timestamp));
+                        userActionCallback.onUserAction(new UserAction(ActionType.SHOW_MAP, timestamp));
                         break;
                     case R.id.recycler_menu_move:
-                        userActionCallback.accept(new UserAction(ActionType.CHANGE_CATEGORY, timestamp));
+                        userActionCallback.onUserAction(new UserAction(ActionType.CHANGE_CATEGORY, timestamp));
                         break;
                     case R.id.recycler_menu_remove:
-                        userActionCallback.accept(new UserAction(ActionType.REMOVE_TIMESTAMP, timestamp));
+                        userActionCallback.onUserAction(new UserAction(ActionType.REMOVE_TIMESTAMP, timestamp));
                         break;
                     case R.id.recycler_menu_share:
-                        userActionCallback.accept(new UserAction(ActionType.SHARE_TIMESTAMP, timestamp));
+                        userActionCallback.onUserAction(new UserAction(ActionType.SHARE_TIMESTAMP, timestamp));
                         break;
                 }
                 return false;

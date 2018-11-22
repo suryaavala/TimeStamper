@@ -17,6 +17,7 @@
         android:layout_height="70dp"
         android:layout_gravity="center_vertical"
         android:paddingTop="@dimen/nav_header_vertical_spacing"
+        android:background="@null"
         android:src="@mipmap/ic_launcher" />
 
     <TextView
@@ -26,13 +27,7 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
         android:paddingTop="16dp"
         android:layout_gravity="center_vertical"
+        android:background="@null"
         android:id="@+id/phraseOfTheDay" />
-
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="80dp"
-        android:visibility="gone" />
 
 </LinearLayout>

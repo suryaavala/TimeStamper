@@ -46,7 +46,7 @@ public class DataManager {
         if (mPrefs.contains(Constants.Settings.SHARED_PREFS_AUTONOTE))
             appSettings.setShowNoteAddDialog(mPrefs.getBoolean(Constants.Settings.SHARED_PREFS_AUTONOTE, false));
         if (mPrefs.contains(Constants.Settings.SHARED_PREFS_SHOW_MILLIS)) {
-            appSettings.setShowMillis(mPrefs.getBoolean(Constants.Settings.SHARED_PREFS_SHOW_MILLIS, false));
+            appSettings.setShouldShowMillis(mPrefs.getBoolean(Constants.Settings.SHARED_PREFS_SHOW_MILLIS, false));
         }
         if (mPrefs.contains(Constants.Settings.SHARED_PREFS_USE24HR)) {
             appSettings.setUse24hrFormat(mPrefs.getBoolean(Constants.Settings.SHARED_PREFS_USE24HR, false));
@@ -57,11 +57,11 @@ public class DataManager {
         if (mPrefs.contains(Constants.Settings.SHARED_PREFS_USE_QUICK_NOTES)) {
             appSettings.setShouldUseQuickNotes(mPrefs.getBoolean(Constants.Settings.SHARED_PREFS_USE_QUICK_NOTES, true));
         }
-        if (mPrefs.contains(Constants.Settings.SHARED_PREFS_USEDARK)) {
-            appSettings.setUseDark(mPrefs.getBoolean(Constants.Settings.SHARED_PREFS_USEDARK, true));
-        }
         if (mPrefs.contains(Constants.Settings.SHARED_PREFS_SHOW_KEYBOARD)) {
             appSettings.setShouldShowKeyboardInAddNote(mPrefs.getBoolean(Constants.Settings.SHARED_PREFS_SHOW_KEYBOARD, false));
+        }
+        if (mPrefs.contains(Constants.Settings.SHARED_PREFS_USE_DARK_THEME)) {
+            appSettings.setShouldUseDarkTheme(mPrefs.getBoolean(Constants.Settings.SHARED_PREFS_USE_DARK_THEME, true));
         }
         if (mPrefs.contains(Constants.Settings.SHARED_PREFS_QUICK_NOTES)) {
             appSettings.setQuickNotes(readQuickNotes());
@@ -69,24 +69,17 @@ public class DataManager {
         return appSettings;
     }
 
-    public void writeUserSettings(AppSettings appSettings) {
-        mPrefs.edit().putBoolean(Constants.Settings.SHARED_PREFS_SHOW_MILLIS, appSettings.shouldShowMillis()).commit();
-        mPrefs.edit().putBoolean(Constants.Settings.SHARED_PREFS_USE24HR, appSettings.shouldUse24hrFormat()).commit();
-        mPrefs.edit().putBoolean(Constants.Settings.SHARED_PREFS_AUTONOTE, appSettings.shouldShowNoteAddDialog()).commit();
-        mPrefs.edit().putBoolean(Constants.Settings.SHARED_PREFS_USEDARK, appSettings.shouldUseDarkTheme()).commit();
-        mPrefs.edit().putBoolean(Constants.Settings.SHARED_PREFS_USE_GPS, appSettings.shouldUseGps()).commit();
-        mPrefs.edit().putBoolean(Constants.Settings.SHARED_PREFS_SHOW_KEYBOARD, appSettings.shouldShowKeyboardInAddNote()).commit();
-        mPrefs.edit().putBoolean(Constants.Settings.SHARED_PREFS_USE_QUICK_NOTES, appSettings.shouldUseQuickNotes()).commit();
+    public void writeUserNotes(AppSettings appSettings) {
         writeQuickNotes(appSettings.getQuickNotes());
     }
 
-    public void writeQuickNotes(QuickNoteList quickNoteList) {
+    private void writeQuickNotes(QuickNoteList quickNoteList) {
         Gson gson = new Gson();
         String json = gson.toJson(quickNoteList);
-        mPrefs.edit().putString(Constants.Settings.SHARED_PREFS_QUICK_NOTES, json).commit();
+        mPrefs.edit().putString(Constants.Settings.SHARED_PREFS_QUICK_NOTES, json).apply();
     }
 
-    public QuickNoteList readQuickNotes() {
+    private QuickNoteList readQuickNotes() {
         Gson gson = new Gson();
         String json = mPrefs.getString(Constants.Settings.SHARED_PREFS_QUICK_NOTES, "");
         Type type = new TypeToken<QuickNoteList>() {
@@ -259,9 +252,9 @@ public class DataManager {
 
     public JetUUID readDefaultCategoryForWidget() {
         if (mPrefs.contains(Constants.Settings.SHARED_PREFS_WIDGET_DEFAULT_TIMESTAMP)) {
-            return JetUUID.fromString(mPrefs.getString(Constants.Settings.SHARED_PREFS_WIDGET_DEFAULT_TIMESTAMP, AppSettings.NO_DEFAULT_CATEGORY.toString()));
+            return JetUUID.fromString(mPrefs.getString(Constants.Settings.SHARED_PREFS_WIDGET_DEFAULT_TIMESTAMP, AppSettings.Companion.getNO_DEFAULT_CATEGORY().toString()));
         } else {
-            return AppSettings.NO_DEFAULT_CATEGORY;
+            return AppSettings.Companion.getNO_DEFAULT_CATEGORY();
         }
     }
 

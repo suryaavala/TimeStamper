@@ -1,7 +1,9 @@
 {
   "project_info": {
     "project_number": "241525923723",
-    "project_id": "timesamper"
+    "firebase_url": "https://timesamper.firebaseio.com",
+    "project_id": "timesamper",
+    "storage_bucket": "timesamper.appspot.com"
   },
   "client": [
     {
@@ -11,7 +13,12 @@
           "package_name": "com.sardox.timestamper"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "241525923723-0gu5qifs5e5f7ra70rou0lpahqctifn2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBonigHM3hAND9R6qyFHJXJf8t1g1iq2yM"
@@ -29,7 +36,7 @@
           "other_platform_oauth_client": []
         },
         "ads_service": {
-          "status": 1
+          "status": 2
         }
       }
     }

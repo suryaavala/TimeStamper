@@ -6,7 +6,8 @@
     <string name="action_export">Экспорт в CSV</string>
     <string name="action_save">Сохранить</string>
     <string name="action_open">Открыть</string>
-    <string name="action_category_delete">Удалить категорию</string>
+
+    <string name="action_use_dark_theme_hint">Требуется перезагрузка </string>
     <string name="action_use_dark_theme">Использовать темный стиль</string>
     <string name="navigation_drawer_open">Открыть меню</string>
     <string name="navigation_drawer_close">Закрыть меню</string>
@@ -18,8 +19,12 @@
     <string name="import_export">Импорт / Экспорт</string>
     <string name="settings">Настройки</string>
 
+    <string name="action_category_toggle">Показать категории</string>
+    <string name="action_timestamps_delete">Удалить таймстемп</string>
+
     <string name="add_note_to_new_stamps">Автоввод заметки</string>
     <string name="add_note_to_new_stamps_hint">Окно для ввода заметок будет появляться при создании каждого нового таймстемпа</string>
+    <string name="new_timestamp_created_with_location">>Новая запись была добавлена. Месторасположение сохранено</string>
 
     <string name="use_gps">Сохранять координаты</string>
     <string name="use_gps_hint">Приложение будет записывать ваши коориданты в тайстемп. Experimental feature</string>

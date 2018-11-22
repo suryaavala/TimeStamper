@@ -36,7 +36,7 @@
         android:paddingStart="10dp"
         android:paddingEnd="10dp"
         android:paddingBottom="30dp"
-        android:drawableStart="@drawable/icon_idea"
+        android:drawableStart="@drawable/ic_info_black"
         android:drawablePadding="2dp"
         android:text="@string/widget_hint"
         android:visibility="visible"/>
